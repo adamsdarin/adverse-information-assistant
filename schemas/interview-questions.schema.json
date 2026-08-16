@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "InterviewQuestions",
+  "type": "object",
+  "required": ["questions"],
+  "additionalProperties": false,
+  "properties": {
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text", "element_ref", "sensitivity"],
+        "additionalProperties": false,
+        "properties": {
+          "text": {"type": "string"},
+          "element_ref": {"type": "string"},
+          "sensitivity": {"enum": ["normal", "high"]},
+          "note": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

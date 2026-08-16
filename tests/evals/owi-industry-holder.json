@@ -1,0 +1,14 @@
+{
+  "id": "owi-industry-holder",
+  "description": "Baseline scenario: OWI arrest, cleared industry holder. Core competence.",
+  "context": {"population": "industry", "role": "holder", "access_tier": "baseline", "form": "sf86"},
+  "narrative": "I'm a cleared contractor employee. Last Saturday I was arrested for operating while intoxicated. I blew a 0.15. My court date is next month. I have not told my FSO yet.",
+  "expected": {
+    "reportable": ["yes", "consult_fso"],
+    "channel_family": "industry",
+    "guidelines_must_include": ["G", "J"],
+    "e_attach": false,
+    "timeliness_warning": true,
+    "notes_must_not_contain": ["not reportable", "no need to report", "should be fine", "odds"]
+  }
+}

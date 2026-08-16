@@ -1,0 +1,50 @@
+# Guideline G (Alcohol) — required narrative elements.
+# Maintainer-authored, derived from SEAD 4 ¶¶ 21–23, ISL 2021-02 data elements,
+# and recurring factual questions in published DOHA decisions.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+guideline: G
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: medium
+sources:
+  - corpus/sead4/guideline-G-alcohol.md
+  - corpus/reporting/tables/all-covered-individuals.yaml
+elements:
+  - id: incident-date
+    ask: "When did the incident occur (month/year)?"
+    maps_to: {sf86: "Section 22 — Police Record", pvq: "criminal-history", incident_report: "event_date"}
+  - id: incident-description
+    ask: "What happened, factually — location type, circumstances, BAC if known?"
+    maps_to: {sf86: "Section 22", pvq: "criminal-history", incident_report: "description"}
+  - id: charges
+    ask: "What exactly were you charged with, if anything?"
+    maps_to: {sf86: "Section 22", pvq: "criminal-history"}
+  - id: disposition
+    ask: "What was the legal outcome — plea, conviction, sentence, fines, court dates? Is anything still pending?"
+    maps_to: {sf86: "Section 22", pvq: "criminal-history"}
+    document: "certified court disposition"
+    escalation_if: "pending"
+  - id: license-consequences
+    ask: "Any license suspension, restricted driving privileges, or interlock requirement?"
+  - id: treatment-status
+    ask: "Was any evaluation, education, or treatment ordered or undertaken voluntarily? Completed, in progress, or not started?"
+    mitigation_ref: "G-23"
+    document: "completion certificate or provider letter, if any"
+    sensitivity: high
+  - id: pattern-check
+    ask: "Any prior alcohol-related incidents — including any never charged or reported?"
+    mitigation_ref: "G-23"
+  - id: current-relationship
+    ask: "Describe your current alcohol use, in your own words."
+    mitigation_ref: "G-23"
+    sensitivity: high
+  - id: age-at-conduct
+    ask: "Roughly how old were you at the time?"
+    mitigation_ref: "whole-person"
+    optional: true
+  - id: changes-made
+    ask: "What, if anything, have you changed since — habits, circumstances, support?"
+    mitigation_ref: "G-23"

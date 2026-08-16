@@ -1,0 +1,73 @@
+# Reporting channels, SCOPED BY POPULATION.
+#
+# The DISS/FSO/CISA mechanism is the INDUSTRY channel, established by DCSA's
+# implementation. It is not how a federal employee or military member reports.
+# An earlier version of this file applied these channels universally, which
+# would have sent a federal employee to a system they have no access to.
+source: "DCSA ISL 2021-02 (SEAD 3), v2, May 2024 — industry channels"
+maintainer_verified: false
+
+# ---------------------------------------------------------------------------
+# INDUSTRY — cleared contractors under the NISP
+# ---------------------------------------------------------------------------
+industry_channels:
+  fso:
+    description: "Raise directly with your Facility Security Officer (or designee)."
+  diss-incident:
+    description: "Report to your FSO, who submits an Incident Customer Service Report in DISS (the DoD system of record for personnel security management)."
+  diss-foreign-travel:
+    description: "Report to your FSO for entry in the DISS Foreign Travel Module. Pre-approval required for unofficial foreign travel; itinerary deviations reported within five business days of return."
+  cisa-direct:
+    description: "Report unofficial contact with a known or suspected foreign intelligence entity directly to your company's assigned DCSA Counterintelligence Special Agent, in addition to the DISS submission via your FSO."
+
+# ---------------------------------------------------------------------------
+# FEDERAL CIVILIAN AND MILITARY — SEAD 3 applies; the industry mechanism does not
+# ---------------------------------------------------------------------------
+federal_military_channels:
+  servicing_security_office:
+    description: |
+      Report through your servicing security office — your security manager,
+      SSO, or the office that handles your eligibility. Your agency or service
+      has its own implementing guidance for SEAD 3 that specifies the format,
+      the system, and any internal timelines.
+    note: |
+      This corpus does not contain agency-specific implementations. State the
+      SEAD 3 requirement, direct the user to their security office for the
+      mechanism, and do not invent a system name, a form, or a deadline.
+
+  counterintelligence:
+    description: |
+      Contact with a known or suspected foreign intelligence entity is
+      reported to your security office and your supporting counterintelligence
+      element. Do not name a specific organization — that varies by agency and
+      service.
+
+# ---------------------------------------------------------------------------
+# APPLICANTS — in-process applicants are covered individuals under SEAD 3.
+# These entries are UNVERIFIED until the maintainer confirms the mechanism
+# against official guidance; until then the advisor states the requirement
+# and degrades the channel to "confirm with the office sponsoring your case."
+# ---------------------------------------------------------------------------
+applicant_channels:
+  applicant_sponsoring_fso:
+    population: industry
+    description: |
+      An industry applicant in process reports new adverse information through
+      the FSO of the facility sponsoring their eligibility.
+  applicant_hiring_agency_security_office:
+    population: federal
+    description: |
+      A federal applicant in process reports new adverse information to the
+      security office of the hiring agency sponsoring their case.
+
+default_when_unmatched: fso
+default_for_federal_when_unmatched: servicing_security_office
+
+# ---------------------------------------------------------------------------
+# HARD RULE
+# ---------------------------------------------------------------------------
+never_do: |
+  Never route a federal or military user to DISS, an FSO, or a DCSA CI Special
+  Agent. Those are the industry mechanism. Naming a system the user cannot
+  access reads as authoritative and sends them somewhere useless — worse than
+  saying "your security office," which is always correct.

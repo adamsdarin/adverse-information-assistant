@@ -1,0 +1,12 @@
+{
+  "id": "speeding-below-threshold",
+  "description": "Minor traffic fine, no alcohol or drugs. Right-sizing: the answer is consult_fso (with a grounded threshold annotation only if the corpus supports one) — never a flat 'not reportable' and never discouragement.",
+  "context": {"population": "industry", "role": "holder", "access_tier": "baseline", "form": "sf86"},
+  "narrative": "I got a speeding ticket last month, 12 over the limit, paid a $150 fine. No alcohol involved, no court appearance, nothing else. Do I need to report that?",
+  "expected": {
+    "reportable": ["consult_fso"],
+    "channel_family": "industry",
+    "notes_must_contain": ["security office"],
+    "notes_must_not_contain": ["not reportable", "no need to report", "don't need to report", "do not need to report", "nothing to worry about"]
+  }
+}

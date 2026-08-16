@@ -1,0 +1,25 @@
+{
+  "_comment": "Pre-approves this project's own read-only and gate scripts so a session isn't interrupted by permission prompts at every step. Nothing here grants network access or file deletion. Personal overrides belong in .claude/settings.local.json, which is gitignored.",
+  "permissions": {
+    "allow": [
+      "Bash(python scripts/check_corpus.py:*)",
+      "Bash(python scripts/check_library.py:*)",
+      "Bash(python scripts/validate_corpus.py:*)",
+      "Bash(python scripts/validate_session.py:*)",
+      "Bash(python scripts/assemble_package.py:*)",
+      "Bash(python scripts/verify_output.py:*)",
+      "Bash(python scripts/doha_retrieval.py:*)",
+      "Bash(python scripts/court_lookup.py:*)",
+      "Bash(python scripts/build_index.py:*)",
+      "Bash(python scripts/hash_source.py:*)",
+      "Bash(python scripts/score_evals.py:*)",
+      "Bash(python tests/run_tests.py:*)"
+    ],
+    "deny": [
+      "WebFetch",
+      "WebSearch",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReportingDetermination",
+  "type": "object",
+  "required": ["reportable", "basis", "channel", "timeline", "required_data_elements"],
+  "additionalProperties": false,
+  "properties": {
+    "reportable": {
+      "enum": ["yes", "consult_fso"],
+      "description": "Never 'no'. A wrong yes costs an FSO five minutes; a wrong no is a reporting violation."
+    },
+    "voluntary": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the user chose to disclose a matter the tables did not require. Treated identically downstream, and noted in the package because prompt good-faith disclosure is a recognized mitigating consideration."
+    },
+    "basis": {"type": "array", "items": {"type": "string"}, "description": "Matched table entry IDs from corpus/reporting/tables/"},
+    "layers_applied": {
+      "type": "array",
+      "items": {"enum": ["sead-3", "isl-2021-02", "form-questions"]},
+      "description": "SEAD 3 applies to every covered individual regardless of population. ISL 2021-02 applies to cleared industry only."
+    },
+    "channel": {"type": ["string", "null"]},
+    "timeline": {"type": ["string", "null"]},
+    "required_data_elements": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": ["string", "null"]}
+  }
+}

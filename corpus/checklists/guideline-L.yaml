@@ -1,0 +1,29 @@
+# Guideline L — Outside Activities. REVIEW DRAFT.
+guideline: L
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-L-outside-activities.md, corpus/reporting/tables/top-secret-q.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: low
+elements:
+  - id: activity-description
+    ask: "What is the outside activity — employment, consulting, service, volunteer role, board seat, ownership interest?"
+  - id: entity-identity
+    ask: "What organization or entity, and what does it do?"
+  - id: foreign-nexus
+    ask: "Is the entity foreign, foreign-owned, foreign-funded, or does it have foreign government ties?"
+    escalation_if: "yes"
+    note: "A foreign nexus likely also implicates Guideline B and may be separately reportable — re-run classifier and requirements advisor."
+  - id: dates
+    ask: "When did the activity start, and is it ongoing?"
+  - id: compensation
+    ask: "Are you compensated, and roughly how much?"
+  - id: subject-matter-overlap
+    ask: "Does the activity touch on the same subject matter as your cleared work?"
+  - id: approval-status
+    ask: "Did you seek or receive approval from your employer or security office?"
+    mitigation_ref: "L — activity was approved by the appropriate agency official"
+  - id: conflict-assessment
+    ask: "Could this activity create a conflict with your security responsibilities, or an appearance of one?"

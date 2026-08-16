@@ -1,0 +1,453 @@
+# Guideline ↔ Personnel Vetting Questionnaire (PVQ) FIELD-LEVEL map.
+#
+# *** THIS IS THE COLLECTION STANDARD FOR EVERY USER. ***
+# See collection-policy.yaml. The PVQ governs what the tool ASKS FOR,
+# regardless of which form the user actually filed. The form the user filed
+# governs only what the package CITES BACK TO.
+#
+# PROVENANCE — read this before trusting anything below:
+#   sections, titles, and field questions: EXTRACTED from the maintainer's
+#     PVQ source documents (Final, September 2023), marked "For Reference
+#     Only". Not transcribed from memory, not inferred.
+#   guideline_mapping: MAINTAINER INFERENCE. Which SEAD 4 guideline a PVQ
+#     section serves is an editorial judgment, not something the form states.
+#     Review these before relying on them.
+#   Field lists are the adverse-information-relevant fields, not a complete
+#     transcription of every address subfield and repeat-instance prompt.
+#
+# NOTE ON SOURCE FILES: in the maintainer's upload, the file named
+# "PVQ_Part_A" contains Part B and the file named "PVQ_Part_B" contains
+# Part A. Mapping below follows CONTENT, not filename.
+
+populated: true
+maintainer_verified: false        # flip after reviewing guideline_mapping
+source: "Personnel Vetting Questionnaire, Final September 2023 (Parts A-D + Certification and Releases)"
+source_note: "Documents marked 'For Reference Only'. Verify against the authoritative issuance before production use."
+sections_source: extracted
+guideline_mapping_source: inference_review_required
+
+# ---------------------------------------------------------------------------
+# PART APPLICABILITY — which Parts a given user must satisfy.
+# This is a new intake dimension: position type, not just clearance tier.
+# ---------------------------------------------------------------------------
+parts:
+  A:
+    title: "Part A - Mandatory for All Positions"
+    applies_to: all_positions
+  B:
+    title: "Part B - Mandatory for All Positions Except Low Risk"
+    applies_to: all_except_low_risk
+  C:
+    title: "Part C - Mandatory for all National Security Positions"
+    applies_to: national_security_positions
+  D:
+    title: "Part D - Public Trust-Specific (Select Positions)"
+    applies_to: public_trust_select
+
+position_type_to_parts:
+  national_security: [A, B, C]      # cleared industry / clearance holders
+  public_trust: [A, B, D]
+  low_risk: [A]
+
+# ---------------------------------------------------------------------------
+# SCOPING — the PVQ's lookback windows. These differ from the SF-86 and are
+# load-bearing: asking without the window produces over- or under-collection.
+# ---------------------------------------------------------------------------
+default_lookback: "past five years"
+scope_notes:
+  five_years_or_since_16: "Alcohol (19) and drug/controlled-substance (12) questions use 'in the past five years or since the age of 16, whichever is shorter'."
+  marijuana_90_days: "Section 13 asks about marijuana/cannabis use in the LAST 90 DAYS, plus 'ever' for use while in a national security or criminal justice/public safety position."
+  ever_questions: "Some questions are lifetime scope regardless of the five-year default — notably Sections 14 (clearance granted/suspended/revoked), 18 (violent-overthrow organization membership), 28 (court-ordered mental incompetency), and 29 (convictions with sentences over one year)."
+
+# ---------------------------------------------------------------------------
+# SECTIONS
+# ---------------------------------------------------------------------------
+sections:
+  "10":
+    part: A
+    title: "People Who Know You Well"
+    guidelines: []
+    note: "The PVQ's own knowledgeable-parties section. Requires THREE people known collectively for a required period. Distinct from this tool's Person N handling, but the same data-you-will-need problem applies."
+    third_party_data_required: true
+    fields: [person_name, contact_info, dates_known, relationship, lives_or_works_in_us]
+
+  "11":
+    part: A
+    title: "Police Record"
+    also_part: B
+    guidelines: [J, G, H, E]
+    lookback: "past five years"
+    fields:
+      - citation_summons_ticket_flag
+      - charged_convicted_sentenced_flag
+      - probation_flag
+      - parole_or_supervised_release_flag
+      - offense_date
+      - offense_occurred_in_us
+      - offense_county
+      - domestic_violence_involved
+      - firearms_involved
+      - explosives_involved
+      - drugs_involved
+      - alcohol_involved
+      - offense_description_who_was_involved
+      - law_enforcement_agency_name
+      - law_enforcement_agency_in_us
+      - arrested_flag
+      - arresting_agency_name
+      - went_to_court_or_awaiting
+      - fine_paid_flag
+      - fine_amount
+      - fine_paid_in_full_flag
+      - fine_paid_date
+      - court_name
+      - court_in_us
+      - charge_description
+      - charge_outcome
+      - sentence_terms
+
+  "12":
+    part: A
+    title: "Drug Activity"
+    guidelines: [H]
+    lookback: "past five years or since age 16, whichever is shorter"
+    fields:
+      - illegal_drug_or_controlled_substance_use_flag
+      - substance_identity
+      - use_dates_first_and_most_recent
+      - use_frequency_and_amount
+      - used_while_in_national_security_position
+      - used_while_in_criminal_justice_or_public_safety_position
+      - intent_to_use_in_future
+      - prescription_misuse_flag
+      - additional_instances_flag
+
+  "13":
+    part: A
+    title: "Marijuana and Cannabis Derivative Use"
+    guidelines: [H]
+    lookback: "last 90 days; plus lifetime scope for use while in a national security or criminal justice/public safety position"
+    fields:
+      - marijuana_use_last_90_days_flag
+      - used_while_in_national_security_position_90_days
+      - used_while_in_criminal_justice_or_public_safety_90_days
+      - ever_used_while_in_national_security_position
+      - ever_used_while_in_criminal_justice_or_public_safety_position
+      - use_dates
+      - additional_instances_flag
+
+  "14":
+    part: A
+    title: "U.S. Personnel Vetting Investigations, Security Clearances, and Federal Debarments"
+    guidelines: [E, K]
+    lookback: "investigations: last five years; clearance grants/suspensions/revocations: ever"
+    fields:
+      - prior_investigation_flag
+      - clearance_ever_granted_flag
+      - clearance_ever_suspended_flag
+      - clearance_ever_revoked_flag
+      - federal_debarment_flag
+      - agency_and_dates
+      - circumstances
+    escalation_note: "Affirmative suspension/revocation answers indicate the user may be past self-reporting and into an adversarial process. Triage escalates."
+
+  "15":
+    part: A
+    title: "Federal Debt"
+    guidelines: [F]
+    lookback: "past five years"
+    fields:
+      - failed_to_file_federal_tax_return_flag
+      - tax_years_not_filed
+      - intent_to_file_flag
+      - failed_to_pay_federal_taxes_flag
+      - tax_years_unpaid
+      - currently_past_due_federal_non_tax_debt_flag
+      - debt_type_and_amount
+      - current_status
+
+  "16":
+    part: A
+    title: "Information Technology Systems"
+    guidelines: [M]
+    lookback: "past five years"
+    fields:
+      - unauthorized_access_attempt_flag
+      - access_succeeded_flag
+      - shared_accessed_information_flag
+      - unauthorized_modification_destruction_manipulation_flag
+      - actions_received_from_organization
+      - incident_dates
+      - system_involved
+      - additional_instances_flag
+
+  "17":
+    part: A
+    title: "Handling Protected Information"
+    guidelines: [K]
+    lookback: "past five years"
+    fields:
+      - unauthorized_access_to_protected_information_flag
+      - access_succeeded_flag
+      - deliberate_noncompliance_with_safeguarding_rules_flag
+      - actions_received
+      - incident_dates
+      - additional_instances_flag
+    content_warning: "Collect circumstances only. The PVQ Certification itself affirms no classified information is included in the questionnaire — the same rule governs this tool."
+
+  "18":
+    part: A
+    title: "Associations"
+    guidelines: [A]
+    lookback: "ever"
+    fields:
+      - membership_in_organization_dedicated_to_force_or_violence_flag
+      - organization_name
+      - organization_us_address_flag
+      - organization_foreign_address_flag
+      - organization_web_page
+      - positions_held_flag
+      - financial_contributions_flag
+      - membership_dates
+      - nature_of_involvement
+
+  "04":
+    part: A
+    also_part: B
+    title: "Additional Citizenships / Foreign Passports"
+    guidelines: [C, B]
+    lookback: "ever"
+    fields:
+      - foreign_passport_or_identity_card_ever_flag
+      - country_of_origin
+      - has_access_to_document_flag
+      - document_used_flag
+      - used_for_travel_flag
+      - travel_countries_and_length
+      - purpose_of_travel
+      - questioned_by_foreign_entity_flag
+      - police_encounters_during_travel_flag
+      - foreign_government_encounters_flag
+      - suspicious_activity_flag
+
+  "19":
+    part: B
+    title: "Use of Alcohol and Rehabilitative Actions"
+    guidelines: [G]
+    lookback: "past five years or since age 16, whichever is shorter"
+    third_party_data_required: true
+    fields:
+      - alcohol_negatively_impacted_life_flag
+      - how_impacted_description
+      - impact_date_range
+      - ordered_to_get_counseling_or_treatment_flag
+      - who_ordered_it
+      - did_you_get_counseling_flag
+      - counselor_or_provider_name          # THIRD-PARTY IDENTITY
+      - counselor_phone                     # THIRD-PARTY IDENTITY
+      - counselor_email                     # THIRD-PARTY IDENTITY
+      - counselor_address                   # THIRD-PARTY IDENTITY
+      - provider_still_practicing_flag
+      - completed_counseling_flag
+      - current_status_of_counseling
+      - explanation_if_not_completed
+      - voluntary_counseling_flag
+      - voluntary_counseling_basis
+      - additional_instances_flag
+
+  "20":
+    part: B
+    title: "Relationship Status"
+    guidelines: [B, D]
+    third_party_data_required: true
+    fields:
+      - marital_or_partnership_status
+      - partner_identity_and_birth_country   # THIRD-PARTY IDENTITY
+      - partner_other_names_used
+      - marriage_entered_in_us_flag
+      - cohabitation_flag
+      - partner_lives_in_us_flag
+
+  "21":
+    part: B
+    title: "Relatives"
+    guidelines: [B]
+    third_party_data_required: true
+    fields:
+      - relative_identity_and_names          # THIRD-PARTY IDENTITY
+      - relative_lives_in_us_flag
+      - contact_with_relative_flag
+      - additional_relatives_flag
+    note: "All relatives must be listed, including deceased."
+
+  "22":
+    part: B
+    title: "Foreign Travel"
+    guidelines: [B, C]
+    lookback: "past five years"
+    fields:
+      - foreign_travel_flag
+      - countries_visited
+      - travel_dates
+      - additional_countries_flag
+    note: "Excludes travel on U.S. government orders/official travel — that is scoped out of this section."
+
+  "23":
+    part: B
+    title: "Financial Record"
+    guidelines: [F]
+    lookback: "past five years"
+    third_party_data_required: true
+    fields:
+      - bankruptcy_filed_flag
+      - bankruptcy_chapter
+      - bankruptcy_filed_jointly_flag
+      - court_docket_or_account_number
+      - bankruptcy_court_name
+      - bankruptcy_court_county
+      - bankruptcy_filing_date
+      - amount_involved_usd
+      - trustee_or_administrator_name       # THIRD-PARTY IDENTITY
+      - trustee_address                     # THIRD-PARTY IDENTITY
+      - bankruptcy_discharged_flag
+      - discharge_date
+      - alimony_past_due_120_days_flag
+      - alimony_monthly_amount
+      - alimony_amount_past_due
+      - reason_past_due
+      - date_became_past_due
+      - currently_past_due_flag
+      - date_became_current
+
+  "24":
+    part: B
+    title: "Civil Court Actions"
+    guidelines: [F, E]
+    lookback: "past five years"
+    fields:
+      - party_to_civil_action_flag
+      - plaintiff_or_defendant
+      - other_parties
+      - additional_actions_flag
+
+  "25":
+    part: C
+    title: "Foreign Contacts"
+    guidelines: [B]
+    lookback: "past five years"
+    third_party_data_required: true
+    fields:
+      - foreign_national_contact_flag
+      - contact_identity_and_aliases        # THIRD-PARTY IDENTITY
+      - contact_lives_in_us_flag
+      - nature_of_relationship
+      - relationship_influences_or_obligates_you_flag
+      - spouse_or_partner_foreign_contact_flag
+      - additional_contacts_flag
+
+  "26":
+    part: C
+    title: "Foreign Financial Interests and Foreign Benefits"
+    guidelines: [B]
+    lookback: "past five years"
+    third_party_data_required: true
+    fields:
+      - foreign_financial_interest_flag
+      - interest_held_by_self_or_listed_persons
+      - co_owners_flag
+      - co_owner_identity                   # THIRD-PARTY IDENTITY
+      - co_owner_lives_in_us_flag
+      - real_estate_currently_owned_flag
+      - financial_interest_currently_owned_flag
+      - interest_type_and_value
+
+  "27":
+    part: C
+    title: "Foreign Business Affairs and Foreign Government Activities"
+    guidelines: [B, C, L]
+    lookback: "past five years"
+    fields:
+      - advised_supported_consulted_foreign_business_flag
+      - compensation_received_flag
+      - foreign_government_official_solicitation_flag
+      - family_member_solicited_flag
+      - foreign_national_job_or_consulting_offer_flag
+      - additional_instances_flag
+
+  "28":
+    part: C
+    title: "Psychological and Emotional Health"
+    guidelines: [I]
+    lookback: "incompetency order: ever; court-ordered consultation and hospitalization: past five years"
+    third_party_data_required: true
+    preamble_source: "PVQ Part D/C psychological preamble — see corpus/forms/pvq-preambles.md"
+    fields:
+      - court_declared_mentally_incompetent_flag
+      - declaring_court_or_agency_name
+      - declaration_date
+      - court_in_us_flag
+      - appealed_flag
+      - appeal_court_name
+      - final_disposition
+      - court_ordered_consultation_flag
+      - ordering_court_name
+      - order_date
+      - hospital_admission_or_evaluation_flag
+      - additional_instances_flag
+    note: "An order by a superior officer to a military member is out of scope; an order by a military court is in scope."
+
+  "29":
+    part: C
+    title: "Criminal Convictions Resulting in Sentences Over One Year"
+    guidelines: [J]
+    lookback: "ever"
+    fields:
+      - convicted_with_sentence_over_one_year_flag
+      - reported_elsewhere_on_form_flag
+      - firearms_involved
+      - explosives_involved
+      - drugs_involved
+      - charge_details
+      - additional_charges_flag
+
+  "07":
+    part: A
+    also_part: B
+    title: "Employment Activities"
+    guidelines: [L, E]
+    fields:
+      - employment_history
+      - reason_for_leaving
+      - disciplinary_or_adverse_employment_actions
+
+  "09":
+    part: A
+    also_part: C
+    title: "U.S. Military and U.S. Uniformed Service"
+    guidelines: [J, E]
+    fields:
+      - service_history
+      - disciplinary_actions_court_martial_flag
+      - charge_outcome
+      - sentence_of_confinement_flag
+      - imprisonment_over_one_year_flag
+      - imprisonment_dates
+
+# Guidelines with no dedicated PVQ section — narrative-driven. The tool still
+# runs the guideline checklist and _UNIVERSAL.yaml for these.
+narrative_only_guidelines: [D]
+narrative_only_note: "Sexual behavior has no dedicated PVQ section; it surfaces through Section 11 if criminal, or through the self-report narrative. Collect per corpus/checklists/guideline-D.yaml, minimally."
+
+# ---------------------------------------------------------------------------
+# CERTIFICATION — governs the whole form and this tool's candor posture.
+# ---------------------------------------------------------------------------
+certification:
+  source: "PVQ Certification and Releases, Final September 2023"
+  false_statement_penalty: "18 U.S.C. § 1001 — knowing and willful false statement punishable by fine or imprisonment or both"
+  classified_information_affirmation: "The signer affirms they have not included any classified information in completing the questionnaire."
+  consequences_language: "Intentional withholding, misrepresenting, falsifying, or including classified information may negatively affect clearance, employment prospects, or job status, up to denial or revocation, or removal or debarment from Federal service."
+  tool_use: |
+    This is the authoritative basis for the tool's candor rules. When a user
+    signals intent to omit or minimize, the Triage agent may cite the
+    certification the user will personally sign — not as a threat, but
+    because it is the actual standard they are being held to.

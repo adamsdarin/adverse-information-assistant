@@ -1,0 +1,857 @@
+# State court recognition aid — WHICH COURT WAS IT?
+#
+# PURPOSE, AND THE LIMIT ON IT
+# ----------------------------
+# This is a MEMORY AID, not a jurisdiction determination. People routinely do
+# not know which court heard their case: they were arrested, a lawyer told them
+# where to show up, they paid a fine, and the court's name never registered.
+# That is ordinary, not careless.
+#
+# So the interviewer ASKS FIRST — "what court did your case go through?" — and
+# only if the user does not know does it offer a nudge:
+#
+#     "In Iowa that's usually the Iowa District Court for the county you were
+#      arrested in — would that be Black Hawk County District Court?"
+#
+# The user confirms or corrects. WHAT GETS RECORDED IS ALWAYS THE USER'S
+# ANSWER, never this file's guess. If they still don't know, the honest fallback
+# is: contact the clerk in the county where it happened.
+#
+# THIS IS NOT LEGAL ADVICE and it is not a statement of jurisdiction. It is
+# directory information offered to jog a memory. Court structures change, and a
+# nudge that is wrong costs a phone call — a nudge presented as an answer costs
+# trust.
+#
+# VERIFICATION
+# ------------
+# Every state ships `verified: false`. Until a human checks it against that
+# state's official judiciary site, the agents may not assert it — they may only
+# offer it explicitly as a guess, or skip the nudge entirely. Setting
+# `verified: true` requires `source_url` and `verified_date`; validate_corpus.py
+# errors otherwise.
+#
+# FIELD REFERENCE
+# ---------------
+#   trial_court_felony    court that hears felony criminal matters
+#   trial_court_misdemeanor  court that hears misdemeanors (often different!)
+#   organized_by          the geographic unit courts are organized around
+#   unit_label            what that unit is CALLED (County / Parish / Borough)
+#   lower_courts          municipal/city/justice courts below the trial court —
+#                         this is the fork that most often confuses people
+#   records_custodian     the title to ask for. Wrong title = transferred twice
+#   statewide_portal      online case search, if the state has one
+#   judiciary_url         the official source of truth
+#   dui_note              where OWI/DUI specifically lands, when it differs
+#   notes                 anything that trips people up
+
+schema_version: "1.0"
+maintainer_verified: false
+purpose: recognition_aid_only
+authoritative_source: "each state's own judiciary website (judiciary_url)"
+
+cross_check_sources:
+  - name: "NCSC State Court Structure Charts"
+    url: "https://www.ncsc.org/resources-courts/understanding-state-court-jurisdictions"
+    note: "Per-state hierarchy charts. Canonical, but PDFs and recently reorganized on NCSC's site."
+  - name: "BJS Census of State Court Organization"
+    url: "https://bjs.ojp.gov/data-collection/census-state-court-organization"
+    note: "Most detailed structured data and public domain, but last collected 2011. Cross-check only; do not rely on alone."
+
+do_not_use:
+  - name: "CourtReference.com and similar aggregators"
+    reason: |
+      Commercial (Intelius), explicitly not an official source, and its terms
+      restrict reuse for FCRA-adjacent purposes. This tool serves clearance
+      holders — too close to background screening to redistribute that data.
+
+states:
+
+  AL:
+    name: Alabama
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Circuit Clerk"
+    statewide_portal: "https://www.alacourt.com/"
+    judiciary_url: "https://judicial.alabama.gov/"
+    dui_note: "DUI may be Municipal Court if charged by a city, District Court otherwise."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  AK:
+    name: Alaska
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: judicial_district
+    unit_label: Judicial District
+    lower_courts: []
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://records.courts.alaska.gov/"
+    judiciary_url: "https://courts.alaska.gov/"
+    dui_note: "DUI is typically District Court."
+    notes: "Alaska has no counties. Courts are organized into four judicial districts, so ask for the city/community, not the county."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  AZ:
+    name: Arizona
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "Justice Court or Municipal Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Justice Court", "Municipal (City) Court"]
+    records_custodian: "Clerk of the Superior Court"
+    statewide_portal: "https://apps.supremecourt.az.gov/publicaccess/"
+    judiciary_url: "https://www.azcourts.gov/"
+    dui_note: "Misdemeanor DUI is usually Justice or Municipal Court; aggravated DUI is Superior Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  AR:
+    name: Arkansas
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["District Court (city/county divisions)"]
+    records_custodian: "Circuit Clerk"
+    statewide_portal: "https://caseinfo.arcourts.gov/"
+    judiciary_url: "https://www.arcourts.gov/"
+    dui_note: "DWI is typically District Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  CA:
+    name: California
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "Superior Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of the Superior Court"
+    statewide_portal: null
+    judiciary_url: "https://www.courts.ca.gov/"
+    notes: "Unified — one Superior Court per county hears everything. There is no statewide case search; each county's Superior Court runs its own."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  CO:
+    name: Colorado
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "County Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://www.coloradojudicial.gov/"
+    judiciary_url: "https://www.coloradojudicial.gov/"
+    dui_note: "DUI is typically County Court, or Municipal Court if charged by a city."
+    notes: "Denver has its own County Court and Municipal Court structure."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  CT:
+    name: Connecticut
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "Superior Court"
+    organized_by: judicial_district
+    unit_label: Judicial District
+    lower_courts: []
+    records_custodian: "Clerk of the Superior Court"
+    statewide_portal: "https://www.jud.ct.gov/jud2.htm"
+    judiciary_url: "https://www.jud.ct.gov/"
+    notes: "Unified Superior Court organized by judicial district, plus geographical areas (G.A.) for criminal. Counties exist but courts are not organized by them — ask for the town."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  DE:
+    name: Delaware
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "Court of Common Pleas"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Justice of the Peace Court", "Municipal Court (Wilmington)"]
+    records_custodian: "Prothonotary (Superior Court)"
+    statewide_portal: null
+    judiciary_url: "https://courts.delaware.gov/"
+    dui_note: "First-offense DUI is typically Court of Common Pleas."
+    notes: "Only three counties. The Superior Court records custodian is the Prothonotary — an unusual title people rarely know to ask for."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  DC:
+    name: District of Columbia
+    trial_court_felony: "Superior Court of the District of Columbia"
+    trial_court_misdemeanor: "Superior Court of the District of Columbia"
+    organized_by: district
+    unit_label: District
+    lower_courts: []
+    records_custodian: "Clerk of the Superior Court"
+    statewide_portal: "https://eaccess.dccourts.gov/"
+    judiciary_url: "https://www.dccourts.gov/"
+    notes: "A single unified trial court for the whole District."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  FL:
+    name: Florida
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "County Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of the Circuit Court"
+    statewide_portal: "https://www.myfloridacounty.com/"
+    judiciary_url: "https://www.flcourts.gov/"
+    dui_note: "Misdemeanor DUI is County Court; felony DUI is Circuit Court."
+    notes: "The Clerk of the Circuit Court usually holds County Court records too."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  GA:
+    name: Georgia
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "State Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Magistrate Court", "Municipal Court", "Probate Court (some traffic)"]
+    records_custodian: "Clerk of Superior Court"
+    statewide_portal: null
+    judiciary_url: "https://georgiacourts.gov/"
+    dui_note: "DUI is usually State Court, or Municipal/Probate Court in counties without a State Court."
+    notes: "Not every county has a State Court — where there isn't one, Superior Court hears misdemeanors."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  HI:
+    name: Hawaii
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: judicial_circuit
+    unit_label: Judicial Circuit
+    lower_courts: []
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://www.courts.state.hi.us/legal_references/records/jims_system_availability"
+    judiciary_url: "https://www.courts.state.hi.us/"
+    dui_note: "OVUII (Hawaii's DUI) is District Court."
+    notes: "Organized by island-based judicial circuits rather than counties."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  ID:
+    name: Idaho
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "District Court, Magistrate Division"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of the District Court"
+    statewide_portal: "https://mycourts.idaho.gov/"
+    judiciary_url: "https://isc.idaho.gov/"
+    dui_note: "Misdemeanor DUI is heard in the Magistrate Division."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  IL:
+    name: Illinois
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "Circuit Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Circuit Clerk"
+    statewide_portal: "https://www.illinoiscourts.gov/rosters/public-access-to-court-records/"
+    judiciary_url: "https://www.illinoiscourts.gov/"
+    notes: "Unified Circuit Court by county, grouped into judicial circuits. Cook County is its own circuit and by far the largest."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  IN:
+    name: Indiana
+    trial_court_felony: "Circuit or Superior Court"
+    trial_court_misdemeanor: "Circuit or Superior Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["City Court", "Town Court"]
+    records_custodian: "Clerk of the Circuit Court"
+    statewide_portal: "https://public.courts.in.gov/mycase"
+    judiciary_url: "https://www.in.gov/courts/"
+    notes: "Circuit and Superior Courts have overlapping jurisdiction; which one heard a case varies by county."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  IA:
+    name: Iowa
+    trial_court_felony: "Iowa District Court"
+    trial_court_misdemeanor: "Iowa District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://www.iowacourts.state.ia.us/ESAWebApp/SelectFrameCriteriaPub"
+    judiciary_url: "https://www.iowacourts.gov/"
+    dui_note: "OWI is heard in the District Court for the county of arrest."
+    notes: "Fully unified — one District Court, sitting in each county. There are no city or municipal courts."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  KS:
+    name: Kansas
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Clerk of the District Court"
+    statewide_portal: "https://www.kansas.gov/countyCourts/"
+    judiciary_url: "https://www.kscourts.gov/"
+    dui_note: "DUI may be Municipal Court if charged under a city ordinance."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  KY:
+    name: Kentucky
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Circuit Clerk"
+    statewide_portal: null
+    judiciary_url: "https://www.kycourts.gov/"
+    dui_note: "DUI is District Court unless it is a felony-level offense."
+    notes: "The Circuit Clerk holds records for both Circuit and District Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  LA:
+    name: Louisiana
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: parish
+    unit_label: Parish
+    lower_courts: ["City Court", "Parish Court", "Mayor's Court"]
+    records_custodian: "Clerk of Court"
+    statewide_portal: null
+    judiciary_url: "https://www.lasc.org/"
+    dui_note: "DWI is often City Court where one exists."
+    notes: "Louisiana has PARISHES, not counties. Orleans Parish has its own criminal district court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  ME:
+    name: Maine
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of Court"
+    statewide_portal: null
+    judiciary_url: "https://www.courts.maine.gov/"
+    dui_note: "OUI is typically District Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  MD:
+    name: Maryland
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "District Court of Maryland"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of the Circuit Court"
+    statewide_portal: "https://casesearch.courts.state.md.us/casesearch/"
+    judiciary_url: "https://www.mdcourts.gov/"
+    dui_note: "DUI is District Court unless a jury trial was requested, which moves it to Circuit Court."
+    notes: "The District Court of Maryland is a single STATE court with locations, not a county court. Baltimore City is treated as a county."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  MA:
+    name: Massachusetts
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "District Court or Boston Municipal Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk-Magistrate"
+    statewide_portal: "https://www.masscourts.org/"
+    judiciary_url: "https://www.mass.gov/topics/courts"
+    dui_note: "OUI is typically District Court or the Boston Municipal Court."
+    notes: "District Court divisions are named for towns, not counties — ask which town."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  MI:
+    name: Michigan
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court (a few cities)"]
+    records_custodian: "County Clerk (Circuit) / Court Clerk (District)"
+    statewide_portal: null
+    judiciary_url: "https://www.courts.michigan.gov/"
+    dui_note: "OWI is typically District Court; felony OWI moves to Circuit Court."
+    notes: "District Courts are numbered by district, not named for counties."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  MN:
+    name: Minnesota
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Court Administrator"
+    statewide_portal: "https://mcro.courts.state.mn.us/"
+    judiciary_url: "https://www.mncourts.gov/"
+    dui_note: "DWI is District Court in the county of arrest."
+    notes: "Records custodian is the Court Administrator, not a 'clerk'."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  MS:
+    name: Mississippi
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "County, Justice, or Municipal Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["County Court", "Justice Court", "Municipal Court"]
+    records_custodian: "Circuit Clerk"
+    statewide_portal: null
+    judiciary_url: "https://courts.ms.gov/"
+    dui_note: "First-offense DUI is usually Justice or Municipal Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  MO:
+    name: Missouri
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "Circuit Court (Associate Division)"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Division"]
+    records_custodian: "Circuit Clerk"
+    statewide_portal: "https://www.courts.mo.gov/casenet/base/welcome.do"
+    judiciary_url: "https://www.courts.mo.gov/"
+    dui_note: "DWI may be in the Municipal Division if charged by a city."
+    notes: "Case.net is the statewide portal and covers most courts."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  MT:
+    name: Montana
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "Justice Court, City Court, or Municipal Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Justice Court", "City Court", "Municipal Court"]
+    records_custodian: "Clerk of District Court"
+    statewide_portal: null
+    judiciary_url: "https://courts.mt.gov/"
+    dui_note: "Misdemeanor DUI is usually Justice or City Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  NE:
+    name: Nebraska
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "County Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of the District Court / Clerk Magistrate"
+    statewide_portal: "https://www.nebraska.gov/apps-courts-epad/"
+    judiciary_url: "https://supremecourt.nebraska.gov/"
+    dui_note: "DUI is typically County Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  NV:
+    name: Nevada
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "Justice Court or Municipal Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Justice Court", "Municipal Court"]
+    records_custodian: "Clerk of the Court"
+    statewide_portal: null
+    judiciary_url: "https://nvcourts.gov/"
+    dui_note: "Misdemeanor DUI is Justice or Municipal Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  NH:
+    name: New Hampshire
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "Circuit Court, District Division"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://www.courts.nh.gov/our-courts/electronic-services"
+    judiciary_url: "https://www.courts.nh.gov/"
+    dui_note: "DWI is typically the Circuit Court District Division."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  NJ:
+    name: New Jersey
+    trial_court_felony: "Superior Court, Law Division – Criminal Part"
+    trial_court_misdemeanor: "Municipal Court"
+    organized_by: county
+    unit_label: County (vicinage)
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Criminal Division Manager (Superior) / Municipal Court Administrator"
+    statewide_portal: "https://portal.njcourts.gov/"
+    judiciary_url: "https://www.njcourts.gov/"
+    dui_note: "IMPORTANT — DWI in New Jersey is a MOTOR VEHICLE offense heard in MUNICIPAL COURT, not a criminal case and not in Superior Court. People routinely look in the wrong place. Ask for the municipality, not the county."
+    notes: "Superior Court is organized by vicinage. Indictable offenses go there; disorderly persons offenses and DWI stay in the town's Municipal Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  NM:
+    name: New Mexico
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "Magistrate Court or Metropolitan Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Magistrate Court", "Metropolitan Court (Bernalillo)", "Municipal Court"]
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://caselookup.nmcourts.gov/"
+    judiciary_url: "https://www.nmcourts.gov/"
+    dui_note: "DWI is Magistrate Court, or Metropolitan Court in Bernalillo County (Albuquerque)."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  NY:
+    name: New York
+    trial_court_felony: "County Court (outside NYC) or Supreme Court (NYC)"
+    trial_court_misdemeanor: "City, Town, or Village Justice Court (outside NYC); Criminal Court (NYC)"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["City Court", "Town Court", "Village Justice Court"]
+    records_custodian: "County Clerk / Chief Clerk of the court"
+    statewide_portal: "https://iapps.courts.state.ny.us/webcivil/ecourtsMain"
+    judiciary_url: "https://www.nycourts.gov/"
+    dui_note: "DWI is usually the local Town, Village, or City Court where the arrest occurred — often a very small court."
+    notes: "The most complicated system in the country. Outside NYC, minor cases go to town and village justice courts that may sit part-time in a municipal building. Ask for the TOWN or VILLAGE, not the county."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  NC:
+    name: North Carolina
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of Superior Court"
+    statewide_portal: "https://portal-nc.tylertech.cloud/"
+    judiciary_url: "https://www.nccourts.gov/"
+    dui_note: "DWI starts in District Court; an appeal for trial de novo moves it to Superior Court."
+    notes: "The Clerk of Superior Court holds District Court records too."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  ND:
+    name: North Dakota
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Clerk of District Court"
+    statewide_portal: "https://publicsearch.ndcourts.gov/"
+    judiciary_url: "https://www.ndcourts.gov/"
+    dui_note: "DUI may be Municipal Court if charged by a city."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  OH:
+    name: Ohio
+    trial_court_felony: "Court of Common Pleas"
+    trial_court_misdemeanor: "Municipal Court or County Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court", "County Court", "Mayor's Court"]
+    records_custodian: "Clerk of Courts"
+    statewide_portal: null
+    judiciary_url: "https://www.supremecourt.ohio.gov/"
+    dui_note: "OVI is Municipal or County Court. Some villages run Mayor's Courts, which are not courts of record."
+    notes: "Municipal Court boundaries do not follow county lines — ask which city."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  OK:
+    name: Oklahoma
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Court Clerk"
+    statewide_portal: "https://www.oscn.net/dockets/search.aspx"
+    judiciary_url: "https://www.oscn.net/"
+    dui_note: "DUI may be Municipal Court in cities with a court of record."
+    notes: "OSCN covers most but not all counties; ODCR covers others."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  OR:
+    name: Oregon
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "Circuit Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court", "Justice Court"]
+    records_custodian: "Trial Court Administrator"
+    statewide_portal: "https://www.courts.oregon.gov/services/online/Pages/ojcin.aspx"
+    judiciary_url: "https://www.courts.oregon.gov/"
+    dui_note: "DUII is usually Circuit Court, but can be Municipal Court if cited by a city."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  PA:
+    name: Pennsylvania
+    trial_court_felony: "Court of Common Pleas"
+    trial_court_misdemeanor: "Court of Common Pleas"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Magisterial District Court", "Philadelphia Municipal Court"]
+    records_custodian: "Clerk of Courts (criminal)"
+    statewide_portal: "https://ujsportal.pacourts.us/"
+    judiciary_url: "https://www.pacourts.us/"
+    dui_note: "DUI begins with a preliminary hearing at a Magisterial District Court, then moves to the Court of Common Pleas — so there may be TWO docket numbers for one arrest."
+    notes: "CRITICAL TITLE DISTINCTION: criminal records are with the Clerk of Courts; the Prothonotary holds CIVIL records. Asking the Prothonotary for a criminal disposition gets you sent away."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  RI:
+    name: Rhode Island
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://publicportal.courts.ri.gov/"
+    judiciary_url: "https://www.courts.ri.gov/"
+    dui_note: "DUI is typically District Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  SC:
+    name: South Carolina
+    trial_court_felony: "Circuit Court (Court of General Sessions)"
+    trial_court_misdemeanor: "Magistrate Court or Municipal Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Magistrate Court", "Municipal Court"]
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://publicindex.sccourts.org/"
+    judiciary_url: "https://www.sccourts.org/"
+    dui_note: "First-offense DUI is usually Magistrate or Municipal Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  SD:
+    name: South Dakota
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "Circuit Court (Magistrate)"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of Courts"
+    statewide_portal: "https://ujs.sd.gov/Public/"
+    judiciary_url: "https://ujs.sd.gov/"
+    dui_note: "DUI is Circuit Court, often before a magistrate judge."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  TN:
+    name: Tennessee
+    trial_court_felony: "Criminal Court or Circuit Court"
+    trial_court_misdemeanor: "General Sessions Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["General Sessions Court", "Municipal Court"]
+    records_custodian: "Circuit Court Clerk / Criminal Court Clerk"
+    statewide_portal: null
+    judiciary_url: "https://www.tncourts.gov/"
+    dui_note: "DUI usually starts in General Sessions Court and may move up on appeal or indictment."
+    notes: "Larger counties have a separate Criminal Court; smaller ones use Circuit Court for criminal matters."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  TX:
+    name: Texas
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "County Court at Law or Constitutional County Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Justice of the Peace Court", "Municipal Court"]
+    records_custodian: "District Clerk (felony) / County Clerk (misdemeanor)"
+    statewide_portal: null
+    judiciary_url: "https://www.txcourts.gov/"
+    dui_note: "First and second DWI are misdemeanors heard in a County Court at Law. Felony DWI goes to District Court."
+    notes: "TWO different clerks depending on offense level — District Clerk for felonies, County Clerk for misdemeanors. Getting this wrong is the most common Texas mistake. Justice and Municipal Courts handle fine-only offenses."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  UT:
+    name: Utah
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "Justice Court or District Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Justice Court"]
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://www.utcourts.gov/en/about/courts/xchange.html"
+    judiciary_url: "https://www.utcourts.gov/"
+    dui_note: "Misdemeanor DUI is frequently a city or county JUSTICE COURT, not the District Court — people commonly look in the wrong one."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  VT:
+    name: Vermont
+    trial_court_felony: "Superior Court, Criminal Division"
+    trial_court_misdemeanor: "Superior Court, Criminal Division"
+    organized_by: county
+    unit_label: County
+    lower_courts: []
+    records_custodian: "Clerk of Court"
+    statewide_portal: "https://www.vermontjudiciary.org/court-records-online"
+    judiciary_url: "https://www.vermontjudiciary.org/"
+    dui_note: "DUI is the Criminal Division of Superior Court for the county."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  VA:
+    name: Virginia
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "General District Court"
+    organized_by: county_or_independent_city
+    unit_label: County or Independent City
+    lower_courts: []
+    records_custodian: "Clerk of the Circuit Court"
+    statewide_portal: "https://eapps.courts.state.va.us/ocis/"
+    judiciary_url: "https://www.vacourts.gov/"
+    dui_note: "DUI is General District Court; an appeal for trial de novo moves it to Circuit Court, producing two records."
+    notes: "Virginia has INDEPENDENT CITIES that are not part of any county and have their own courts. Ask whether the arrest was in a city or a county — the answer changes which courthouse."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  WA:
+    name: Washington
+    trial_court_felony: "Superior Court"
+    trial_court_misdemeanor: "District Court or Municipal Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["District Court", "Municipal Court"]
+    records_custodian: "County Clerk (Superior) / Court Clerk (District)"
+    statewide_portal: "https://odysseyportal.courts.wa.gov/"
+    judiciary_url: "https://www.courts.wa.gov/"
+    dui_note: "DUI is District or Municipal Court depending on whether the city or county filed it."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  WV:
+    name: West Virginia
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "Magistrate Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Magistrate Court", "Municipal Court"]
+    records_custodian: "Circuit Clerk"
+    statewide_portal: null
+    judiciary_url: "https://www.courtswv.gov/"
+    dui_note: "DUI is typically Magistrate Court."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  WI:
+    name: Wisconsin
+    trial_court_felony: "Circuit Court"
+    trial_court_misdemeanor: "Circuit Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Clerk of Circuit Court"
+    statewide_portal: "https://wcca.wicourts.gov/"
+    judiciary_url: "https://www.wicourts.gov/"
+    dui_note: "A FIRST-OFFENSE OWI in Wisconsin is a civil forfeiture, not a crime, and is often heard in MUNICIPAL COURT — it may not appear in the circuit court record search at all. Second and later offenses are criminal and go to Circuit Court."
+    notes: "That first-offense distinction catches people out constantly, both when finding the record and when answering form questions about criminal history."
+    verified: false
+    source_url: null
+    verified_date: null
+
+  WY:
+    name: Wyoming
+    trial_court_felony: "District Court"
+    trial_court_misdemeanor: "Circuit Court"
+    organized_by: county
+    unit_label: County
+    lower_courts: ["Municipal Court"]
+    records_custodian: "Clerk of District Court"
+    statewide_portal: null
+    judiciary_url: "https://www.courts.state.wy.us/"
+    dui_note: "DWUI is typically Circuit Court, or Municipal Court if charged by a city."
+    notes: "Wyoming's Circuit Court is the LOWER court — the opposite of most states, where 'circuit' means the higher trial court."
+    verified: false
+    source_url: null
+    verified_date: null

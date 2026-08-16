@@ -1,0 +1,30 @@
+# ISL 2021-02 — adverse information items (Table 1), industry.
+# Drafted from DCSA ISL 2021-02 (v2, May 2024). Unciteable until
+# maintainer_verified: true after line-by-line check against the PDF.
+source: "DCSA ISL 2021-02 (SEAD 3), v2, May 2024"
+source_url: "https://www.dcsa.mil/Portals/128/Documents/CTP/tools/ISL2021-02_SEAD-3_052024_v2.pdf"
+maintainer_verified: false
+applies_to: all_covered_individuals
+entries:
+  - id: adv.psych.legal-events
+    event: "Court declaration of incompetency; court/administrative order to consult a mental health professional; mental-health-related hospitalization"
+    reportable: "yes"
+    channel_ref: diss-incident
+    sensitivity: high
+    notes: "SEAD 4 states that seeking mental health care is not, by itself, disqualifying — surface this to the user."
+  - id: adv.psych.diagnoses
+    event: "Diagnosis of psychotic disorder, schizophrenia, schizoaffective disorder, delusional disorder, bipolar disorder, borderline personality disorder, or antisocial personality disorder (per the ISL's enumerated list)"
+    reportable: "yes"
+    channel_ref: diss-incident
+    sensitivity: high
+    required_data_elements: [diagnosis, treatment_status]
+  - id: adv.psych.treatment-deviation
+    event: "Failure to consult the treating professional before altering or discontinuing prescribed treatment"
+    reportable: "yes"
+    channel_ref: diss-incident
+    sensitivity: high
+  - id: adv.crypto.foreign
+    event: "Ownership of foreign state-backed, hosted, or managed cryptocurrency; ownership of cryptocurrency wallets hosted by foreign exchanges"
+    reportable: "yes"
+    channel_ref: diss-incident
+    required_data_elements: [cryptocurrency_name, exchange_host_country, dollar_value]

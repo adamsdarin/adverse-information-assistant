@@ -1,0 +1,12 @@
+# Checklist template — copy per guideline. See guideline-G.yaml for a worked example.
+guideline: X
+sources: []          # corpus files this checklist derives from — REQUIRED
+elements:
+  - id: kebab-case-id
+    ask: "Plain-language question."
+    maps_to: {sf86: "", pvq: "", incident_report: ""}   # optional
+    mitigation_ref: ""    # SEAD 4 mitigating-condition anchor, optional
+    document: ""          # supporting document this element implies, optional
+    sensitivity: normal   # normal | high
+    optional: false
+    escalation_if: ""     # value that triggers orchestrator escalation, optional

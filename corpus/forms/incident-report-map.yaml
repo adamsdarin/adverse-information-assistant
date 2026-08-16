@@ -1,0 +1,15 @@
+# Guideline ↔ initial-report field map (SEAD 3 / industry incident reporting).
+# Fields an FSO needs to open a DISS incident report. Maintainer: verify
+# against current DISS behavior; DISS field labels are not public documentation.
+maintainer_verified: false
+fields:
+  event_date: "Date of the event (not the date of reporting)"
+  event_type: "Category of reportable event (see corpus/reporting/tables/)"
+  description: "Concise factual account, first person"
+  disposition_status: "Legal/administrative outcome, or 'pending' with expected dates"
+  supporting_documents: "What exists and what will follow"
+guideline_defaults:
+  G: [event_date, event_type, description, disposition_status]
+  J: [event_date, event_type, description, disposition_status]
+  F: [event_date, event_type, description]
+  H: [event_date, event_type, description, disposition_status]

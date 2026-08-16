@@ -1,0 +1,41 @@
+# Guideline F — Financial Considerations. REVIEW DRAFT.
+guideline: F
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-F-financial.md, corpus/reporting/tables/all-covered-individuals.yaml, corpus/reporting/tables/top-secret-q.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: medium
+elements:
+  - id: debt-inventory
+    ask: "What accounts are delinquent or in collection? For each: creditor, approximate balance, and how far behind."
+    format: [creditor, balance, days_delinquent, account_status]
+    maps_to: {sf86: "Section 26", incident_report: "financial_detail"}
+  - id: event-type
+    ask: "Is this a bankruptcy, garnishment, tax issue, judgment, or delinquency? Which chapter or type, if applicable."
+  - id: dates
+    ask: "When did the trouble begin, and when was any filing or judgment entered?"
+  - id: cause
+    ask: "What caused it — job loss, medical, divorce, business failure, overspending, identity theft, something else?"
+    mitigation_ref: "F — conditions largely beyond the person's control"
+    sensitivity: high
+  - id: current-status
+    ask: "Where does each account stand today — paid, on a plan, in dispute, still delinquent?"
+    mitigation_ref: "F — good-faith effort to repay or resolve"
+  - id: resolution-efforts
+    ask: "What have you done about it? Payment arrangements, consolidation, disputes, settlements — with dates."
+    mitigation_ref: "F"
+    document: "payment plan agreements, settlement letters, payoff statements"
+  - id: financial-counseling
+    ask: "Have you received financial counseling, and is the situation under control now?"
+    mitigation_ref: "F — received counseling and there are clear indications the problem is resolving"
+    document: "counseling completion documentation"
+  - id: income-stability
+    ask: "Is your current income sufficient to meet your obligations going forward?"
+  - id: unexplained-affluence
+    ask: "Have you received any unusual infusion of assets — inheritance, winnings, gift, or similar — of roughly $10,000 or more?"
+    note: "Separately reportable for Top Secret/Q holders — re-run requirements advisor."
+    format: [amount, source, date]
+  - id: tax-filing
+    ask: "Are all federal and state tax returns filed and current?"

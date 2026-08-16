@@ -1,0 +1,63 @@
+# ISL 2021-02 — reporting requirements for ALL covered individuals (industry).
+# Drafted from DCSA ISL 2021-02 (v2, May 2024) Tables 2 and 4.
+# maintainer_verified MUST be flipped to true only after line-by-line check
+# against the ISL PDF. Until then validate_corpus.py treats this file as
+# unciteable and the requirements advisor returns consult_fso.
+source: "DCSA ISL 2021-02 (SEAD 3), v2, May 2024"
+source_url: "https://www.dcsa.mil/Portals/128/Documents/CTP/tools/ISL2021-02_SEAD-3_052024_v2.pdf"
+maintainer_verified: false
+applies_to: all_covered_individuals
+entries:
+  - id: aci.foreign-contact.official
+    event: "Official foreign contacts"
+    reportable: "no"
+    basis: "Not reportable unless deemed a security concern (ISL Table 2)"
+  - id: aci.foreign-contact.fie
+    event: "Contact with a known or suspected foreign intelligence entity"
+    reportable: "yes"
+    channel_ref: cisa-direct
+    required_data_elements: [contact_description, dates, circumstances]
+  - id: aci.foreign-contact.continuing
+    event: "Continuing association with a foreign national involving bonds of affection or personal obligation; qualifying exchanges of personal information; updates to previously reported associations"
+    reportable: "yes"
+    channel_ref: diss-incident
+    required_data_elements: [national_identity_country, nature_of_association, dates]
+  - id: aci.behavior.elicitation
+    event: "Attempted elicitation, exploitation, blackmail, or coercion to obtain classified information"
+    reportable: "yes"
+    channel_ref: cisa-direct
+    required_data_elements: [description, dates, parties]
+  - id: aci.foreign-affiliation.citizenship
+    event: "Application for or receipt of foreign citizenship"
+    reportable: "yes"
+    channel_ref: diss-incident
+  - id: aci.foreign-affiliation.passport
+    event: "Application for, possession, or use of a foreign passport or identity card"
+    reportable: "yes"
+    channel_ref: diss-incident
+    required_data_elements: [issuing_country, document_type, dates]
+  - id: aci.media
+    event: "Media contact where classified information is sought (reportable where mishandling/unauthorized disclosure is indicated per the ISL)"
+    reportable: "consult_fso"
+    channel_ref: fso
+  - id: aci.criminal.arrest
+    event: "Arrest"
+    reportable: "yes"
+    channel_ref: diss-incident
+    required_data_elements: [event_date, description, charges, disposition_status]
+  - id: aci.treatment.alcohol-drug
+    event: "Alcohol- and drug-related treatment"
+    reportable: "yes"
+    channel_ref: diss-incident
+    required_data_elements: [treatment_type, dates, status]
+  - id: aci.finance.bankruptcy-delinquency
+    event: "Bankruptcy, or over 120 days delinquent on any debt"
+    reportable: "yes"
+    channel_ref: diss-incident
+    required_data_elements: [event_type, amounts, dates, current_status]
+  - id: aci.travel.unofficial
+    event: "Unofficial foreign travel (all travel other than official; includes personal travel before/during/after official travel)"
+    reportable: "yes"
+    channel_ref: diss-foreign-travel
+    notes: "Requires pre-approval; itinerary deviations reported within five business days of return; unplanned day trips to Canada/Mexico reported within five business days (ISL Table 4)."
+    required_data_elements: [countries, dates, modes_carriers, passport_details]

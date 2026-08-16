@@ -1,0 +1,29 @@
+# NEVER commit user-generated content. Drafts and session artifacts contain
+# sensitive personal information by the nature of this tool.
+output/
+sessions/
+*.draft.md
+*.session.json
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Claude Code personal overrides (project settings.json IS committed)
+.claude/settings.local.json
+
+# Locations recorded at runtime (point outside the repo)
+.corpus-location.json
+.library-location.json

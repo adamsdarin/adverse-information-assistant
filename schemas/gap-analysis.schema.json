@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GapAnalysis",
+  "type": "object",
+  "required": ["satisfied", "missing", "checklist_feedback"],
+  "additionalProperties": false,
+  "properties": {
+    "satisfied": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["element", "evidence"],
+        "additionalProperties": false,
+        "properties": {"element": {"type": "string"}, "evidence": {"type": "string"}}
+      }
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["element", "why_it_matters", "source_ref"],
+        "additionalProperties": false,
+        "properties": {
+          "element": {"type": "string"},
+          "why_it_matters": {"type": "string"},
+          "source_ref": {"type": "string"}
+        }
+      }
+    },
+    "checklist_feedback": {"type": "array", "items": {"type": "string"}}
+  }
+}

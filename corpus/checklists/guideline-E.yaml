@@ -1,0 +1,36 @@
+# Guideline E — Personal Conduct. REVIEW DRAFT.
+# NOTE: E is auto-attached by the classifier whenever a narrative reveals a
+# prior non-disclosure, omission, or falsification — even if the user did not
+# raise it. See agents/classifier.md.
+guideline: E
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-E-personal-conduct.md]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: high
+elements:
+  - id: omission-what
+    ask: "What specifically was left out, understated, or answered incorrectly?"
+  - id: omission-where
+    ask: "Where did that happen — which form, interview, or process, and when?"
+    maps_to: {sf86: "form-wide", pvq: "form-wide"}
+  - id: omission-why
+    ask: "What accounts for it? Misunderstanding the question, not having the information, deciding not to include it, or something else? A straight answer serves you better than a flattering one."
+    sensitivity: high
+  - id: omission-deliberate
+    ask: "At the time, was the omission deliberate?"
+    answer_type: boolean_with_detail
+    sensitivity: high
+    note: "Do not coach toward a favorable answer. Record what the user says."
+  - id: correction-status
+    ask: "Has it been corrected since — and if so, when, how, and did you raise it or did someone else?"
+    mitigation_ref: "E — prompt, good-faith correction before being confronted"
+  - id: rule-violation-pattern
+    ask: "Are there other instances of rules, policies, or agreements not being followed — security, employment, or otherwise?"
+  - id: cooperation
+    ask: "Have you ever declined or failed to cooperate with a security or investigative process?"
+  - id: underlying-conduct-reported
+    ask: "Is the underlying matter itself now fully disclosed, or is there anything still not reported?"
+    note: "If anything remains undisclosed, say plainly that continuing non-disclosure is itself the Guideline E problem — then let the user decide."

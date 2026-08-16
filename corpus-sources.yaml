@@ -1,0 +1,114 @@
+# Where to get the corpus.
+#
+# The repository ships the AGENTS and the STRUCTURE. The corpus — SEAD 3 and
+# SEAD 4 text, DCSA guidance, and curated DOHA decisions — is distributed
+# separately and must be downloaded to the user's own machine.
+#
+# THIS FILE IS DATA, NOT CODE. It exists so the download location can change
+# without touching a single agent prompt. A fork can point at its own corpus;
+# an organization can point at an internal share; a future maintainer can
+# replace a dead link. Nothing about the tool's behavior depends on any
+# particular host.
+
+corpus_required: true
+default_local_path: "./corpus"
+remembered_path_file: ".corpus-location.json"   # gitignored; written after first successful locate
+
+# ---------------------------------------------------------------------------
+# HARD PROHIBITION — the tool NEVER builds the corpus itself.
+# ---------------------------------------------------------------------------
+never_auto_fetch: true
+never_auto_fetch_rule: |
+  No agent may download, scrape, crawl, or otherwise assemble corpus content
+  from the internet. Not from dni.gov, not from doha.ogc.osd.mil, not from
+  anywhere. If the corpus is missing, the tool ASKS THE USER to obtain it and
+  stops — it does not go get it.
+
+  Two reasons, either sufficient on its own:
+
+  1. It would break. Government sites change structure, rate-limit, and block
+     automated access. A tool whose core function depends on scraping is a
+     tool that works until it silently doesn't.
+
+  2. It would defeat the architecture. Everything in this design rests on a
+     human having verified each corpus file against its official source.
+     Auto-fetched content is unverified content wearing a verified file's
+     name — which is worse than an empty corpus, because an empty corpus
+     announces itself and a scraped one does not.
+
+  NOT covered by this rule: the entity-resolver's business-address lookup.
+  That is a single consent-gated query about an organization the user named,
+  it never touches corpus files, and its result is confirmed by the user
+  before use. Do not conflate the two.
+
+# ---------------------------------------------------------------------------
+# SOURCES, in the order the tool should suggest them.
+# ---------------------------------------------------------------------------
+sources:
+  - id: maintainer-drive
+    name: "Maintainer distribution (Darin Adams)"
+    type: google_drive
+    url: "TODO — paste the shareable Google Drive link here"
+    contact: "TODO — contact method for access requests"
+    notes: |
+      Primary distribution. Request access if the link is view-restricted.
+    status: pending_link
+
+  - id: official-sources
+    name: "Build it yourself from the official sources"
+    type: manual
+    url: null
+    instructions: corpus/BUILDING.md
+    notes: |
+      Everything in the corpus originates from public U.S. Government
+      material, so nobody has to depend on a redistribution that may or may
+      not outlive its maintainer:
+        - SEAD 3 and SEAD 4 ....... dni.gov
+        - ISL 2021-02 ............. dcsa.mil
+        - 32 CFR Part 117 ......... ecfr.gov
+        - DOHA ISCR decisions ..... doha.ogc.osd.mil
+      BY HAND. See corpus/BUILDING.md. The tool will not do this for you —
+      see never_auto_fetch above.
+    status: always_available
+
+# ---------------------------------------------------------------------------
+# WHAT A VALID CORPUS LOOKS LIKE — checked by scripts/check_corpus.py
+# ---------------------------------------------------------------------------
+expected_structure:
+  required_directories:
+    - sead4
+    - reporting
+    - reporting/tables
+    - forms
+    - checklists
+    - doha
+    - doha/cases
+  required_files:
+    - VERSION
+    - checklists/_UNIVERSAL.yaml
+    - forms/collection-policy.yaml
+    - reporting/authority-layers.yaml
+    - reporting/tables/channels.yaml
+  # Present but empty is a valid, expected state — the scaffold ships that way.
+  # Absent entirely means the user pointed at the wrong folder.
+
+# ---------------------------------------------------------------------------
+# BEHAVIOR WHEN THE CORPUS IS MISSING OR PARTIAL
+# ---------------------------------------------------------------------------
+on_missing: ask_user_then_offer_sources
+on_partial: proceed_with_disclosure
+on_wrong_folder: refuse_and_reprompt
+
+partial_corpus_rule: |
+  A partial corpus is workable and common. The tool proceeds, but it states
+  plainly at the start of the session what is missing and what that costs:
+  no citations from the absent material, and reportability degrading to
+  "check with your security office" where the tables can't answer.
+  Never let a user believe they got a fully-grounded session when they did
+  not.
+
+wrong_folder_rule: |
+  If the path exists but does not contain the expected structure, the user
+  pointed at the wrong place. Say so and ask again. Do NOT fall back to
+  running without a corpus silently — a tool that quietly works at reduced
+  capability is how people end up trusting output that was never grounded.

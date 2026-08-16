@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Session state file",
+  "description": "The single source of truth for a running session. Written incrementally by the conductor after every stage, validated by scripts/validate_session.py (the executable form of this schema — keep the two in agreement). The narrative is stamped with its SHA-256 immediately after capture by deterministic code, never by the model, and reporting.reportable deliberately has no 'no' value: this tool never determines that a matter is unreportable.",
+  "type": "object",
+  "required": ["privacy_tier"],
+  "properties": {
+    "privacy_tier": { "enum": ["high", "medium", "low"] },
+    "privacy_tier_chosen_by_user": { "type": "boolean" },
+    "mapping_notice_delivered": { "type": "boolean" },
+    "user_confirmations": {
+      "type": "object",
+      "description": "Verbatim user utterances backing consequential flags (e.g. mapping_notice). Weak evidence, honestly labeled: it makes silent flag-setting detectable, not lying impossible.",
+      "properties": {
+        "mapping_notice": { "type": "string" },
+        "tier_downgrade": { "type": "string" }
+      }
+    },
+    "population": { "enum": ["industry", "federal"] },
+    "role": { "enum": ["applicant", "holder"] },
+    "form": { "enum": ["sf86", "pvq", "incident_report"] },
+    "access_tier": { "enum": ["baseline", "ts_q", "not_applicable"] },
+    "position_type": { "enum": ["national_security", "public_trust", "low_risk"] },
+    "narrative": {
+      "type": "string",
+      "description": "The user's verbatim intake account. Never rewritten — it is the candor baseline."
+    },
+    "narrative_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Set only by 'validate_session.py --stamp-narrative'. Validation fails if it no longer matches 'narrative'."
+    },
+    "deployment_mode_disclosed": { "type": "boolean" },
+    "stage_log": {
+      "type": "array",
+      "description": "Append-only. Stages may repeat (threads re-enter the pipeline); entries are never removed or rewritten.",
+      "items": {
+        "type": "object",
+        "required": ["stage"],
+        "properties": {
+          "stage": {
+            "enum": ["corpus_located", "intake", "requirements", "classification",
+                     "question_sourcing", "gap_loop", "thread_detection",
+                     "consistency", "documents", "narrative", "candor",
+                     "triage_checkpoint", "assembly", "verification", "handoff"]
+          },
+          "matter": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "stage_log_length_at_last_validate": {
+      "type": "integer",
+      "description": "Maintained by validate_session.py to detect log shrinkage. Do not set by hand."
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "guidelines": { "type": "array", "items": { "enum": ["A","B","C","D","E","F","G","H","I","J","K","L","M"] } },
+          "narrative": { "type": "string" },
+          "reporting": {
+            "type": "object",
+            "properties": {
+              "reportable": { "enum": ["yes", "consult_fso"] },
+              "channel": { "type": "string" },
+              "timeline": { "type": "string" },
+              "basis": { "type": "array", "items": { "type": "string" } },
+              "layers_applied": { "type": "array", "items": { "type": "string" } },
+              "voluntary": { "type": "boolean" }
+            }
+          },
+          "crosswalk": { "type": "array", "items": { "type": "object" } },
+          "documents": { "type": "array", "items": { "type": "object" } },
+          "persons": {
+            "type": "array",
+            "items": { "type": "object", "required": ["label"], "properties": { "label": { "type": "string" }, "role": { "type": "string" } } }
+          },
+          "declined_elements": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "entities": { "type": "array", "items": { "type": "object" } },
+    "outstanding_required": {
+      "type": "array",
+      "items": { "type": "object", "required": ["element"], "properties": { "element": { "type": "string" }, "source_ref": { "type": "string" }, "how_to_get": { "type": "string" } } }
+    },
+    "data_you_must_supply": { "type": "array", "items": { "type": "object" } }
+  }
+}

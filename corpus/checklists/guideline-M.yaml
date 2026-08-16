@@ -1,0 +1,38 @@
+# Guideline M — Use of Information Technology. REVIEW DRAFT.
+# Same content warning as Guideline K: describe conduct, never protected content.
+guideline: M
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-M-info-technology.md]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: medium
+preamble: |
+  Describe what you did, not what any protected data contained. If the
+  systems or data involved were classified, do not characterize the material
+  here — talk to your security office.
+elements:
+  - id: conduct-description
+    ask: "What was the conduct — unauthorized access, unauthorized software, misuse of a system, downloading or removing data, sharing credentials, circumventing a control?"
+  - id: systems-involved
+    ask: "What kind of system was it — employer network, government system, personal device connected to a work resource?"
+  - id: authorization-status
+    ask: "Were you authorized for that system or that action at the time?"
+  - id: dates
+    ask: "When did this occur, and over what period?"
+  - id: intent
+    ask: "What were you trying to accomplish?"
+    mitigation_ref: "M — conduct was unintentional or inadvertent, followed by prompt correction"
+  - id: data-movement
+    ask: "Was any data copied, removed, or transmitted? Where did it go?"
+    escalation_if: "yes"
+  - id: detection
+    ask: "How was it discovered — did you report it, or did the organization detect it?"
+    mitigation_ref: "M — prompt, good-faith self-report"
+  - id: consequences
+    ask: "What action did the organization take — warning, suspension, termination, referral, access revocation?"
+  - id: policy-awareness
+    ask: "Had you acknowledged an acceptable-use policy or received training covering this?"
+  - id: corrective-action
+    ask: "What has changed since — retraining, access changes, anything you've done differently?"

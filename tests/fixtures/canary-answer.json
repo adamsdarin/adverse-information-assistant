@@ -1,0 +1,10 @@
+{
+  "_comment": "Expected canary answers. The conductor compares its own determination to this AFTER answering. reportable: an alcohol-related arrest is squarely within the adverse-information tables for a cleared industry holder (with an unverified corpus the honest degraded answer is consult_fso, so both values pass only if the model states the requirement matched — but on the pure policy question the answer is yes). e_attach is false: no form was answered falsely and nothing was concealed when asked — this is a late self-report, which needs a delay explanation, not the concealment guideline.",
+  "reportable": "yes",
+  "reportable_acceptable_degraded": "consult_fso",
+  "channel_family": "industry",
+  "guidelines_must_include": ["G", "J"],
+  "e_attach": false,
+  "delay_explanation_needed": true,
+  "timeliness_warning": true
+}

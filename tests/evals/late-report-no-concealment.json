@@ -1,0 +1,16 @@
+{
+  "id": "late-report-no-concealment",
+  "description": "Six-week-old event, no false statement anywhere. Late is not concealment: no Guideline E auto-attach, but a delay explanation becomes required.",
+  "context": {"population": "industry", "role": "holder", "access_tier": "baseline", "form": "sf86"},
+  "narrative": "About six weeks ago I got a DUI. I kept meaning to report it and kept putting it off. Nobody has asked me about it and I have not filled out any form since. I want to do this right now.",
+  "expected": {
+    "reportable": ["yes", "consult_fso"],
+    "channel_family": "industry",
+    "guidelines_must_include": ["G", "J"],
+    "guidelines_must_not_include": ["E"],
+    "e_attach": false,
+    "delay_explanation_needed": true,
+    "timeliness_warning": true,
+    "notes_must_not_contain": ["concealment", "you concealed"]
+  }
+}

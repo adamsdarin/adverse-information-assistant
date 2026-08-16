@@ -1,0 +1,34 @@
+# Guideline B — Foreign Influence. REVIEW DRAFT.
+guideline: B
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-B-foreign-influence.md, corpus/reporting/tables/all-covered-individuals.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: medium
+elements:
+  - id: contact-identity
+    ask: "Who is the foreign national or entity involved? Name and country of citizenship."
+    format: [name, country_of_citizenship, country_of_residence]
+  - id: relationship-nature
+    ask: "What is your relationship — family, friend, romantic partner, business associate, professional contact?"
+  - id: how-met
+    ask: "How and when did you first meet or come into contact?"
+  - id: contact-frequency
+    ask: "How often are you in contact, and by what means?"
+    mitigation_ref: "B — infrequent or casual contact"
+  - id: government-nexus
+    ask: "To your knowledge, is this person or entity connected to a foreign government, military, intelligence service, or state-owned enterprise?"
+    escalation_if: "yes"
+  - id: foreign-financial-interest
+    ask: "Do you have any financial interest, property, or business involvement in a foreign country? Approximate value if so."
+    maps_to: {incident_report: "foreign_financial_interest"}
+  - id: foreign-travel-nexus
+    ask: "Has this relationship involved foreign travel on your part, or theirs to the U.S.?"
+  - id: prior-reporting
+    ask: "Have you previously reported this contact to your security office?"
+  - id: obligation-assessment
+    ask: "Would you feel any obligation or conflict if you were ever asked to choose between this relationship and your obligations to the United States?"
+    mitigation_ref: "B — deep and longstanding relationships and loyalties to the U.S."
+    sensitivity: high

@@ -1,0 +1,159 @@
+# Privacy tiers — the user chooses how much they share with the AI tool.
+#
+# This replaces the earlier flat "never collect identifying information" rule.
+# Adults get to decide their own exposure; the tool's job is to make the
+# choice informed and then hold the line they picked.
+#
+# Two axes, kept separate on purpose:
+#   TIER          — what the USER types about NATURAL PERSONS.
+#   DEPLOYMENT    — where that text GOES (see DEPLOYMENT.md).
+# A tier choice made without knowing the deployment mode is not informed, so
+# Intake discloses the deployment mode BEFORE asking for a tier.
+
+default_tier: high
+rationale_for_default: |
+  If the default is too strict, the cost is inconvenience. If it is too
+  permissive, the cost is a clearance holder's undisclosed adverse
+  information sitting somewhere they did not intend. Default to the
+  recoverable error and let people opt down knowingly.
+
+# ---------------------------------------------------------------------------
+# FLOOR — never collected at ANY tier. Not a property of the lowest tier.
+# Encoded separately so no future tier edit can accidentally admit them.
+# ---------------------------------------------------------------------------
+never_collected:
+  - social_security_number
+  - date_of_birth
+  - classified_information
+never_collected_note: |
+  Not even at LOW. The form will ask for SSN and DOB; the user enters those
+  directly on the form, never here. If a user types one anyway, the tool tells
+  them, does not retain it in any saved session, and asks them to remove it.
+
+# ---------------------------------------------------------------------------
+# TIERS — apply to NATURAL PERSONS only. Entities are exempt (see below).
+# ---------------------------------------------------------------------------
+tiers:
+  low:
+    label: "Low protection — most convenient"
+    natural_persons_allowed: [name, phone, email, address, relationship]
+    natural_persons_forbidden: [ssn, date_of_birth]
+    placeholders_used: false
+    user_tracks_mapping: false
+    description: |
+      Names, phone numbers, email addresses, and mailing addresses may be
+      entered for other people. No Social Security numbers, no dates of birth.
+      The finished package can be handed over with the least additional work
+      from you.
+    tradeoff_disclosure: |
+      Everything you type — including other people's contact details — goes to
+      whichever AI provider you're running this on. Those people did not
+      choose that.
+
+  medium:
+    label: "Medium protection — names only"
+    natural_persons_allowed: [name, relationship]
+    natural_persons_forbidden: [phone, email, address, ssn, date_of_birth]
+    placeholders_used: false
+    user_tracks_mapping: false
+    description: |
+      You may name other people, but no phone numbers, email addresses, or
+      mailing addresses. Contact details go on a blank template you complete
+      by hand before you submit.
+
+  high:
+    label: "High protection — synthetic only"
+    natural_persons_allowed: [relationship]
+    natural_persons_forbidden: [name, phone, email, address, ssn, date_of_birth]
+    placeholders_used: true
+    placeholder_format: "Person {n}"
+    user_tracks_mapping: true
+    description: |
+      No real person is identified anywhere. Everyone is Person 1, Person 2,
+      and so on, described only by role — "my supervisor", "the arresting
+      agency". Nothing about them reaches the AI provider.
+    user_notice: |
+      Because nothing identifying is stored here, YOU are the only record of
+      who Person 1 and Person 2 actually are. Grab a pen and paper — or a note
+      somewhere you control — and keep the mapping as we go:
+
+          Person 1 = ______________________
+          Person 2 = ______________________
+
+      When the narrative is finished you'll paste your real names in. If you
+      lose the mapping, the report is unusable and we'd have to start over.
+    placeholder_naming_note: |
+      Numbers, not letters. "Person B" reads badly beside "Guideline B" in a
+      document that references both, and a reviewer skimming it will conflate
+      them.
+
+# ---------------------------------------------------------------------------
+# ENTITY EXEMPTION — organizations are not natural persons.
+# Naming the bar where something happened does not expose a private
+# individual, and the form requires these fields regardless of tier.
+# ---------------------------------------------------------------------------
+entities_exempt_from_tiers: true
+entity_types:
+  business_or_venue:
+    examples: ["bars", "restaurants", "stores", "hotels", "gas stations"]
+  court_or_law_enforcement:
+    examples: ["courts", "clerk of court", "police departments", "sheriff's offices", "state patrol"]
+    note: "Required by PVQ Section 11 on essentially every criminal matter."
+  employer_or_institution:
+    examples: ["companies", "schools", "universities", "government offices"]
+  treatment_facility_or_practice:
+    examples: ["clinics", "hospitals", "counseling practices", "treatment programs"]
+    caution: |
+      The FACILITY or PRACTICE name is an entity and is exempt. The individual
+      counselor's name, phone, and email — which PVQ Section 19 also requires —
+      is a NATURAL PERSON and follows the tier. A sole practitioner is both;
+      when the name of the practice is the person's name, treat it as a natural
+      person and say so to the user.
+
+entity_data_allowed: [name, address, phone, city, state, county]
+
+# ---------------------------------------------------------------------------
+# ENTITY LOOKUP — the tool may search for a business address, with consent.
+# ---------------------------------------------------------------------------
+entity_lookup:
+  enabled: true
+  consent: ask_every_time
+  consent_applies_at_all_tiers: true
+  consent_rationale: |
+    The lookup is itself a disclosure. Searching "Casey's Bar Waterloo Iowa"
+    tells a search provider the venue involved in the user's matter — which,
+    combined with the rest of the session, can be more identifying than the
+    address it returns. A user who chose HIGH protection would be badly served
+    by the tool quietly broadcasting it. So: ask, every time, at every tier.
+  consent_prompt: |
+    I can look that up to get the address, which saves you finding it. That
+    sends the business name and city to a search engine. Want me to?
+  confirm_before_use: true
+  confirmation_prompt: |
+    I found: {name}, {address}. Is that the right place?
+  rules:
+    - "Never insert an address the user has not confirmed."
+    - "If results are ambiguous or empty, say so and ask the user to supply it. Do not guess, and do not pick the most likely of several."
+    - "Never look up a natural person. Ever, at any tier, with or without consent."
+    - "Record confirmed entities in the session so the verifier can distinguish an allowed business address from a disallowed personal one."
+
+# ---------------------------------------------------------------------------
+# CHANGING TIER MID-SESSION
+# ---------------------------------------------------------------------------
+tier_changes:
+  upgrade:
+    allowed: true
+    friction: none
+    behavior: |
+      Tightening applies retroactively. Redact what has already been collected
+      down to the new tier, replace natural-person identifiers with
+      placeholders, and — if moving to HIGH — give the user the mapping notice
+      and time to write down what they'll need.
+  downgrade:
+    allowed: true
+    friction: confirm
+    behavior: |
+      Loosening means re-entering information the user deliberately withheld.
+      Confirm once, plainly: "That means typing in details you chose to keep
+      out. Still want to?" Never suggest a downgrade to make the interview go
+      faster — interview fatigue is not consent.

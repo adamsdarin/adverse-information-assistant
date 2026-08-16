@@ -1,0 +1,97 @@
+{
+ "form": "sf86",
+ "population": "industry",
+ "events": [
+  {
+   "title": "Alcohol-related arrest",
+   "guidelines": [
+    "G",
+    "J"
+   ],
+   "narrative": "I was arrested on 3 March 2026 for operating while intoxicated after leaving The Blue Heron Tavern, 123 Main Street, Testville, XX 00000. My blood alcohol level was 0.16. Person 1, my supervisor, was informed the following week. Person 2, my spouse, was aware the same night.",
+   "reporting": {
+    "reportable": "yes",
+    "channel": "FSO -> DISS incident report",
+    "timeline": "promptly",
+    "basis": [
+     "aci.criminal.arrest"
+    ]
+   },
+   "crosswalk": [
+    {
+     "form_section": "22",
+     "title": "Police Record"
+    }
+   ],
+   "documents": [
+    {
+     "name": "Certified court disposition",
+     "source": "Clerk of court",
+     "timing": "can_follow"
+    }
+   ],
+   "persons": [
+    {
+     "label": "Person 1",
+     "role": "my supervisor"
+    },
+    {
+     "label": "Person 2",
+     "role": "my spouse"
+    }
+   ],
+   "declined_elements": [
+    "current-relationship"
+   ]
+  }
+ ],
+ "data_you_must_supply": [
+  {
+   "form": "PVQ",
+   "section": "19",
+   "title": "Use of Alcohol and Rehabilitative Actions",
+   "needs": [
+    "Counselor or treatment provider: full name",
+    "Provider phone number",
+    "Provider email address",
+    "Provider mailing address",
+    "Whether the provider still practices"
+   ]
+  }
+ ],
+ "outstanding_required": [
+  {
+   "element": "court_name",
+   "source_ref": "PVQ Section 11 (Police Record)",
+   "how_to_get": "On your citation or summons; the clerk of court can confirm."
+  },
+  {
+   "element": "disposition",
+   "source_ref": "PVQ Section 11 (Police Record)",
+   "how_to_get": "Certified disposition from the clerk of court in the county where the case was heard."
+  }
+ ],
+ "privacy_tier": "high",
+ "mapping_notice_delivered": true,
+ "entities": [
+  {
+   "label": "Entity 1",
+   "type": "business_or_venue",
+   "name": "The Blue Heron Tavern",
+   "address": "123 Main Street, Testville, XX 00000",
+   "phone": null,
+   "source": "user_confirmed_lookup",
+   "confirmed_by_user": true,
+   "needs_user_supply": false
+  },
+  {
+   "label": "Entity 2",
+   "type": "court_or_law_enforcement",
+   "name": "Black Hawk County District Court",
+   "address": null,
+   "source": "lookup_declined",
+   "confirmed_by_user": false,
+   "needs_user_supply": true
+  }
+ ]
+}

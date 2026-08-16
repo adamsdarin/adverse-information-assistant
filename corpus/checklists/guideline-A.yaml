@@ -1,0 +1,27 @@
+# Guideline A — Allegiance to the United States. REVIEW DRAFT.
+guideline: A
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-A-allegiance.md]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: high
+elements:
+  - id: activity-description
+    ask: "What was the activity or association, described factually?"
+  - id: organization-identity
+    ask: "What organization or group was involved, if any, and what is its stated purpose?"
+  - id: your-role
+    ask: "What was your role — member, attendee, donor, organizer, something else?"
+  - id: dates-duration
+    ask: "When did this begin and, if it ended, when did it end?"
+  - id: knowledge-of-purpose
+    ask: "At the time, what did you understand the group's aims to be?"
+    mitigation_ref: "A — involvement without knowledge of unlawful aims"
+  - id: current-status
+    ask: "What is your involvement today, if any?"
+    mitigation_ref: "A — involvement is no longer current"
+  - id: severance
+    ask: "If you ended the association, what did that look like and when?"
+    mitigation_ref: "A"

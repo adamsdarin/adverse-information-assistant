@@ -1,0 +1,28 @@
+# Guideline C — Foreign Preference. REVIEW DRAFT.
+guideline: C
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-C-foreign-preference.md, corpus/reporting/tables/all-covered-individuals.yaml, corpus/reporting/tables/top-secret-q.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: medium
+elements:
+  - id: foreign-citizenship
+    ask: "Do you hold citizenship in another country? Which country, and how was it acquired — birth, descent, marriage, application?"
+  - id: foreign-passport
+    ask: "Do you possess, or have you applied for, a foreign passport or national identity card? Issuing country, document number if you have it, and expiration."
+    format: [issuing_country, document_type, number, issued, expires]
+    maps_to: {sf86: "Section 10", incident_report: "foreign_document"}
+  - id: passport-use
+    ask: "Have you used that document for travel? When, and to where?"
+  - id: exercise-of-rights
+    ask: "Have you exercised any other rights of that citizenship — voting, foreign military service, government employment, benefits, or property rights available only to citizens?"
+  - id: foreign-vote
+    ask: "Have you voted in a foreign election?"
+    note: "Separately reportable for Top Secret/Q holders — re-run requirements advisor."
+  - id: renunciation-status
+    ask: "Have you taken any steps to renounce the foreign citizenship or surrender the document?"
+    mitigation_ref: "C — expressed willingness to renounce or surrender"
+  - id: us-preference-evidence
+    ask: "Is there anything you'd point to showing your preference for the United States — military service, oath, long-term residence, family ties?"

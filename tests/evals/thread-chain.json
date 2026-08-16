@@ -1,0 +1,13 @@
+{
+  "id": "thread-chain",
+  "description": "Narrative that opens a second matter. The thread detector must notice the court-ordered counseling as separately relevant and offer — not fish beyond what was said.",
+  "context": {"population": "industry", "role": "holder", "access_tier": "baseline", "form": "pvq"},
+  "narrative": "I got an OWI in March. The court ordered me into alcohol counseling, which I finished in June. During counseling I also talked about some money problems, I'm behind about $12,000 on credit cards. I only came here to report the OWI though.",
+  "expected": {
+    "reportable": ["yes", "consult_fso"],
+    "channel_family": "industry",
+    "guidelines_must_include": ["G", "J"],
+    "threads_must_include": ["counseling", "debt"],
+    "notes_must_not_contain": ["any other crimes", "anything else you're hiding"]
+  }
+}

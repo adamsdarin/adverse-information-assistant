@@ -1,0 +1,150 @@
+# Guideline ↔ SF-86 (eApp) FIELD-LEVEL map.
+#
+# This file is not a labeling aid — it is an active completeness check. The
+# gap analyst walks every field listed for every implicated section and
+# confirms the user's narrative supplies it. A section the user already
+# answered on their SF-86 must still be cross-checked here, because the
+# self-report narrative has to be consistent with what the form says.
+#
+# MAINTAINER: field lists below are a starting skeleton derived from the
+# public structure of the SF-86. Verify against the current form and eApp
+# before flipping the flag. Wrong field lists produce confidently incomplete
+# reports, which is the exact failure this tool exists to prevent.
+maintainer_verified: false
+source: "SF-86, Questionnaire for National Security Positions (via eApp)"
+cross_check_rule: |
+  For each implicated guideline, load every section below and treat each
+  field as a required narrative element unless the user states it is not
+  applicable. Report unmatched fields as gaps, not as assumptions.
+
+sections:
+  "22":
+    title: "Police Record"
+    guidelines: [G, H, J]
+    fields:
+      - offense_date
+      - offense_description
+      - charge_felony_or_misdemeanor
+      - charge_domestic_violence_flag
+      - charge_firearms_explosives_flag
+      - charge_alcohol_or_drug_related_flag
+      - court_name
+      - court_address
+      - disposition
+      - disposition_date
+      - sentence_terms
+      - sentence_confinement_dates
+      - probation_parole_dates
+      - awaiting_trial_flag
+  "23":
+    title: "Illegal Use of Drugs or Drug Activity"
+    guidelines: [H]
+    fields:
+      - substance
+      - first_use_date
+      - most_recent_use_date
+      - nature_frequency_of_use
+      - use_while_possessing_clearance_flag
+      - prescription_misuse_detail
+      - involvement_in_manufacture_or_distribution
+      - treatment_received_flag
+      - treatment_provider_name
+      - treatment_provider_address
+      - treatment_dates
+      - treatment_successfully_completed_flag
+      - intent_to_use_in_future
+  "24":
+    title: "Use of Alcohol"
+    guidelines: [G]
+    fields:
+      - negative_impact_on_work_or_life_flag
+      - incident_dates
+      - incident_description
+      - voluntary_or_ordered_counseling_flag
+      - counseling_provider_name
+      - counseling_provider_address
+      - counseling_dates
+      - treatment_completed_flag
+      - current_use_description
+  "26":
+    title: "Financial Record"
+    guidelines: [F]
+    fields:
+      - event_type
+      - bankruptcy_chapter
+      - bankruptcy_filing_date
+      - court_docket_number
+      - creditor_name
+      - creditor_address
+      - amount
+      - date_incurred
+      - reason_for_delinquency
+      - current_status
+      - resolution_actions_taken
+      - tax_filing_delinquency_detail
+      - gambling_related_flag
+  "19":
+    title: "Foreign Contacts"
+    guidelines: [B]
+    fields:
+      - contact_name
+      - contact_date_first
+      - contact_date_last
+      - contact_methods
+      - contact_frequency
+      - relationship_nature
+      - country_of_citizenship
+      - country_of_residence
+      - foreign_government_affiliation
+  "10":
+    title: "Dual/Multiple Citizenship & Foreign Passport"
+    guidelines: [C]
+    fields:
+      - foreign_country
+      - how_citizenship_acquired
+      - citizenship_dates
+      - renunciation_action_taken
+      - passport_issuing_country
+      - passport_number
+      - passport_issue_date
+      - passport_expiration_date
+      - passport_used_for_travel_flag
+      - travel_countries_and_dates
+  "21":
+    title: "Psychological and Emotional Health"
+    guidelines: [I]
+    fields:
+      - court_ordered_incompetency_flag
+      - court_ordered_consultation_flag
+      - hospitalization_flag
+      - hospitalization_dates_and_facility
+      - diagnosis
+      - provider_name
+      - provider_address
+      - treatment_dates
+      - currently_in_treatment_flag
+      - condition_affects_judgment_flag
+  "25":
+    title: "Investigations and Clearance Record"
+    guidelines: [E, K]
+    fields:
+      - prior_investigation_detail
+      - clearance_denied_suspended_revoked_flag
+      - denial_date_and_agency
+      - security_violation_flag
+      - violation_date_and_description
+  "27":
+    title: "Use of Information Technology Systems"
+    guidelines: [M]
+    fields:
+      - unauthorized_access_flag
+      - unauthorized_modification_flag
+      - unauthorized_removal_of_data_flag
+      - incident_date
+      - incident_description
+      - system_or_entity_involved
+      - action_taken_by_organization
+
+# Guidelines with no dedicated SF-86 section are narrative-driven, but the
+# gap analyst still runs the guideline checklist and _UNIVERSAL.yaml.
+narrative_only_guidelines: [A, D, L]

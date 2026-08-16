@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Classification",
+  "type": "object",
+  "required": ["guidelines", "rationale", "confidence", "escalation"],
+  "additionalProperties": false,
+  "properties": {
+    "guidelines": {
+      "type": "array",
+      "items": {"enum": ["A","B","C","D","E","F","G","H","I","J","K","L","M"]},
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "rationale": {"type": "object", "additionalProperties": {"type": "string"}},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "escalation": {"type": "boolean"},
+    "escalation_reason": {"type": ["string", "null"]}
+  }
+}

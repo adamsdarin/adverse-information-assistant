@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Verification",
+  "type": "object",
+  "required": ["pass", "violations"],
+  "additionalProperties": false,
+  "properties": {
+    "pass": {"type": "boolean"},
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check", "detail", "location"],
+        "additionalProperties": false,
+        "properties": {
+          "check": {"enum": ["citations", "pseudonym", "candor", "disclaimer", "two_stage", "completeness_honesty"]},
+          "detail": {"type": "string"},
+          "location": {"type": "string"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"pass": {"const": true}}},
+      "then": {"properties": {"violations": {"maxItems": 0}}}
+    }
+  ]
+}

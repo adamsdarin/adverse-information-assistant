@@ -1,0 +1,128 @@
+# Where to get the DCSA Library.
+#
+# The repository ships the AGENTS, the SCRIPTS, and the maintainer's authored
+# analysis (checklists, reporting tables, form maps). The DCSA Library — source
+# documents, DOHA decisions, and retrieval indexes — is distributed separately
+# and downloaded to the user's own machine.
+#
+# THIS FILE IS DATA, NOT CODE. The download location can change without
+# touching a single agent prompt.
+
+library_required: true
+library_required_rule: |
+  The tool RUNS without the library, but it cannot quote guideline text and
+  cannot cite any decision. Reportability degrades to "check with your security
+  office." A user without the library must be told this plainly at the start of
+  the session, not left to discover it.
+
+entry_point: "START_HERE_FOR_ROBOTS.json"
+remembered_path_file: ".library-location.json"
+
+# ---------------------------------------------------------------------------
+# HARD PROHIBITION — the tool NEVER downloads library content.
+# ---------------------------------------------------------------------------
+never_auto_fetch: true
+never_auto_fetch_rule: |
+  No agent may download, scrape, crawl, or otherwise assemble library content.
+  Not from this distribution link, not from dni.gov, not from
+  doha.ogc.osd.mil, not from anywhere.
+
+  When files are missing the tool NAMES them, says which bundle contains them,
+  and points here. That is the entire repair story: instructions, never a
+  network call.
+
+  Two reasons, either sufficient alone:
+
+  1. It would break. Government sites change structure, rate-limit, and block
+     automated access. A tool whose core function depends on fetching is a
+     tool that works until it silently doesn't.
+
+  2. It would defeat the architecture. Everything rests on a human having
+     verified this material against its official source. Auto-fetched content
+     is unverified content wearing a verified file's name — worse than an
+     absent library, because an absent library announces itself.
+
+# ---------------------------------------------------------------------------
+# BUNDLES — smallest first. Most users need only the first.
+# ---------------------------------------------------------------------------
+bundles:
+  - id: essentials
+    name: "Essentials"
+    approx_size: "~55 MB"
+    url: "TODO — paste the shareable Google Drive link for the Essentials zip"
+    contains:
+      - START_HERE_FOR_ROBOTS.json
+      - PORTABLE_LIBRARY_INDEX.json
+      - ROBOT_READABLE_DIRECTORY/
+      - LOCAL_INDEXES/DOHA_CURRENT_PATHS.sqlite
+      - LOCAL_INDEXES/DOHA_SEAD4_METADATA.sqlite
+    unlocks: |
+      The tool works. Guideline text and reporting authorities can be quoted;
+      all 10,658 decisions are known by number, era, outcome, and adjudicated
+      guideline, so citations are checkable and precedent questions work.
+    status: pending_link
+
+  - id: search
+    name: "Essentials + Search"
+    approx_size: "~460 MB"
+    url: "TODO — paste the shareable Google Drive link for the Search zip"
+    adds:
+      - LOCAL_INDEXES/DCSA_DOHA_DECISIONS_FTS.sqlite
+      - LOCAL_INDEXES/DCSA_GENERAL_FTS.sqlite
+      - LOCAL_INDEXES/voi_sead_fts.sqlite
+    unlocks: |
+      Full-text search across decision text, so precedent-derived questions can
+      be drawn from what judges actually wrote rather than case metadata alone.
+    status: pending_link
+
+  - id: complete
+    name: "Complete library"
+    approx_size: "~2.3 GB"
+    url: "TODO — paste the shareable Google Drive link for the full library"
+    adds:
+      - HUMAN_READABLE_DIRECTORY/
+    unlocks: |
+      The original PDFs, for a human who wants to read a source document
+      directly. The tool itself does not need these.
+    status: pending_link
+
+# ---------------------------------------------------------------------------
+# NOT DISTRIBUTED — maintainer material.
+# ---------------------------------------------------------------------------
+excluded_from_all_bundles:
+  - OPERATIONS      # build history, audit trails, migration journals, checkpoints
+  - ARCHIVE         # superseded material retained in the master copy only
+excluded_rule: |
+  These are how the library was built, not what it contains. They are useful to
+  the maintainer and noise (or worse) to a user. Exclude them from every zip.
+
+# ---------------------------------------------------------------------------
+# WHAT A VALID LIBRARY LOOKS LIKE — checked by scripts/check_library.py
+# ---------------------------------------------------------------------------
+root_rule: |
+  Any folder containing START_HERE_FOR_ROBOTS.json is a library root, and every
+  path inside that file is relative to it. The library is portable by design:
+  no drive letter, account name, or folder name is assumed. The user may put it
+  anywhere.
+
+on_missing: ask_user_then_offer_sources
+on_partial: proceed_with_disclosure
+on_wrong_folder: refuse_and_reprompt
+
+partial_library_rule: |
+  A partial library is workable and expected — the bundles above are partial by
+  design. The tool proceeds and states plainly which bundle it found and what
+  is unavailable as a result. A manifest entry pointing at a file the user's
+  bundle does not include is NORMAL, not corruption.
+
+known_upstream_issues: |
+  Fix these in the library itself; check_library.py reports them but works
+  around them:
+    - START_HERE_FOR_ROBOTS.json names CATALOG/COLLECTIONS.json,
+      CATALOG/ALIASES.json, and RETRIEVAL/RETRIEVAL_CONFIG.json in uppercase;
+      the files on disk are lowercase. Works on Windows, FAILS on macOS/Linux.
+    - START_HERE_FOR_HUMANS.md points at ROBOT_READABLE_DIRECTORY/START_HERE.json,
+      which does not exist; the robot entry point is at the library root.
+    - retrieval_config.json points at the same non-existent START_HERE.json.
+    - A .sqlite-journal file (~130 MB) sits beside the DOHA FTS index. It is a
+      rollback journal from an unclean close. Do not distribute it.

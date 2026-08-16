@@ -1,0 +1,72 @@
+# Two layers of reporting authority. Do not collapse them.
+#
+# An earlier version of this corpus treated SEAD 3 as though it were a DCSA
+# industry artifact and routed federal employees away from reporting analysis
+# entirely. That was wrong, and it was the kind of wrong that produces a
+# missed report: a federal employee IS a covered individual under SEAD 3.
+# They are simply not subject to DCSA's industry implementation of it.
+
+layers:
+  sead-3:
+    name: "SEAD 3 — Reporting Requirements for Personnel with Access to Classified Information or Who Hold a Sensitive Position"
+    issued_by: "Security Executive Agent (ODNI)"
+    applies_to: all_covered_individuals
+    populations: [industry, federal_civilian, military]
+    scope: |
+      Executive-branch-wide baseline. Every covered individual — contractor,
+      federal employee, or military member — is subject to SEAD 3 reporting
+      requirements. This layer is ALWAYS in scope.
+    source_file: sead-3.md
+
+  isl-2021-02:
+    name: "DCSA Industrial Security Letter 2021-02 (v2, May 2024)"
+    issued_by: "Defense Counterintelligence and Security Agency"
+    applies_to: cleared_industry_only
+    populations: [industry]
+    scope: |
+      DCSA's implementation of SEAD 3 for contractors under the NISP,
+      operating with 32 CFR § 117.8. Layered ON TOP of SEAD 3 — it does not
+      replace it, and it does not reach federal or military personnel.
+    source_file: isl-2021-02.md
+    companion_regulation: 32cfr117-8.md
+
+# ---------------------------------------------------------------------------
+# WHICH LAYERS APPLY
+# ---------------------------------------------------------------------------
+population_to_layers:
+  industry:         [sead-3, isl-2021-02]
+  federal_civilian: [sead-3]
+  military:         [sead-3]
+
+federal_and_military_note: |
+  SEAD 3 applies in full. What this corpus does NOT contain is the user's own
+  agency or service implementation of it, which may add requirements, specify
+  formats, or set internal timelines. So: apply SEAD 3, state the requirement,
+  and then say plainly that their agency's own implementing guidance may add
+  to it and their security office is the authority on that. Never treat the
+  absence of agency guidance in this corpus as an absence of obligation.
+
+# ---------------------------------------------------------------------------
+# ATTRIBUTION STATUS — read this before trusting the tables.
+# ---------------------------------------------------------------------------
+attribution_status: needs_maintainer_split
+attribution_note: |
+  The structured tables in ./tables/ were extracted from ISL 2021-02, which
+  both RESTATES SEAD 3 requirements and ADDS industry-specific ones. They are
+  not yet attributed entry by entry, so the tool cannot currently tell a
+  baseline SEAD 3 obligation from a DCSA industry addition.
+
+  Until a maintainer splits them:
+    - INDUSTRY users get the full tables (correct — both layers apply).
+    - FEDERAL and MILITARY users get `consult_fso` on every match, with the
+      requirement stated and the caveat that this corpus cannot confirm
+      whether that specific item is baseline SEAD 3 or an industry addition.
+      The tool says the matter is very likely reportable and that their
+      security office should confirm the channel — it never says "not
+      reportable."
+
+  TO RESOLVE: add `authority: sead-3 | isl-2021-02 | both` to every entry in
+  ./tables/, sourced from the SEAD 3 text itself rather than inferred from the
+  ISL. Then set attribution_status: complete.
+
+degraded_behavior_federal: consult_fso_with_requirement_stated

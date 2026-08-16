@@ -1,0 +1,40 @@
+# Guideline D — Sexual Behavior. REVIEW DRAFT.
+# Ask clinically and minimally. Collect only what the guideline actually
+# requires: criminality, compulsivity, coercion exposure, judgment. Do NOT
+# collect descriptive detail beyond that — it serves no adjudicative purpose.
+guideline: D
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-D-sexual-behavior.md]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: high
+all_elements_sensitivity: high
+elements:
+  - id: conduct-category
+    ask: "In general terms, what is the conduct you need to report? A category is enough — I don't need details beyond what a reviewer requires."
+  - id: criminality
+    ask: "Was the conduct criminal, or has it resulted in any charge or investigation?"
+    escalation_if: "yes"
+  - id: consent-and-parties
+    ask: "Did the conduct involve anyone unable to consent, or anyone under 18?"
+    escalation_if: "yes"
+    note: |
+      An affirmative answer here is a hard escalation: advise consulting an
+      attorney before submitting anything. Do not continue drafting a
+      narrative around this without saying so plainly.
+  - id: dates-frequency
+    ask: "When did this occur, and was it a single instance or a pattern?"
+    mitigation_ref: "D — behavior so long ago, so infrequent, or under such unusual circumstances"
+  - id: compulsivity
+    ask: "Do you consider the behavior compulsive, or something you've had difficulty controlling?"
+    mitigation_ref: "D — treatment and favorable prognosis"
+  - id: treatment
+    ask: "Have you sought any professional help related to this? Status if so."
+    mitigation_ref: "D"
+  - id: public-vs-private
+    ask: "Is the conduct known publicly, or is it something you've kept private?"
+    note: "Feeds the coercion-exposure analysis in _UNIVERSAL.yaml — conduct nobody knows about is the classic vulnerability."
+  - id: workplace-nexus
+    ask: "Did any of this occur at work, on work systems, or involve coworkers?"

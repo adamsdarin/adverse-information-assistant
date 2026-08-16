@@ -1,0 +1,62 @@
+# Collection standard vs. crosswalk target.
+#
+# These are two different things and conflating them loses information:
+#
+#   COLLECTION STANDARD — what the tool asks the user for. Fixed at the PVQ,
+#     because the Government is transitioning to it under Trusted Workforce
+#     2.0. A person who filed an SF-86 last year will be operating against
+#     PVQ expectations going forward, so the record they build now should
+#     meet that standard regardless of which form they originally completed.
+#
+#   CROSSWALK TARGET — which form's sections the package cites back to. This
+#     follows whatever the user actually filed, because that is the document
+#     their security officer and investigator will be holding.
+#
+# UNION RULE: collect the union of PVQ and SF-86 fields, not PVQ alone.
+# Where the SF-86 asks for something at finer granularity than the PVQ, that
+# detail is still needed for the SF-86 crosswalk and costs only an extra
+# question to gather. Dropping it to match PVQ granularity would be a silent
+# loss. Consistent with the gap analyst's standing rule: when in doubt,
+# collect it.
+
+collection_standard: pvq
+collection_mode: union          # union | pvq_only
+union_sources:
+  - pvq-map.yaml
+  - sf86-map.yaml
+
+crosswalk_target: follows_user_filed_form   # sf86 | pvq | incident_report
+
+# pvq-map.yaml is now POPULATED from the maintainer's PVQ source documents
+# (Final, September 2023). Section numbers, titles, and field questions are
+# extracted; the guideline mapping is maintainer inference pending review.
+#
+# Fallback remains defined in case a fork ships without it:
+#   - collect against sf86-map.yaml as the best available proxy
+#   - mark every collected element `pvq_standard_unverified: true`
+#   - the drafter labels PVQ crosswalk lines "verify with your FSO" rather
+#     than asserting a section number
+# Do NOT guess PVQ sections or fields. An invented section reference in a
+# document handed to a security officer is worse than an honest "verify."
+degraded_mode_when_pvq_unpopulated: use_sf86_as_proxy
+
+# Position type selects which PVQ Parts apply — a second axis alongside
+# clearance tier. See position_type_to_parts in pvq-map.yaml.
+#   national_security -> Parts A, B, C
+#   public_trust      -> Parts A, B, D
+#   low_risk          -> Part A
+position_type_required: true
+
+# The PVQ requires third-party identity in several sections (19 counselor,
+# 21 relatives, 23 trustee, 25 foreign contacts, 26 co-owners, 10 references).
+# This tool NEVER collects that. Those fields route to the package's
+# "Information You Will Need" list so the user gathers them independently.
+third_party_fields_policy: never_collect_always_notify
+
+# The user is told, plainly, once:
+user_notice: |
+  I'm going to ask you for everything the newer Personnel Vetting
+  Questionnaire expects, even if you originally filled out the SF-86. The
+  Government is moving to the PVQ, and building the fuller record now means
+  you won't be back here filling gaps later. Where it matters, I'll show you
+  which section of the form you actually filed this maps to.

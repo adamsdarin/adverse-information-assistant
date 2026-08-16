@@ -1,0 +1,12 @@
+{
+  "_comment": "Synthetic miniature of the DCSA Library for tests. Same shape, 8 fake decisions, no real content. Real case numbers are deliberately avoided.",
+  "schema_version": "2.0",
+  "root_resolution": "Treat this JSON file's parent folder as library root.",
+  "human_directory": "HUMAN_READABLE_DIRECTORY",
+  "robot_directory": "ROBOT_READABLE_DIRECTORY",
+  "documents": "ROBOT_READABLE_DIRECTORY/MANIFESTS/documents.jsonl",
+  "doha_current_paths": "ROBOT_READABLE_DIRECTORY/MANIFESTS/DOHA_CURRENT_PATHS.jsonl",
+  "doha_router": "ROBOT_READABLE_DIRECTORY/MANIFESTS/DOHA_SEAD4_SEARCH_ROUTER.json",
+  "catalog": "ROBOT_READABLE_DIRECTORY/CATALOG/COLLECTIONS.json",
+  "aliases": "ROBOT_READABLE_DIRECTORY/CATALOG/ALIASES.json"
+}

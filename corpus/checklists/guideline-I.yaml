@@ -1,0 +1,42 @@
+# Guideline I — Psychological Conditions. REVIEW DRAFT.
+# The interviewer MUST surface, before the first question here, that SEAD 4
+# states seeking mental health care is not by itself disqualifying.
+# Ask one question at a time. Every question is skippable.
+guideline: I
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-I-psychological.md, corpus/reporting/tables/adverse-information.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: medium
+all_elements_sensitivity: high
+preamble: |
+  Before anything else: SEAD 4 states that seeking mental health care is not,
+  by itself, a reason to question someone's judgment or reliability. Many
+  people hold clearances while in treatment. What follows is about specific
+  reportable circumstances, not about whether you've sought help.
+elements:
+  - id: reportable-trigger
+    ask: "Which of these applies — a court declaration of incompetency, an order to consult a mental health professional, a hospitalization, or a diagnosis on the reportable list?"
+    note: "Only the ISL's enumerated circumstances are reportable. Voluntary counseling outside those circumstances generally is not — if unsure, the answer is to ask the FSO."
+  - id: diagnosis
+    ask: "What is the diagnosis, if one was made, and when?"
+    maps_to: {sf86: "Section 21", incident_report: "psych_detail"}
+  - id: treatment-current
+    ask: "Are you currently in treatment? With what kind of provider, and since when?"
+    mitigation_ref: "I — ongoing treatment with a favorable prognosis"
+  - id: treatment-compliance
+    ask: "Are you following the treatment plan as prescribed?"
+    note: "Failing to consult the treating professional before altering or stopping prescribed treatment is separately reportable per the ISL."
+  - id: prognosis
+    ask: "Has a provider given an opinion on your prognosis or your ability to function reliably? A letter from them is the strongest form of this."
+    mitigation_ref: "I — opinion of a duly qualified mental health professional"
+    document: "provider statement or letter"
+  - id: functional-impact
+    ask: "Has the condition affected your judgment, reliability, or ability to protect classified information in any concrete way?"
+  - id: hospitalization-detail
+    ask: "If there was a hospitalization — when, how long, and was it voluntary?"
+  - id: court-involvement
+    ask: "Was there any court order or legal proceeding involved?"
+    escalation_if: "yes"

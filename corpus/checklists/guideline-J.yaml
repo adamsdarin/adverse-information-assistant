@@ -1,0 +1,44 @@
+# Guideline J — Criminal Conduct. REVIEW DRAFT.
+guideline: J
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-J-criminal-conduct.md, corpus/reporting/tables/all-covered-individuals.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: high
+elements:
+  - id: event-date
+    ask: "When did the incident occur? Month and year is enough to start."
+    maps_to: {sf86: "Section 22", incident_report: "event_date"}
+  - id: arresting-agency
+    ask: "What agency was involved, and in what city and state?"
+    format: [agency, city, state]
+  - id: charges-exact
+    ask: "What exactly were you charged with? The precise charge language matters more than the general category."
+    maps_to: {sf86: "Section 22"}
+  - id: incident-description
+    ask: "What happened, factually?"
+  - id: disposition
+    ask: "What was the outcome — plea, verdict, dismissal, diversion, deferred adjudication? Include dates."
+    maps_to: {sf86: "Section 22"}
+    document: "certified court disposition"
+    escalation_if: "pending"
+  - id: sentence
+    ask: "What was the sentence — fines, jail, probation, community service, classes? What's completed and what's outstanding?"
+    document: "proof of completion, probation discharge"
+  - id: probation-status
+    ask: "Are you currently on probation, parole, or under any court supervision? Until when?"
+    mitigation_ref: "J — successful completion of criminal probation"
+  - id: felony-misdemeanor
+    ask: "Was this charged as a felony or a misdemeanor?"
+  - id: firearms-nexus
+    ask: "Did the matter involve a firearm, or result in any firearms restriction?"
+  - id: domestic-nexus
+    ask: "Did the matter involve a family member or intimate partner, or result in a protective order?"
+    sensitivity: high
+  - id: victim-restitution
+    ask: "Was there a victim, and was restitution ordered? Status if so."
+  - id: rehabilitation
+    ask: "What would you point to showing this is behind you — completed programs, employment record, time elapsed, anything else?"
+    mitigation_ref: "J — evidence of successful rehabilitation"

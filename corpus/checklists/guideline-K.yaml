@@ -1,0 +1,43 @@
+# Guideline K — Handling Protected Information. REVIEW DRAFT.
+# CRITICAL: the interviewer must warn, before the first question, that the
+# user is NOT to describe the classified content itself. Collect the
+# circumstances of the mishandling only.
+guideline: K
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-K-protected-info.md, corpus/reporting/tables/all-covered-individuals.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: high
+preamble: |
+  Do not describe the classified or protected content itself — not the
+  subject, not the substance, nothing. This tool is not an authorized system
+  for that material. Describe only what happened procedurally. If you're
+  unsure whether something is safe to type here, stop and talk to your
+  security office instead.
+elements:
+  - id: incident-type
+    ask: "What kind of mishandling was it — improper storage, unauthorized removal, transmission over an unapproved channel, discussion in an uncleared setting, unattended material, or something else?"
+  - id: incident-date
+    ask: "When did it happen, and when was it discovered?"
+  - id: circumstances
+    ask: "What were the circumstances, described procedurally — no content."
+  - id: classification-level
+    ask: "What was the classification level involved? Level only — no subject matter."
+  - id: intentional-vs-inadvertent
+    ask: "Was it inadvertent, or a deliberate deviation from procedure?"
+    mitigation_ref: "K — inadvertent, followed by prompt, good-faith effort to correct"
+  - id: self-reported
+    ask: "Did you report it yourself, and to whom, or was it discovered by someone else?"
+    mitigation_ref: "K — prompt, good-faith self-report"
+  - id: security-response
+    ask: "Was a security violation or infraction issued? Was there an inquiry or investigation?"
+  - id: corrective-action
+    ask: "What corrective action followed — retraining, counseling, administrative action, access change?"
+    document: "training completion records"
+  - id: pattern
+    ask: "Have there been prior security violations or infractions, however minor?"
+  - id: training-adequacy
+    ask: "Had you received training covering the requirement involved?"
+    mitigation_ref: "K — the person responded favorably to counseling or remedial security training"

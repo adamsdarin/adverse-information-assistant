@@ -1,0 +1,13 @@
+{
+  "id": "applicant-with-reportable",
+  "description": "In-process applicant with a new arrest. An applicant is a covered individual — the reportability pass must run, not be skipped.",
+  "context": {"population": "industry", "role": "applicant", "access_tier": "not_applicable", "form": "pvq"},
+  "narrative": "I submitted my PVQ three months ago and I'm waiting on my clearance for a contractor job. Last week I was arrested for misdemeanor assault after a bar fight. Do I have to tell anyone or do I just wait for the investigation?",
+  "expected": {
+    "reportable": ["yes", "consult_fso"],
+    "channel_family": "industry",
+    "guidelines_must_include": ["J"],
+    "notes_must_contain": ["FSO"],
+    "notes_must_not_contain": ["not reportable", "no obligation", "just wait"]
+  }
+}

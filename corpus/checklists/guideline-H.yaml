@@ -1,0 +1,41 @@
+# Guideline H — Drug Involvement and Substance Misuse. REVIEW DRAFT.
+# Ask without moralizing. No language implying judgment about the user's use.
+guideline: H
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+sources: [corpus/sead4/guideline-H-drugs.md, corpus/reporting/tables/all-covered-individuals.yaml]
+# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
+# not from data. It controls interview depth on OPTIONAL material only and
+# can never downgrade a required form field. Review before relying on it.
+severity_default: high
+elements:
+  - id: substances
+    ask: "What substance or substances are involved?"
+  - id: use-period
+    ask: "Over what period did the use occur — first use and most recent use?"
+    mitigation_ref: "H — so long ago, so infrequent, or under such circumstances that recurrence is unlikely"
+  - id: frequency-amount
+    ask: "How often, and roughly how much?"
+    sensitivity: high
+  - id: while-cleared
+    ask: "Did any use occur while you held a clearance or were in a sensitive position?"
+    answer_type: boolean_with_detail
+    escalation_if: true
+    note: "Use while cleared is treated far more seriously than pre-clearance use. Do not soften this; do not editorialize either."
+  - id: prescription-misuse
+    ask: "Does this involve prescription medication — yours or someone else's — used other than as prescribed?"
+  - id: legality-context
+    ask: "Was the substance legal under state law where it occurred? Note that federal law governs for clearance purposes regardless."
+  - id: criminal-nexus
+    ask: "Any arrests, charges, or investigations connected to this?"
+    escalation_if: "pending"
+  - id: treatment
+    ask: "Any evaluation, counseling, treatment, or program — ordered or voluntary? Status and dates."
+    mitigation_ref: "H — completion of a treatment program with a favorable prognosis"
+    document: "completion certificate or provider letter"
+    sensitivity: high
+  - id: abstinence-intent
+    ask: "What's your intent going forward, and what have you changed to support that — associations, environment, anything else?"
+    mitigation_ref: "H — demonstrated intent not to misuse drugs in the future"
+  - id: workplace-nexus
+    ask: "Did any use occur at work, on work premises, or involving coworkers? Any failed workplace drug test?"

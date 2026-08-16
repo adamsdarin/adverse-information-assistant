@@ -1,0 +1,142 @@
+# UNIVERSAL elements — appended to EVERY guideline checklist.
+# The gap analyst always loads this file in addition to the guideline-specific
+# checklist(s). These elements are guideline-independent: adjudicators and
+# investigators need them regardless of what the underlying conduct was.
+#
+# maintainer_verified: false — review before relying on these.
+maintainer_verified: false
+sources:
+  - "SEAD 4 whole-person considerations"
+  - "SEAD 3 / ISL 2021-02 — coercion and elicitation reporting"
+  - "Maintainer (FSO) judgment"
+
+# CONDITION SYNTAX: ask_if / on_zero conditions are evaluated by the agent
+# reading them, not by a parser. Keep them as simple comparisons referencing
+# another element id in this file. Prose conditions are ambiguous and were
+# removed for that reason.
+elements:
+  # ---- Knowledgeable parties -------------------------------------------
+  # Two purposes: (1) investigators need corroborating sources; (2) conduct
+  # NOBODY knows about is the classic coercion exposure, which is itself a
+  # security concern independent of the conduct.
+  #
+  # DESIGN RULE: this tool NEVER collects a third party's identity or contact
+  # information. Those people did not consent to being entered into anything
+  # and are not in the room. The tool collects a count and assigns
+  # placeholders; the package ships a BLANK template the user completes by
+  # hand at submission time. Same pattern as "John Doe" for the user.
+  - id: others-aware-count
+    ask: "How many people are aware of this? A number is all I need — no names."
+    answer_type: integer
+    always_ask: true
+    on_zero: |
+      Note it plainly and without alarm: conduct no one else knows about is
+      the situation adjudicators associate with vulnerability to pressure,
+      which is why the next question matters. Do not editorialize further.
+
+  - id: others-aware-roles
+    ask: |
+      For each of them, just tell me how they know — their role, not their
+      name. For example: my supervisor, my spouse, the arresting agency, a
+      coworker who was present.
+
+      I'll refer to them as Person 1, Person 2, and so on for the rest of
+      this conversation, and the report will use those labels. You'll fill in
+      their actual names and contact information yourself, on a template I'll
+      include, right before you hand it in.
+    answer_type: role_list
+    ask_if: "others-aware-count > 0"
+    assigns_placeholders: true
+    placeholder_format: "Person {n}"
+    privacy_notice: |
+      I'm not going to ask for anyone's name, phone number, email, or
+      address, and you shouldn't type them here. Nothing about these people
+      is stored by this tool.
+    note: |
+      Roles are collected because the narrative is unusable without them
+      ("Person 1, my supervisor, was informed the following week"). A role is
+      not an identity. Do not press for detail beyond the role.
+
+  - id: coercion-exposure
+    ask: "Has anyone ever tried to use this to pressure, influence, blackmail, or get something from you?"
+    answer_type: boolean_with_detail
+    always_ask: true
+    escalation_if: true
+    note: |
+      An affirmative answer is very likely separately reportable as attempted
+      elicitation/exploitation and may route to the DCSA CI channel — the
+      requirements advisor re-runs when this is answered yes.
+
+  - id: employer-awareness
+    ask: "Does your employer, FSO, or security office already know about this — and if so, how did they learn of it and roughly when?"
+    answer_type: text
+    always_ask: true
+
+  # ---- Timeline and context --------------------------------------------
+  - id: age-at-conduct
+    ask: "Roughly how old were you when this happened? Approximate is fine."
+    mitigation_ref: "whole-person — age and maturity at the time of conduct"
+    optional: true
+    always_ask: true
+
+  - id: reporting-delay
+    ask: "Have you reported this before now? If time has passed since it happened, what accounts for the gap?"
+    answer_type: text
+    always_ask: true
+    note: |
+      Unexplained delay is its own candor issue. The narrative addresses the
+      delay directly rather than omitting it. Do not editorialize about
+      whether the user was wrong to wait — collect the explanation.
+
+  - id: pattern-check
+    ask: "Has anything similar happened before — including anything that was never charged, never reported, or that you don't think 'counts'?"
+    answer_type: text
+    always_ask: true
+
+  - id: changes-made
+    ask: "What, if anything, has changed since — circumstances, habits, support, treatment, or anything else you'd want a reviewer to know?"
+    mitigation_ref: "whole-person — rehabilitation and likelihood of recurrence"
+    always_ask: true
+
+  # ---- Recurrence: the three questions adjudicators are actually asking ----
+  # Every guideline's mitigating conditions circle the same question: is this
+  # going to happen again? These make it explicit instead of hoping the user
+  # volunteers it.
+  - id: prior-controls
+    ask: |
+      If something like this has happened before, what was in place at the
+      time that was supposed to prevent it — and why didn't it hold?
+    mitigation_ref: "whole-person — likelihood of recurrence"
+    ask_if: "pattern-check != none"
+    note: |
+      This is the question that separates "it won't happen again" from a
+      reason to believe it. A person who says "I'd told myself I'd stop after
+      two, and that rule didn't survive a bad week" is describing a real
+      failure mode. Do not lead them toward a flattering answer, and do not
+      treat a candid answer as damaging — candor about a failed control is
+      more credible than a promise with nothing behind it.
+
+  - id: current-controls
+    ask: |
+      What's in place now that wasn't before? Anything concrete — a rule you
+      keep, a person who knows, a program you're in, a change in circumstances.
+    mitigation_ref: "whole-person — rehabilitation"
+    always_ask: true
+
+  - id: future-intent
+    ask: "Going forward, what's your intent regarding this — in your own words?"
+    mitigation_ref: |
+      Explicit in several guidelines (e.g. Guideline H's demonstrated intent
+      not to misuse drugs in the future) and implicit in the whole-person
+      assessment of likelihood of recurrence.
+    always_ask: true
+    note: |
+      Record what they actually say. Never supply the answer, never coach
+      toward "I intend to abstain," and never soften a qualified answer into
+      an unqualified one. A hedged but honest statement of intent is worth
+      more than a confident one the user doesn't mean and can't sustain.
+
+  - id: supporting-documents
+    ask: "What documentation exists — court records, letters, statements, certificates? You don't need it in hand right now; I just need to know what exists."
+    answer_type: text
+    always_ask: true
