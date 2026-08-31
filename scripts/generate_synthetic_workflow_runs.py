@@ -8,8 +8,10 @@ question and answer, the gated session state, and the assembled report.
 from __future__ import annotations
 
 import argparse
+from difflib import SequenceMatcher
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -30,6 +32,9 @@ def event(title, guidelines, incident_types, narrative, basis, updates=(), docum
         profiles.append("financial-event")
     if "K" in guidelines or "M" in guidelines:
         profiles.append("information-or-technology")
+    facts = [s.strip() for s in re.split(r"(?<=[.!?])\s+", narrative) if s.strip()]
+    while len(facts) < 8:
+        facts.append(facts[-1])
     return {
         "title": title,
         "guidelines": guidelines,
@@ -39,14 +44,14 @@ def event(title, guidelines, incident_types, narrative, basis, updates=(), docum
             "profiles": profiles,
             "complete": True,
             "phases": {
-                "before": {"status": "answered", "evidence": "The transcript records the circumstances before the incident."},
-                "precipitating_circumstances": {"status": "answered", "evidence": "The transcript records what set the incident in motion."},
-                "decisions_and_actions": {"status": "answered", "evidence": "The transcript records the synthetic user's actions in sequence."},
-                "incident": {"status": "answered", "evidence": narrative},
-                "immediate_aftermath": {"status": "answered", "evidence": "The narrative records the immediate result or response."},
-                "later_consequences": {"status": "answered", "evidence": "The narrative and follow-up answers record later consequences."},
-                "current_status": {"status": "answered", "evidence": "The narrative states the current status as of the fictional report date."},
-                "future_developments": {"status": "answered", "evidence": "The tailored update topics identify known or conditional future developments."},
+                "before": {"status": "answered", "evidence": facts[0]},
+                "precipitating_circumstances": {"status": "answered", "evidence": facts[1]},
+                "decisions_and_actions": {"status": "answered", "evidence": facts[2]},
+                "incident": {"status": "answered", "evidence": facts[3]},
+                "immediate_aftermath": {"status": "answered", "evidence": facts[4]},
+                "later_consequences": {"status": "answered", "evidence": facts[5]},
+                "current_status": {"status": "answered", "evidence": facts[-2]},
+                "future_developments": {"status": "answered", "evidence": facts[-1]},
             },
         },
         "narrative": narrative,
@@ -423,6 +428,438 @@ CASES = [
 ]
 
 
+DEEP_QUESTIONS = [
+    "What was happening before the earliest event you described?",
+    "What specifically set the matter in motion?",
+    "What actions did you take, in order?",
+    "Who was directly involved or witnessed the material events?",
+    "Which organizations, agencies, courts, providers, or institutions are involved?",
+    "What happened immediately after the central event?",
+    "What identifying numbers, notices, orders, or records exist?",
+    "What later consequences occurred at home, work, financially, medically, or administratively?",
+    "Had anything materially similar happened before?",
+    "What changed or what controls were put in place afterward?",
+    "What remains unresolved as of this report?",
+    "What future event, decision, payment, review, counseling, treatment, or update is expected?",
+]
+
+# These answers deliberately add facts beyond the short opening account. The
+# generator refuses a case unless every question has a case-specific answer.
+DEEP_ANSWERS = {
+    "01-owi-arrest-holder": [
+        "I worked a normal shift, then attended a coworker's retirement dinner and remained at the restaurant afterward.",
+        "I continued drinking while talking with coworkers and left when the gathering ended.",
+        "I drank, decided I could drive, left alone, traveled toward home, and was stopped after crossing the center line.",
+        "Several coworkers saw me at dinner; Person 1 knew when I was released, and Person 2 learned the next workday.",
+        "The state patrol made the stop, the Cedar County jail handled booking, and the county district court has the pending case.",
+        "I completed roadside tests, provided a breath sample, was arrested, and spent the night in jail before release.",
+        "The citation, booking number, temporary-license notice, and pending court docket identify the matter; the final disposition does not exist yet.",
+        "My license is temporarily restricted, I paid towing and bond costs, and I told my supervisor; no collision or injury occurred.",
+        "I had no earlier arrest or alcohol-related driving incident and had not previously driven after that amount of alcohol.",
+        "I stopped drinking when driving is possible, use a designated driver or rideshare, and gave my spouse access to transportation plans.",
+        "The criminal charge, administrative license action, and any alcohol-evaluation requirement remain unresolved.",
+        "A court appearance, license review, possible evaluation, and final disposition are expected and will be provided to the security office.",
+    ],
+    "02-assault-arrest-holder": [
+        "I ate dinner and had two drinks inside the restaurant before patrons began leaving near closing time.",
+        "Another patron accused me of spilling a drink and followed me outside while continuing the argument.",
+        "I argued, stepped toward him, punched him once, stopped when others intervened, and waited for police.",
+        "The injured patron, Person 1, two restaurant employees, and several patrons were present.",
+        "City police arrested me, the municipal detention center booked me, and the county criminal court is handling the charge.",
+        "Staff separated us, treated the cut with first-aid supplies, and called police and emergency medical personnel.",
+        "An arrest report, booking record, complaint, release order, and temporary no-contact order exist; a final disposition does not.",
+        "I missed one work shift while detained and paid bond; the other person received treatment at the scene and made no known civil claim.",
+        "I have no prior assault arrest, workplace violence event, or similar physical altercation.",
+        "I avoid the restaurant and the other person, comply with the order, and leave confrontational situations rather than continuing them.",
+        "Arraignment, the charging decision, the duration of the no-contact order, and the case outcome remain pending.",
+        "The next court date, any counseling requirement, and the final disposition will be reported when issued.",
+    ],
+    "03-domestic-violence-alcohol-holder": [
+        "My spouse and I were at home after dinner, and I had been drinking beer for about four hours.",
+        "An argument about household expenses escalated after we both raised our voices.",
+        "I continued arguing, moved toward my spouse, shoved them once, stepped back, and did not make further physical contact.",
+        "My spouse was directly involved, and a neighbor heard the argument and called law enforcement.",
+        "City police responded, the county jail booked me, and the county district court issued the temporary no-contact order.",
+        "Police separated us, photographed the area, spoke to my spouse, arrested me, and held me overnight.",
+        "The incident report, booking record, criminal complaint, bond paperwork, no-contact order, and pending docket exist.",
+        "I cannot return to the shared residence while the order is active, missed work after release, and paid bond and temporary lodging costs.",
+        "There was no prior domestic-violence arrest, protective order, or alcohol-related assault.",
+        "I comply with the no-contact order, avoid alcohol, stay elsewhere, and communicate only through permitted court channels.",
+        "The injury allegation, criminal charge, residence arrangements, and preliminary-hearing outcome remain unresolved.",
+        "Court dates, any domestic-violence or alcohol evaluation, order changes, and the final disposition will require security-office updates.",
+    ],
+    "04-foreign-contact-holder": [
+        "I joined an international engineering association and participated in an online technical discussion group.",
+        "The contact sent me a private message after we discussed the same engineering conference presentation.",
+        "We exchanged professional messages, added personal topics, began video calls, and continued communicating about twice each month.",
+        "The foreign contact and I communicate directly; Person 1, my spouse, knows of the friendship.",
+        "The engineering association and our personal email and video-call services are the only organizations or platforms involved.",
+        "After the first exchange, we continued discussing family, employment, hobbies, and possible personal travel.",
+        "I retain the contact's name, citizenship, residence, employer description, email address, and message history for submission through the security office.",
+        "There has been no money, gift, employment action, travel, sponsorship, or request for government information.",
+        "I had not previously reported this person because the continuing personal association developed after my last investigation.",
+        "I do not discuss classified, controlled, proprietary, or nonpublic work and will report any request or material change.",
+        "No request, pressure, government connection, financial tie, or planned meeting is unresolved; the association itself continues.",
+        "Any increase in closeness, travel, shared finances, business activity, unusual questions, or change in residence or citizenship will be reported.",
+    ],
+    "05-gambling-debt-holder": [
+        "Before the delinquency, I used online sports-betting applications several evenings each week and paid balances from ordinary income.",
+        "Losses increased during a three-month period, and I used credit cards to continue betting after exhausting available cash.",
+        "I placed bets, took cash advances, missed minimum payments, stopped betting, contacted creditors, and entered payment plans.",
+        "I alone controlled the accounts; Person 1, my spouse, learned of the debt when collection notices arrived.",
+        "Three card issuers, the betting platforms, and a licensed gambling counselor are involved.",
+        "After recognizing the total debt, I self-excluded from the platforms and disclosed all accounts to my spouse.",
+        "Monthly statements, delinquency notices, self-exclusion confirmations, payment plans, and counseling attendance records exist.",
+        "The debt affected household savings and credit, but there is no lawsuit, garnishment, personal loan, or illegal gambling.",
+        "I had gambled recreationally before but had no earlier gambling debt, delinquency, or counseling.",
+        "Betting access is blocked, my spouse reviews accounts weekly, and scheduled payments are automatic.",
+        "The balances remain delinquent while repayment continues; none of the creditors has issued a judgment.",
+        "Monthly counseling, creditor payments, any collection escalation, and eventual payoff or account resolution will be updated.",
+    ],
+    "06-marijuana-use-applicant": [
+        "Before applying, I lived in a state where adult marijuana sales were permitted and used it socially on some weekends.",
+        "Friends used marijuana at a private gathering, and I chose to participate.",
+        "I purchased small personal quantities, stored them at home, used approximately monthly, and stopped in April before beginning the application.",
+        "I used with adult friends; no coworker, supervisor, foreign national, or minor was involved.",
+        "A state-licensed dispensary was the source; no law-enforcement, court, employer, or treatment provider is involved.",
+        "There was no arrest, accident, workplace event, medical emergency, or other immediate consequence.",
+        "Purchase receipts may exist in the dispensary account, but there is no police, court, or treatment record.",
+        "The use did not cause debt, missed work, discipline, injury, or legal proceedings.",
+        "The monthly use from June 2024 through April 2026 is the complete history; there was no other illegal-drug use.",
+        "I stopped using, discarded remaining products, and do not intend to use marijuana while seeking or holding a national-security position.",
+        "No charge or treatment matter is unresolved; the dates and frequency must be disclosed accurately on the initial form.",
+        "Any additional use, purchase, drug-related contact, evaluation, or treatment before adjudication would be reported to the sponsor.",
+    ],
+    "07-bankruptcy-in-process": [
+        "Before filing, my household relied on one income for ten months while uninsured medical bills and ordinary expenses accumulated.",
+        "Minimum payments became unsustainable after savings were exhausted and interest increased the unsecured balances.",
+        "I reviewed every account, completed credit counseling, retained filing assistance, signed the petition, and filed Chapter 7.",
+        "My spouse shares the household impact; the petition lists institutional creditors and no debt to friends or relatives.",
+        "The bankruptcy court, trustee, credit-counseling provider, medical creditors, and card issuers are involved.",
+        "The court opened the case, assigned a case number and trustee, stayed collection activity, and scheduled the creditors meeting.",
+        "The petition, schedules, counseling certificate, trustee notice, creditor matrix, and docket exist.",
+        "Collection calls stopped under the stay; no wage garnishment or employment action occurred.",
+        "I had no prior bankruptcy, foreclosure, repossession, or tax delinquency.",
+        "I use a written budget, no longer use credit cards, maintain current household bills, and completed required counseling.",
+        "The creditors meeting, any trustee requests, and the discharge decision remain unresolved.",
+        "I will update the sponsoring security office with amendments, dismissal, discharge, new delinquency, or any repayment requirement.",
+    ],
+    "08-information-technology-misuse-holder": [
+        "Before installing the software, I was working remotely and wanted access to unclassified files outside the approved connection method.",
+        "The approved remote service was unavailable, and I chose an unapproved shortcut instead of contacting the help desk.",
+        "I downloaded the program, installed it, connected from home, opened work files, disconnected, and left the software installed.",
+        "I was the only user; the help desk, IT security staff, my supervisor, and security office later became involved.",
+        "The government laptop, agency network, endpoint-monitoring service, and IT security office are involved.",
+        "Endpoint monitoring generated an alert, IT isolated the laptop, removed the software, and interviewed me.",
+        "The alert, endpoint logs, incident ticket, software-removal record, and written counseling memorandum exist.",
+        "My remote access was temporarily suspended, I completed retraining, and I received written counseling; no data recipient was identified.",
+        "I had no earlier unauthorized-software, access-control, or remote-access incident.",
+        "I use only approved connections, contact the help desk when access fails, and cannot install software without administrator approval.",
+        "The internal security review remains open, although the device has been remediated and returned.",
+        "Any investigative finding, discipline, access change, or closure memorandum will be reported.",
+    ],
+    "09-protected-information-holder": [
+        "Before the email, I was preparing an unclassified technical package at work and wanted to continue reviewing it at home.",
+        "I selected my personal address from autocomplete without checking the recipient or the controlled marking on the attachment.",
+        "I attached the drawing, sent the message, noticed the address, contacted my supervisor, and reported to security within forty minutes.",
+        "I was the sender; my supervisor, security staff, and IT responders handled containment, and no outside person received the file.",
+        "The employer email system, my personal mailbox provider, the security office, and IT incident-response team are involved.",
+        "IT preserved logs, confirmed deletion, disabled synchronization, and checked for forwarding or additional access.",
+        "The sent-message record, incident ticket, deletion confirmation, access logs, and open review file exist.",
+        "I completed remedial handling training and temporarily lost external-email privileges; there was no classified-data exposure.",
+        "I had no earlier mishandling, unauthorized transmission, or personal-email incident.",
+        "I verify recipients and markings before sending, use only approved storage, and do not forward work to personal accounts.",
+        "The internal finding and any final administrative action remain unresolved.",
+        "The security-office closure, discipline decision, access restoration, and any additional training will be updated.",
+    ],
+    "10-foreign-passport-applicant": [
+        "I was born in Canada, moved to the United States as a child, and retained Canadian citizenship by birth.",
+        "I renewed a Canadian passport in 2023 for identification and family travel.",
+        "I applied through the Canadian passport office, received the passport, used it twice for Canada travel, and retained it.",
+        "My Canadian parent and relatives know of the citizenship; no foreign official has contacted me beyond routine passport processing.",
+        "The Canadian passport authority and border agencies are involved; no foreign employer, bank, political party, or military is involved.",
+        "The two trips ended normally with no security incident, unusual contact, or government inquiry.",
+        "The passport number, issue and expiration dates, application record, and travel dates are available for the form.",
+        "There was no financial benefit, voting, foreign service, property ownership, or employment consequence.",
+        "The citizenship has existed since birth; this is the only foreign passport I have possessed.",
+        "I will disclose the citizenship and passport fully and will notify the sponsor of renewal, use, loss, or surrender.",
+        "Nothing is pending with Canadian authorities; the current passport remains valid and in my possession.",
+        "Any travel, passport transaction, or new exercise of foreign-citizenship rights during the investigation will be reported.",
+    ],
+    "11-foreign-business-holder": [
+        "Before investing, I knew one founder through an international software forum and reviewed the company's public product materials.",
+        "The founders offered a small equity interest and informal advisory role after several technical conversations.",
+        "I reviewed the agreement, transferred $12,000 from personal savings, received shares, and began monthly advisory calls.",
+        "The two German founders and I are the directly involved people; Person 1, my spouse, knows of the investment.",
+        "The German company, its German bank, my United States bank, and the video-call service are involved.",
+        "After investing, I received corporate documents and attended monthly calls but performed no operational work.",
+        "The share agreement, wire record, capitalization table, meeting invitations, and company registration details exist.",
+        "No income or distribution has been received, no employer resource was used, and no classified or proprietary information was discussed.",
+        "I had no prior foreign-business ownership, foreign bank account, or paid foreign outside activity.",
+        "I separate the activity from government work, share no protected information, and will obtain approval before any expanded role.",
+        "The equity remains owned, the advisory relationship continues, and the company has not announced a distribution or sale.",
+        "Any ownership change, payment, travel, new duty, government connection, or information request will be reported.",
+    ],
+    "12-compulsive-gambling-treatment-holder": [
+        "Before seeking help, I gambled online several nights a week and concealed the total losses from my spouse for several months.",
+        "A bank alert showed repeated transfers and led me to calculate the full $27,000 loss.",
+        "I disclosed the losses, stopped betting, self-excluded, contacted a counselor, and transferred account-monitoring access to my spouse.",
+        "I controlled the gambling accounts; Person 1, my spouse, now knows and participates in financial controls.",
+        "The betting platforms, bank, licensed counselor, and household creditors are involved.",
+        "I closed the betting sessions, saved transaction histories, and scheduled the first counseling appointment.",
+        "Bank statements, platform histories, self-exclusion confirmations, and counseling attendance records exist.",
+        "Savings decreased, but all bills remain current and there is no collection, lawsuit, borrowing, or delinquency.",
+        "I gambled recreationally before November 2025 but had no earlier treatment or comparable loss period.",
+        "I remain self-excluded, attend weekly counseling, use spending limits, and review all accounts with my spouse.",
+        "Treatment is ongoing and the long-term financial recovery plan remains active.",
+        "Counseling progress, renewed gambling, debt, delinquency, or changes to account controls will be reported.",
+    ],
+    "13-prescription-misuse-arrest-holder": [
+        "Before the arrest, I was studying after work and had slept poorly for several nights.",
+        "A friend offered prescription stimulant tablets and I accepted them to remain awake.",
+        "I used tablets on three occasions, kept four unused tablets, carried them in my vehicle, and police found them during a stop.",
+        "The friend supplied the tablets; the arresting officer, booking staff, evaluator, and court are involved.",
+        "City police, the county jail, the county criminal court, and a licensed substance-use evaluator are involved.",
+        "Police seized the tablets, arrested and booked me, and released me with a court notice.",
+        "The seizure report, booking record, complaint, docket, and completed evaluation exist; no final disposition exists.",
+        "I paid bond, disclosed the matter at work, and completed an evaluation; there was no injury or workplace use.",
+        "There was no earlier misuse of another person's prescription, illegal-drug arrest, or treatment.",
+        "I do not possess or use medication not prescribed to me and use sleep and study planning instead of stimulants.",
+        "The charge, evaluator recommendation, and any court-ordered testing or treatment remain unresolved.",
+        "Court dates, disposition, probation conditions, testing, counseling, or treatment recommendations will be updated.",
+    ],
+    "14-workplace-theft-in-process": [
+        "Before removal, I worked for the employer and knew the monitors were stored as surplus but had no permission to take them.",
+        "I wanted monitors for home use and incorrectly treated the storage status as permission.",
+        "I entered the storage room, removed two monitors, put them in my vehicle, left work, and returned them after being contacted.",
+        "I acted alone; a security-camera reviewer, supervisor, loss-prevention employee, and police officer became involved.",
+        "The former employer, city police, booking facility, and county criminal court are involved.",
+        "The employer reviewed video, contacted me, recovered the monitors, terminated me, and referred the matter to police.",
+        "Video, inventory records, recovery receipt, termination notice, arrest record, complaint, and pending docket exist.",
+        "I lost the job, returned the property undamaged, paid bond, and currently have no restitution figure.",
+        "I had no prior theft, unauthorized removal of property, termination for misconduct, or criminal arrest.",
+        "I do not retain employer property without written authorization and have provided the sponsor with current employment information.",
+        "The misdemeanor charge, any restitution, and the investigation's effect on sponsorship remain unresolved.",
+        "Court dates, plea, disposition, restitution, employment developments, and sponsor instructions will be reported.",
+    ],
+    "15-sexual-misconduct-charge-applicant": [
+        "Before the alleged contact, I attended a private social gathering where several adults were present.",
+        "The complainant and I spoke privately after the gathering; the criminal complaint alleges that later contact was nonconsensual.",
+        "I interacted with the complainant, left the gathering, later responded to investigators, and was arrested when the charge was filed.",
+        "The complainant, other gathering attendees, investigators, and I are identified in the police and court records.",
+        "The police department, booking facility, criminal court, and office that issued the no-contact order are involved.",
+        "Investigators interviewed witnesses, I was booked and released, and the court imposed a no-contact order.",
+        "The incident report, interview records, booking record, complaint, docket, and no-contact order exist.",
+        "I comply with the order and changed social routines; no employment action or separate civil case has been reported.",
+        "I have no prior sexual-misconduct complaint, arrest, no-contact order, or similar workplace allegation.",
+        "I have no contact with the complainant and preserve all communications requested by investigators or the court.",
+        "The allegation, motions, trial schedule, charge, and case outcome remain unresolved.",
+        "Order changes, hearings, plea, disposition, sentence, evaluation, counseling, or treatment will be reported.",
+    ],
+    "16-unofficial-foreign-travel-holder": [
+        "Before travel, Person 1 and I planned a five-day vacation and booked commercial flights and a hotel.",
+        "I failed to recognize that personal Mexico travel required advance security-office approval.",
+        "I booked the trip, traveled using my United States passport, followed the itinerary, returned, recognized the omission, and notified security.",
+        "Person 1 traveled with me; hotel and airline employees were routine contacts, and no continuing foreign contact developed.",
+        "The airline, hotel, passport-control authorities, and my security office are involved.",
+        "We returned as scheduled with no detention, loss, unusual approach, itinerary change, or security incident.",
+        "Flight confirmations, hotel receipt, passport entry information, itinerary, and security-office notification exist.",
+        "There was no financial anomaly, medical event, law-enforcement contact, employer discipline, or loss of equipment.",
+        "I had no earlier unreported foreign travel or prior warning about a missed travel-reporting requirement.",
+        "I entered future travel into the security process early and use a pre-travel checklist before purchasing tickets.",
+        "The security office has not yet closed its review of the late notification.",
+        "Any follow-up question, corrective action, newly remembered contact, or itinerary correction will be reported.",
+    ],
+    "17-large-gambling-winnings-holder": [
+        "Before the tournament, I registered with personal funds and traveled to Nevada for the scheduled event.",
+        "I advanced through the tournament and received the posted prize after the final round.",
+        "I paid the entry fee, played, won $42,000, received a casino check and tax form, and deposited the check two days later.",
+        "I was the sole winner and owner of the funds; Person 1, my spouse, knew of the trip and deposit.",
+        "The licensed casino, tournament operator, tax-reporting office, and my United States bank are involved.",
+        "The casino verified my identity, issued the payment and tax form, and recorded the result.",
+        "The entry receipt, results sheet, casino check, tax form, deposit receipt, and bank statement exist.",
+        "The deposit increased available assets; it caused no debt, loan, collection action, or employment consequence.",
+        "I had no prior gambling win or other unusual asset infusion of $10,000 or more.",
+        "I retained source records, set aside estimated taxes, and did not transfer the funds to another person or foreign account.",
+        "The tax liability will not be final until the applicable return is filed.",
+        "Any corrected tax form, ownership dispute, returned deposit, or tax assessment will be reported.",
+    ],
+    "18-domestic-violence-plus-foreign-contact": [
+        "Before the domestic incident I was drinking at home with my partner; separately, the Brazilian friendship had continued online since January.",
+        "The domestic argument escalated over plans for the evening; the foreign contact began through a shared online hobby group.",
+        "I argued and grabbed my partner's wrist, was arrested and evaluated; separately, I continued weekly messages with the foreign contact.",
+        "My partner, responding officers, and medical personnel relate to incident one; the Brazilian contact relates only to incident two.",
+        "Police, jail, court, evaluation provider, no-contact-order office, and the online communications platform are involved.",
+        "Police separated us and arrested me; the unrelated foreign communications continued without any request for protected information.",
+        "Incident one has arrest, booking, complaint, order, docket, and evaluation records; incident two has contact-identification and message records.",
+        "The domestic incident changed residence and communication arrangements; the foreign contact caused no financial, employment, or legal consequence.",
+        "There was no earlier domestic arrest or foreign-contact report involving either person.",
+        "I comply with the order and evaluation process; I keep protected information out of foreign communications and report material changes.",
+        "The domestic case and evaluation recommendations remain pending; the foreign friendship remains ongoing but otherwise unchanged.",
+        "Court, order, treatment, or disposition changes and any change in the foreign relationship will be separately updated.",
+    ],
+    "19-alcohol-treatment-holder": [
+        "Before treatment, my drinking increased over several months and I sometimes drank late on work nights.",
+        "Missing three shifts after drinking led my supervisor to issue attendance counseling and prompted me to seek help.",
+        "I disclosed the attendance cause, contacted a provider, completed intake, enrolled in eight weeks of outpatient care, and attended three sessions.",
+        "I am the patient; Person 1, my spouse, my supervisor, and the treatment provider know the relevant facts.",
+        "My employer, outpatient provider, and security office are involved; no police, court, or licensing agency is involved.",
+        "My supervisor documented the absences, I returned to work, and the provider established a weekly schedule.",
+        "Attendance records, written workplace counseling, provider enrollment, treatment plan, and later completion record exist or will exist.",
+        "I remain employed and current on attendance; there was no arrest, injury, accident, debt, or license action.",
+        "I had no prior alcohol treatment or alcohol-related arrest, although the increased work-night drinking lasted several months.",
+        "I attend weekly sessions, avoid alcohol, involve my spouse in scheduling, and follow the provider's recommendations.",
+        "Five sessions and formal completion remain; the provider has not issued the final outcome record.",
+        "Completion, discharge, changed recommendations, recurrence, missed treatment, or new employer action will be reported.",
+    ],
+    "20-tax-delinquency-garnishment-holder": [
+        "Before the debt, I earned salary and self-employment income but did not increase withholding or reserve estimated taxes.",
+        "Filing the returns showed balances I could not pay, and penalties and interest accumulated after notices were not fully resolved.",
+        "I filed all returns, communicated with the tax authority, entered an installment agreement, changed withholding, and attended financial counseling.",
+        "I am responsible for the returns; Person 1, my spouse, and a financial counselor know the repayment plan.",
+        "The federal tax authority, payroll office, financial counselor, and my bank are involved.",
+        "The tax authority issued collection notices and a garnishment order, and payroll began withholding on August 15.",
+        "Tax returns, account transcripts, notices, installment agreement, garnishment order, pay statements, and counseling record exist.",
+        "Net pay decreased and household budgeting changed; there is no bankruptcy, foreclosure, or unpaid state tax.",
+        "I had no prior tax lien, levy, garnishment, or debt over 120 days delinquent.",
+        "Withholding is corrected, installment payments are automatic, self-employment taxes are reserved monthly, and spending follows a written budget.",
+        "The $31,600 balance, garnishment, and installment agreement remain active.",
+        "Payments, balance changes, lien or levy action, agreement changes, payoff, and additional counseling will be reported.",
+    ],
+}
+
+
+SPECIAL_EVENT_DETAILS = {
+    "18-domestic-violence-plus-foreign-contact": [
+        (
+            "Before the incident on July 26, 2026, I consumed four mixed drinks at home with my partner. An "
+            "argument about evening plans escalated, and I grabbed my partner's wrist. My partner sustained "
+            "bruising but did not receive medical care. My partner, responding officers, and medical "
+            "personnel were involved; the unrelated Brazilian contact was not involved. Police separated "
+            "us, documented the bruising, arrested me for domestic battery, and took me to the county jail. The arrest report, "
+            "booking record, complaint, temporary no-contact order, court docket, and alcohol-evaluation "
+            "record identify the matter. I completed the alcohol evaluation, but its recommendations are "
+            "pending. I am living separately and complying with the order. There was no "
+            "earlier domestic-violence arrest or protective order. The charge, order, court disposition, and "
+            "evaluation recommendations remain unresolved. I will update the security office about any "
+            "hearing, plea, disposition, sentence, order change, counseling, education, or treatment."
+        ),
+        (
+            "The separate friendship began through an online hobby group in January 2026. The contact is a "
+            "citizen and resident of Brazil, and we communicate weekly about family, work, travel, and "
+            "personal matters. The domestic incident, police, court, and evaluation provider have no "
+            "connection to this friendship. I retain the contact's identifying information and relevant "
+            "message history. We have not exchanged money or gifts, shared a residence, conducted business, "
+            "planned travel together, or discussed classified, controlled, proprietary, or nonpublic work. "
+            "There has been no request for government information and no known foreign-government connection. "
+            "I have not met the contact in person, sponsored immigration, or made plans to share a residence. "
+            "The friendship remains ongoing. I will report any material change in closeness, frequency, travel, "
+            "shared finances, business activity, residence, citizenship, unusual questions, or requests for "
+            "information."
+        ),
+    ]
+}
+
+
+def integrated_sentences(sentences):
+    """Keep one readable statement while preferring specific overlapping facts."""
+    kept = []
+    stop = {"a", "an", "and", "as", "at", "for", "from", "in", "is", "it", "of", "on", "the", "to", "was", "were", "with"}
+
+    def terms(sentence):
+        return {w.lower() for w in re.findall(r"[A-Za-z0-9'-]+", sentence) if w.lower() not in stop}
+
+    def specificity(sentence):
+        return (len(re.findall(r"\d", sentence)) * 20) + len(sentence)
+
+    for sentence in sentences:
+        candidate = sentence.strip()
+        if not candidate:
+            continue
+        candidate_terms = terms(candidate)
+        duplicate_at = None
+        for index, existing in enumerate(kept):
+            existing_terms = terms(existing)
+            denominator = min(len(candidate_terms), len(existing_terms))
+            overlap = len(candidate_terms & existing_terms) / denominator if denominator else 0
+            sequence_similarity = SequenceMatcher(
+                None, candidate.lower(), existing.lower()
+            ).ratio()
+            if overlap >= 0.48 or sequence_similarity >= 0.56:
+                duplicate_at = index
+                break
+        if duplicate_at is None:
+            kept.append(candidate)
+        elif specificity(candidate) > specificity(kept[duplicate_at]):
+            kept[duplicate_at] = candidate
+    return " ".join(kept)
+
+
+def deepen_cases():
+    """Attach the detailed interview and its facts before artifacts are built."""
+    for case in CASES:
+        answers = DEEP_ANSWERS.get(case["slug"])
+        if answers is None or len(answers) != len(DEEP_QUESTIONS):
+            raise RuntimeError(f"{case['slug']}: missing complete deep-interview answers")
+        case["qas"].extend(zip(DEEP_QUESTIONS, answers))
+
+        special = SPECIAL_EVENT_DETAILS.get(case["slug"])
+        if special:
+            if len(special) != len(case["events"]):
+                raise RuntimeError(f"{case['slug']}: event-detail count does not match incident count")
+            for developed_event, final_narrative in zip(case["events"], special):
+                developed_event["narrative"] = final_narrative
+            additions = [""] * len(case["events"])
+        else:
+            # Build one chronological statement. The short event narrative is
+            # the central event; interview facts supply the lead-in and the
+            # aftermath. They are not rendered as a second, labelled report.
+            original_sentences = [
+                s.strip()
+                for s in re.split(r"(?<=[.!?])\s+", case["events"][0]["narrative"].strip())
+                if s.strip()
+            ]
+            integrated = integrated_sentences([answers[0], answers[1], *original_sentences, *answers[3:]])
+            case["events"][0]["narrative"] = integrated
+            additions = [""]
+
+        for developed_event, addition in zip(case["events"], additions):
+            if addition:
+                developed_event["narrative"] += "\n\n" + addition
+            declared_people = {person["label"] for person in developed_event["persons"]}
+            for label, replacement in (("Person 1", "my spouse"), ("Person 2", "another person known to me")):
+                if label not in declared_people:
+                    developed_event["narrative"] = developed_event["narrative"].replace(
+                        f"{label}, my spouse,", "my spouse"
+                    ).replace(
+                        f"{label}, my spouse", "my spouse"
+                    ).replace(label, replacement)
+            facts = [
+                s.strip()
+                for s in re.split(r"(?<=[.!?])\s+", developed_event["narrative"])
+                if s.strip()
+            ]
+            phases = developed_event["incident_development"]["phases"]
+            evidence_order = [0, 1, 2, 3, 4, 5, -2, -1]
+            for phase, fact_index in zip(phases.values(), evidence_order):
+                phase["evidence"] = facts[fact_index]
+
+
+def enforce_detail_floor(case):
+    """Fail closed when a synthetic run is too abbreviated to test the workflow."""
+    if len(case["qas"]) < 17:
+        raise RuntimeError(f"{case['slug']}: fewer than 17 substantive follow-up answers")
+    for question, answer in case["qas"][-len(DEEP_QUESTIONS):]:
+        if len(answer.split()) < 3:
+            raise RuntimeError(f"{case['slug']}: low-information answer to {question!r}")
+    for developed_event in case["events"]:
+        word_count = len(re.findall(r"\b[\w'-]+\b", developed_event["narrative"]))
+        if word_count < 125:
+            raise RuntimeError(
+                f"{case['slug']}: incident narrative has only {word_count} words; minimum is 125"
+            )
+
+
 OPENING = (
     "This workflow helps prepare a complete factual security report. It does not "
     "provide legal advice or predict how a security report may interact with a "
@@ -487,13 +924,15 @@ def transcript_for(case):
     rows = [
         f"# Synthetic workflow transcript: {case['title']}", "",
         "> FICTIONAL TEST DATA — no person or event in this transcript is real.", "",
+        "This transcript preserves the initial statement and every workflow question and answer. The submission-ready, integrated statement is in `report.md`.", "",
+        "## Initial instructions and intake", "",
         "**Workflow:** " + OPENING, "",
         "**Workflow:** This test uses the high-privacy mode. Keep your own mapping for numbered people; the tool does not collect their identities.", "",
         "**Synthetic user:** I will keep the private mapping for each Person number.", "",
     ]
     for q, a in route_qas(case):
         rows.extend([f"**Workflow:** {q}", "", f"**Synthetic user:** {a}", ""])
-    rows.extend(["**Workflow:** What happened?", "", f"**Synthetic user:** {case['initial']}", ""])
+    rows.extend(["## Initial statement", "", "**Workflow:** What happened?", "", f"**Synthetic user:** {case['initial']}", "", "## Detailed interview", ""])
     for q, a in case["qas"]:
         rows.extend([f"**Workflow:** {q}", "", f"**Synthetic user:** {a}", ""])
     rows.extend([
@@ -502,6 +941,25 @@ def transcript_for(case):
         "**Workflow:** The final combined analysis is complete. The attached report uses one narrative for each factually independent incident and lists every applicable DISS incident type only for clearance-holder output.", "",
     ])
     return "\n".join(rows)
+
+
+def complete_record_for(case, transcript_text, report_text):
+    return "\n".join([
+        f"# Complete synthetic case record: {case['title']}",
+        "",
+        "> FICTIONAL TEST DATA — no person or event in this record is real.",
+        "",
+        "This file preserves what was initially provided, every question and answer, and the single integrated final report.",
+        "",
+        "## Intake and interview record",
+        "",
+        transcript_text,
+        "",
+        "## Integrated final report",
+        "",
+        report_text,
+        "",
+    ])
 
 
 def run(cmd):
@@ -523,22 +981,29 @@ def main():
         "Each case includes the complete workflow transcript, gated session state, and deterministically assembled and verified report.", "",
         "| # | Scenario | Route | Incidents | Artifacts |", "|---:|---|---|---:|---|",
     ]
+    deepen_cases()
     verification = []
     for number, case in enumerate(CASES, 1):
+        enforce_detail_floor(case)
         case_dir = out / case["slug"]
         case_dir.mkdir(parents=True, exist_ok=True)
         transcript = case_dir / "transcript.md"
         session_path = case_dir / "session.json"
         report_path = case_dir / "report.md"
-        transcript.write_text(transcript_for(case), encoding="utf-8")
+        transcript_text = transcript_for(case)
+        transcript.write_text(transcript_text, encoding="utf-8")
         session_path.write_text(json.dumps(session_for(case), indent=2) + "\n", encoding="utf-8")
         run([sys.executable, "scripts/validate_session.py", str(session_path)])
         run([sys.executable, "scripts/assemble_package.py", str(session_path), "-o", str(report_path)])
         verified = run([sys.executable, "scripts/verify_output.py", str(report_path), str(session_path)])
+        report_text = report_path.read_text(encoding="utf-8")
+        (case_dir / "complete-record.md").write_text(
+            complete_record_for(case, transcript_text, report_text), encoding="utf-8"
+        )
         digest = hashlib.sha256(report_path.read_bytes()).hexdigest()
         verification.append({"case": case["slug"], "sha256": digest, "verified": "PASS" in verified})
         rel = case["slug"]
-        index.append(f"| {number} | {case['title']} | {case['role']} / {case['population']} | {len(case['events'])} | [transcript]({rel}/transcript.md) · [session]({rel}/session.json) · [report]({rel}/report.md) |")
+        index.append(f"| {number} | {case['title']} | {case['role']} / {case['population']} | {len(case['events'])} | [complete record]({rel}/complete-record.md) · [transcript]({rel}/transcript.md) · [session]({rel}/session.json) · [final report]({rel}/report.md) |")
     (out / "verification.json").write_text(json.dumps(verification, indent=2) + "\n", encoding="utf-8")
     index.extend(["", "## Verification", "", f"All {len(CASES)} sessions validated, assembled, and passed the deterministic output verifier. Hashes are recorded in `verification.json` and alongside each report.", ""])
     (out / "README.md").write_text("\n".join(index), encoding="utf-8")

@@ -12,6 +12,12 @@ can** — their register, vocabulary, sentence length, and how they naturally
 describe things. It should read like the user wrote it on a good day, not
 like a form letter and not like a lawyer.
 
+The reporting individual is always the narrator. Write `I`, `me`, and `my`,
+never "the applicant," "the clearance holder," "the individual," "the user,"
+or "the undersigned" as a substitute for the narrator. Third parties may be
+described in the third person when necessary, but do not shift the narrative
+itself into an analyst's summary of what the individual reportedly did.
+
 Voice matching is a **style instruction only**. It never extends to content:
 
 - If the user wrote "I had a couple of drinks" but later told you the BAC was

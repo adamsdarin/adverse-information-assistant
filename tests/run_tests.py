@@ -14,6 +14,7 @@ Exit:   0 all passed · 1 something failed
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -38,6 +39,7 @@ CHECKLIB = ROOT / "scripts" / "check_library.py"
 RETRIEVAL = ROOT / "scripts" / "doha_retrieval.py"
 COURTS = ROOT / "scripts" / "court_lookup.py"
 VALIDATE = ROOT / "scripts" / "validate_corpus.py"
+SYNTHETIC = ROOT / "scripts" / "generate_synthetic_workflow_runs.py"
 
 # Drift check: conductor.md is the generative source of the session flow and
 # PROCESS.md renders it. These two anchor lists encode the SAME canonical
@@ -361,6 +363,25 @@ def main() -> int:
         c, o = vs(s, "vs-unknown-profile.json")
         check("incident development rejects invented profile names",
               c == 1 and "unknown incident-development profiles" in o.lower(),
+              o.strip()[-300:])
+
+        s = base_session()
+        s["events"][0]["narrative"] = (
+            "The applicant traveled overseas and later notified the security office."
+        )
+        third_person_path = tmp / "third-person-narrative.json"
+        third_person_path.write_text(json.dumps(s), encoding="utf-8")
+        c, o = run(VALSESS, str(third_person_path))
+        check("completed incident narratives must use first-person voice",
+              c == 1 and "first-person voice" in o.lower(), o.strip()[-300:])
+
+        s = base_session()
+        s["events"][0]["incident_development"]["phases"]["before"]["evidence"] = (
+            "The transcript records the circumstances before the incident."
+        )
+        c, o = vs(s, "vs-boilerplate-evidence.json")
+        check("chronology evidence must contain facts rather than point at the transcript",
+              c == 1 and "pointer to another artifact" in o.lower(),
               o.strip()[-300:])
 
         s = base_session()
@@ -1257,7 +1278,7 @@ def main() -> int:
         pkg_pd, sp_pd = build(s, tmp)
         txt = pkg_pd.read_text(encoding="utf-8")
         check("package marks it previously disclosed, as context",
-              "Previously disclosed" in txt and "context only" in txt)
+              "Previously disclosed" in txt and "include it here as context" in txt)
         check("package records no new obligation and still says confirm",
               "No new reporting obligation identified" in txt
               and "security office" in txt)
@@ -1635,6 +1656,38 @@ def main() -> int:
         check("conductor.md stages present and in canonical order", ok, why)
         ok, why = check_anchor_order(ROOT / "PROCESS.md", PROCESS_ANCHORS)
         check("PROCESS.md stages present and in canonical order", ok, why)
+
+        print("\nsynthetic workflow suite — detail floor and incident evidence")
+        synthetic_out = tmp / "synthetic-runs"
+        c, o = run(SYNTHETIC, "-o", str(synthetic_out))
+        check("all synthetic runs generate and verify", c == 0, o.strip()[-400:])
+        generated_cases = [p for p in synthetic_out.iterdir() if p.is_dir()] if synthetic_out.exists() else []
+        check("synthetic suite contains 20 cases", len(generated_cases) == 20,
+              f"found {len(generated_cases)}")
+        detail_failures = []
+        for case_dir in generated_cases:
+            transcript_text = (case_dir / "transcript.md").read_text(encoding="utf-8")
+            report_text = (case_dir / "report.md").read_text(encoding="utf-8")
+            session_data = json.loads((case_dir / "session.json").read_text(encoding="utf-8"))
+            if transcript_text.count("**Synthetic user:**") < 22:
+                detail_failures.append(f"{case_dir.name}: fewer than 22 user inputs")
+            if "Additional facts developed" in report_text:
+                detail_failures.append(f"{case_dir.name}: report splits developed facts from the narrative")
+            if not (case_dir / "complete-record.md").exists():
+                detail_failures.append(f"{case_dir.name}: complete case record is missing")
+            for event_data in session_data["events"]:
+                if len(event_data["narrative"].split()) < 125:
+                    detail_failures.append(f"{case_dir.name}: narrative below 125 words")
+                for phase_data in event_data["incident_development"]["phases"].values():
+                    evidence = phase_data["evidence"].lower()
+                    if re.search(
+                        r"^(?:the )?(?:transcript|narrative|account) "
+                        r"(?:records?|states?|contains?|covers?|identifies?)\b",
+                        evidence,
+                    ):
+                        detail_failures.append(f"{case_dir.name}: nonfactual phase evidence")
+        check("every synthetic case clears the observable detail floor",
+              not detail_failures, "; ".join(detail_failures[:8]))
 
         print("\nscore_evals.py — the scorer itself is tested")
         rdir = tmp / "evals"

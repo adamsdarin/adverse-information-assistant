@@ -62,7 +62,7 @@ security clearance eligibility. This tool ensures no outcome of any kind. Its
 only purpose is to help the undersigned provide complete and truthful
 information. Nothing in this document is legal advice.
 
-The undersigned is responsible for the accuracy of every statement here.
+I am responsible for the accuracy of every statement in this report.
 """
 
 PROCEEDING_BOUNDARY = """\
@@ -77,25 +77,26 @@ def submission_route(session: dict) -> str:
     role = session.get("role")
     if role == "holder":
         text = (
-            "Provide each incident below to your FSO, security manager, SMO, "
-            "or servicing security office for entry in DISS. The incident-type "
-            "labels are listed with each independent incident; this package "
-            "does not imply that you personally enter information in DISS."
+            "I am providing each incident below to my FSO, security manager, "
+            "SMO, or servicing security office for entry in DISS. The "
+            "incident-type labels are listed with each independent incident; "
+            "I understand that I do not personally enter information in DISS."
         )
     elif role == "in_process":
         text = (
-            "Notify the SMO or security office sponsoring your pending "
+            "I am notifying the SMO or security office sponsoring my pending "
             "investigation so it can ensure DCSA receives this information. "
-            "Depending on when the event occurred, it may be addressed during "
-            "the initial investigation; that possibility is not a reason to "
-            "delay or omit the report. The form crosswalks below are context, "
-            "not an instruction to resubmit the form."
+            "I understand that the event may be addressed during my initial "
+            "investigation depending on when it occurred, and that possibility "
+            "is not a reason to delay or omit my report. The form crosswalks "
+            "below are context, not an instruction to resubmit my form."
         )
     else:
         text = (
-            "Use each incident and its form crosswalk below when completing "
-            "your initial SF-86 or PVQ. Keep factually independent incidents "
-            "separate while preserving one complete narrative for each."
+            "I will use each incident and its form crosswalk below when "
+            "completing my initial SF-86 or PVQ. I have kept factually "
+            "independent incidents separate while preserving one complete "
+            "narrative for each."
         )
     return "## Final Reporting Analysis\n\n" + text + "\n"
 
@@ -272,9 +273,9 @@ def render_event(ev: dict, n: int, total: int, role: str) -> str:
         # being confronted is a recognized mitigating consideration, and a
         # reviewer cannot credit what the document does not tell them.
         parts += [
-            "> **Voluntarily disclosed.** The undersigned raised this matter "
-            "without being asked about it and without a policy requirement "
-            "identified as compelling it.",
+            "> **Voluntarily disclosed.** I raised this matter without being "
+            "asked about it and without an identified policy requirement "
+            "compelling the disclosure.",
             "",
         ]
     pd = ev.get("prior_disclosure") or {}
@@ -284,26 +285,25 @@ def render_event(ev: dict, n: int, total: int, role: str) -> str:
         # they are disclosing it again, but it stays visible because the
         # narrative around it often depends on it.
         parts += [
-            "> **Previously disclosed.** The undersigned states this matter was "
-            "disclosed in a prior background investigation and is unchanged "
-            "since. It appears here as context only — it is not offered as a "
-            "new disclosure, and no new reporting obligation was identified. "
-            "This rests on the undersigned's own account and was not "
-            "independently verified.",
+            "> **Previously disclosed.** I disclosed this matter in a prior "
+            "background investigation, and it has not changed since then. I "
+            "include it here as context rather than as a new disclosure. No "
+            "new reporting obligation was identified based on my account, "
+            "which was not independently verified.",
             "",
         ]
     elif pd.get("status") == "disclosed_but_changed":
         parts += [
-            "> **Previously disclosed, with a change since.** The underlying "
-            f"matter was disclosed in a prior investigation. What is reported "
-            f"here is the change: {pd.get('what_changed', 'see below')}",
+            "> **Previously disclosed, with a change since.** I disclosed the "
+            f"underlying matter in a prior investigation. I am now reporting "
+            f"this change: {pd.get('what_changed', 'see below')}",
             "",
         ]
     if pd.get("scope_concern"):
         parts += [
-            "> **Worth raising with your security office.** What the "
-            "undersigned described in this session may be broader than what "
-            "was disclosed previously. This is flagged rather than resolved.",
+            "> **For my security office's review.** What I described in this "
+            "session may be broader than what I disclosed previously. I am "
+            "flagging that difference rather than resolving it myself.",
             "",
         ]
 
@@ -316,7 +316,7 @@ def render_event(ev: dict, n: int, total: int, role: str) -> str:
     if rep:
         parts += ["### Reporting requirement", ""]
         if rep.get("reportable") == "yes":
-            parts.append("- This incident is included in the final reporting package.")
+            parts.append("- I am including this incident in my final reporting package.")
         elif rep.get("no_new_obligation_identified"):
             parts.append("- **No new reporting obligation identified.** Previously disclosed and unchanged on the user's account; confirm any later change with the security office.")
         else:

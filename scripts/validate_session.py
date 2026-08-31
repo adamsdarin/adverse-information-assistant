@@ -76,6 +76,12 @@ INCIDENT_DEVELOPMENT_PROFILES = {
     "foreign-contact-or-influence", "financial-event",
     "substance-use-or-treatment", "information-or-technology",
 }
+LOW_INFORMATION_EVIDENCE = re.compile(
+    r"^(?:the )?(?:transcript|narrative|account|follow-up answers?|interview) "
+    r"(?:records?|states?|contains?|covers?|identifies?)\b|^see (?:the )?narrative\b",
+    re.IGNORECASE,
+)
+FIRST_PERSON_VOICE = re.compile(r"\b(?:I|me|my|mine|myself)\b", re.IGNORECASE)
 NON_DATE_ANSWERS = re.compile(
     r"^(?:n/?a|not applicable|none|unknown|not (?:yet )?(?:known|obtained|resolved)|pending)\b",
     re.IGNORECASE,
@@ -193,6 +199,14 @@ def validate(session: dict) -> tuple[list[str], list[str]]:
             errors.append(f"{where}: a holder's completed incident needs at least one DISS incident type")
         if role in {"applicant", "in_process"} and incident_types:
             errors.append(f"{where}: {role} output uses form crosswalks, not DISS incident types")
+        event_narrative = ev.get("narrative")
+        if final_complete and (
+                not isinstance(event_narrative, str)
+                or not FIRST_PERSON_VOICE.search(event_narrative)):
+            errors.append(
+                f"{where}: completed incident narrative must be written in the "
+                "reporting individual's first-person voice"
+            )
         development = ev.get("incident_development")
         if final_complete:
             if not isinstance(development, dict):
@@ -240,6 +254,11 @@ def validate(session: dict) -> tuple[list[str], list[str]]:
                         )
                     if not isinstance(evidence, str) or not evidence.strip():
                         errors.append(f"{where}: incident_development.{phase}.evidence is required")
+                    elif status == "answered" and LOW_INFORMATION_EVIDENCE.search(evidence.strip()):
+                        errors.append(
+                            f"{where}: incident_development.{phase}.evidence is a "
+                            "pointer to another artifact, not the user's factual answer"
+                        )
                     key = f"incident_development.{phase}"
                     if status == "unknown" and key not in outstanding_names:
                         errors.append(f"{where}: unknown {key} must be listed in outstanding_required")
