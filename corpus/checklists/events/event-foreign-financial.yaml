@@ -1,0 +1,184 @@
+# EVENT: direct involvement in a foreign business, foreign bank accounts, and
+#        ownership interests in foreign real estate.
+#
+# ===========================================================================
+# ADDITIONAL AT TOP SECRET / "Q" — SAY SO
+# ===========================================================================
+# All three entries here come from the ISL's Top Secret table. They are
+# additional requirements at that level, not universal ones. A Secret-cleared
+# user who owns an apartment abroad is not necessarily under the same
+# obligation, and this file must not imply otherwise.
+#
+# The requirements advisor holds the access level. This checklist collects the
+# facts regardless, because the same facts are also SF-86 / PVQ fields at every
+# level, and because a matter that is not separately reportable is still
+# adjudicated under Guideline B when it comes up. Collecting is cheap; a gap is
+# not.
+#
+# Never tell a user their access level means they need not report something.
+# Where the level is unclear, the answer is consult_fso.
+#
+# ===========================================================================
+# THE FRAMING PROBLEM
+# ===========================================================================
+# None of this is adverse information. Owning a flat in your mother's country,
+# keeping the bank account you had before you emigrated, or holding a share in a
+# family business are ordinary facts of ordinary lives, and a very large number
+# of cleared people have them.
+#
+# The tool's job here is administrative, not moral. Ask like a form, not like an
+# investigator. A user who feels accused of something for having a savings
+# account in the country they were born in will not finish the interview, and
+# will be right not to.
+event_checklist: event-foreign-financial
+event_ids: [tsq.foreign-business, tsq.foreign-bank, tsq.foreign-property]
+guidelines: [B, F, L]
+channel_refs: [diss-incident]
+access_level_note: |
+  All three entries are ADDITIONAL requirements at Top Secret / "Q". State the
+  requirement with the level attached; never state that a lower level is exempt.
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: low
+sources:
+  - corpus/reporting/tables/top-secret-q.yaml
+never_do: |
+  Never advise divesting, closing an account, or transferring an interest.
+  Never characterise a holding as a vulnerability. Never estimate a value the
+  user has not given. Never suggest that holding foreign assets is a problem.
+elements:
+
+  - id: interest-type
+    ask: "Which is it? A business you're involved in, a bank account, or property."
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 20A — Foreign Financial Interests", pvq: "foreign-financial"}
+    followups:
+      - trigger: always
+        ask: "Is there more than one? We'll take them one at a time."
+      - trigger: always
+        ask: "Is it in your name, held jointly, or held through someone else?"
+        why: "An interest held through a spouse or a family member is still an interest, and it is the arrangement users assume does not count."
+
+  - id: country
+    ask: "Which country is it in?"
+    criticality: required
+    covers: [where]
+    maps_to: {incident_report: "country"}
+    followups:
+      - trigger: always
+        ask: "And which city, or which region?"
+      - trigger: always
+        ask: "Is the institution or the entity itself based there, or somewhere else?"
+        why: "An account at a foreign branch of a US bank, and an account at a foreign bank, are different facts. So is a company incorporated in one country and operating in another."
+
+  - id: entity-identity
+    ask: "What is it called?"
+    criticality: required
+    covers: [who]
+    entity_ref: foreign-entity
+    maps_to: {incident_report: "institution_type"}
+    privacy_notice: |
+      The institution or company is an organisation, so I'll take its name and
+      where it is. I won't ask for an account number — the package leaves a blank
+      for that.
+    followups:
+      - trigger: always
+        ask: "What kind of institution or entity is it?"
+      - trigger: always
+        ask: "Is it state-owned, or connected to a foreign government?"
+        escalation_if: "yes"
+        why: "State ownership is the fact that moves this from an administrative disclosure to a Guideline B question. It is one word and it is worth having."
+      - trigger: always
+        ask: "Who else is involved, by role? Partners, co-owners, or joint account holders."
+        event_refs: [aci.foreign-contact.continuing]
+
+  - id: value
+    ask: "Roughly what is it worth in US dollars?"
+    criticality: required
+    covers: [what]
+    why: "The form asks for value. An approximation with the basis and the date stated is expected — property abroad is not easy to value precisely and nobody expects it to be."
+    followups:
+      - trigger: always
+        ask: "As of roughly when, and how are you arriving at that figure?"
+      - trigger: always
+        ask: "Does it produce any income — rent, dividends, or interest?"
+      - trigger: answered_yes
+        ask: "Is that income reported on your US taxes?"
+        why: "Unreported foreign income is a Guideline F matter of its own, and it is much better surfaced here."
+      - trigger: quantitative_tension
+        ask: "The value and what you've told me about how it was acquired don't quite line up for me. I'd rather state it accurately — have I understood right?"
+
+  - id: when-acquired
+    ask: "When did you acquire it?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: always
+        ask: "Do you still hold it, and has it changed hands or changed value much?"
+      - trigger: always
+        ask: "Has it been reported on a previous security form?"
+        prior_disclosure_probe: true
+
+  - id: how-acquired
+    ask: "How did you come to have it? Purchase, inheritance, gift, marriage, or a family arrangement."
+    criticality: required
+    covers: [how, why]
+    why: "The route in is what distinguishes an inherited family flat from a recently purchased asset abroad. Both are fine; they are not the same fact."
+    followups:
+      - trigger: always
+        ask: "How was it paid for, and from where?"
+      - trigger: answered_yes
+        ask: "If it came from someone, who were they to you and which country are they connected to?"
+        event_refs: [aci.foreign-contact.continuing]
+
+  - id: your-involvement
+    ask: "What is your actual involvement day to day?"
+    criticality: required
+    covers: [what]
+    why: "'Direct involvement' is the wording in the Top Secret entry for a foreign business, and it is a question of activity rather than ownership. A dormant share and a management role are very different."
+    followups:
+      - trigger: always
+        ask: "Do you make decisions, hold a role, or draw anything from it?"
+      - trigger: answered_yes
+        ask: "Does it have any government customers or government funding where it operates?"
+        escalation_if: "yes"
+      - trigger: answered_yes
+        ask: "Have you sought approval from your employer for the involvement?"
+        note: "A foreign business role is usually also a Guideline L outside activity. Run the L checklist too."
+
+  - id: control-and-access
+    ask: "Who else can access or control it?"
+    criticality: required
+    covers: [who]
+    followups:
+      - trigger: answered_yes
+        ask: "Who, by role, and are they foreign nationals?"
+        event_refs: [aci.foreign-contact.continuing]
+      - trigger: always
+        ask: "Is anyone managing it on your behalf?"
+
+  - id: purpose
+    ask: "Why do you hold it?"
+    criticality: required
+    covers: [why]
+    note: |
+      Open question, recorded as given. Most answers are entirely mundane —
+      "it's where I grew up," "it's my mother's house," "I never closed it."
+      Mundane is good. Do not press for something more substantial.
+
+  - id: foreign-financial-forward
+    ask: "Do you expect to keep it, and do you expect that to change?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Never advise selling, closing, or transferring anything. Record the intent.
+      If the user asks whether they should divest, that is a question for their
+      FSO and possibly an adviser of their own choosing — the tool says so and
+      does not answer it.
+    followups:
+      - trigger: answered_yes
+        ask: "Anything planned that would change its value or who controls it?"

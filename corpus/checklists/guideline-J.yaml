@@ -1,44 +1,212 @@
-# Guideline J — Criminal Conduct. REVIEW DRAFT.
+# Guideline J (Criminal Conduct) — required narrative elements.
+# Maintainer-authored from SEAD 4 ¶¶ 30–32, ISL 2021-02 data elements, and
+# recurring factual questions in published DOHA decisions.
+# KNOWN LIMITATION: not validated against agency RFI data (ARCHITECTURE.md §5.2).
+#
+# Granular by design, with conditional ladders — see guideline-G.yaml for the
+# rationale and the trigger vocabulary.
 guideline: J
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-J-criminal-conduct.md, corpus/reporting/tables/all-covered-individuals.yaml]
-# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
-# not from data. It controls interview depth on OPTIONAL material only and
-# can never downgrade a required form field. Review before relying on it.
+coverage: _COVERAGE.yaml
+how_relevant: true
 severity_default: high
+sources:
+  - corpus/sead4/guideline-J-criminal-conduct.md
+  - corpus/reporting/tables/all-covered-individuals.yaml
 elements:
+
   - id: event-date
-    ask: "When did the incident occur? Month and year is enough to start."
-    maps_to: {sf86: "Section 22", incident_report: "event_date"}
-  - id: arresting-agency
-    ask: "What agency was involved, and in what city and state?"
-    format: [agency, city, state]
+    covers: [when]
+    ask: "What was the date of the incident? A full date if you have it."
+    criticality: required
+    maps_to: {sf86: "Section 22", pvq: "criminal-history"}
+    followups:
+      - trigger: vague
+        ask: "Court records carry the exact date. Shall I mark this approximate for now and note it as still needed?"
+
+  - id: event-location
+    covers: [where]
+    ask: "Where exactly did this happen — what city and county, and what state?"
+    criticality: required
+    entity_ref: offense-location
+    why: "The form asks for the location of the offence by city, county, state and ZIP."
+    maps_to: {sf86: "Section 22 — location where the offense occurred", pvq: "Part B Section 11"}
+    followups:
+      - trigger: always
+        ask: "Inside city limits or out in the county? The citation usually names the agency."
+
+  - id: citing-agency
+    covers: [who, where]
+    ask: "Which agency issued the citation or made the stop? The full name, not an acronym."
+    criticality: required
+    entity_ref: citing-agency
+    record: "arrest or incident report — request it from this agency"
+    maps_to: {sf86: "Section 22 — name of the law enforcement agency", pvq: "Part B Section 11"}
+    followups:
+      - trigger: always
+        ask: "What city and state is that agency in?"
+      - trigger: always
+        ask: "And its street address, if you can find it? The PVQ asks for it and your FSO needs it to request the report."
+
+  - id: arresting-agency-if-different
+    covers: [who, where]
+    ask: "Was it the same agency that actually arrested you, or did someone else take you in?"
+    criticality: required
+    entity_ref: arresting-agency-if-different
+    why: "A municipal officer often makes the stop while the county sheriff does the booking. The PVQ asks about this directly, and the two agencies hold different records."
+    maps_to: {pvq: "Part B Section 11 — did the same agency arrest you?"}
+    followups:
+      - trigger: answered_no
+        ask: "Which agency booked you, and where were you held?"
+      - trigger: answered_no
+        ask: "What city and state, and its street address if you can find it?"
+
+  - id: what-happened
+    covers: [what, how, why]
+    ask: "What happened? Just the facts, in the order they occurred."
+    criticality: required
+    followups:
+      - trigger: vague
+        ask: "Who else was involved, and what was each person doing?"
+      - trigger: always
+        ask: "Was anyone injured, and was any property damaged or taken?"
+
+  - id: arrest-vs-citation
+    covers: [what]
+    ask: "Were you taken into custody, or cited and released?"
+    criticality: required
+    why: "Form questions distinguish these, and people describe both as being arrested."
+
   - id: charges-exact
-    ask: "What exactly were you charged with? The precise charge language matters more than the general category."
-    maps_to: {sf86: "Section 22"}
-  - id: incident-description
-    ask: "What happened, factually?"
-  - id: disposition
-    ask: "What was the outcome — plea, verdict, dismissal, diversion, deferred adjudication? Include dates."
-    maps_to: {sf86: "Section 22"}
-    document: "certified court disposition"
-    escalation_if: "pending"
-  - id: sentence
-    ask: "What was the sentence — fines, jail, probation, community service, classes? What's completed and what's outstanding?"
-    document: "proof of completion, probation discharge"
-  - id: probation-status
-    ask: "Are you currently on probation, parole, or under any court supervision? Until when?"
-    mitigation_ref: "J — successful completion of criminal probation"
+    covers: [what]
+    ask: "What exactly were you charged with? The precise wording from the paperwork, if you have it."
+    criticality: required
+    why: "The general category is not what the record shows. The statute number is as good as the wording."
+    maps_to: {sf86: "Section 22", pvq: "criminal-history"}
+    followups:
+      - trigger: vague
+        ask: "The statute or code number from the citation works just as well."
+
   - id: felony-misdemeanor
-    ask: "Was this charged as a felony or a misdemeanor?"
+    covers: [what]
+    ask: "Was it charged as a felony, a misdemeanour, or an infraction?"
+    criticality: required
+    followups:
+      - trigger: vague
+        ask: "Did you appear before a judge in a criminal court, or was it handled as a traffic or civil matter?"
+
+  - id: additional-charges
+    covers: [what]
+    ask: "Were you charged with anything else arising from the same incident?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "What were they, and how did each one resolve?"
+
+  - id: court-identity
+    covers: [where, who]
+    ask: "Which court handled the case? The full name, not an acronym."
+    criticality: required
+    entity_ref: court
+    why: "Both forms ask for the court by name and location. The clerk of that court also holds the disposition a security officer needs."
+    tool: "scripts/court_lookup.py — offer the nudge only if they do not know; record their answer"
+    record: "certified court disposition"
+    maps_to: {sf86: "Section 22 — name and location of the court", pvq: "Part B Section 11"}
+    followups:
+      - trigger: always
+        ask: "What city and county is that court in?"
+      - trigger: always
+        ask: "And its street address, if you can find it?"
+
+  - id: case-number
+    covers: [what]
+    ask: "What was the case or docket number?"
+    criticality: required
+    followups:
+      - trigger: vague
+        ask: "It is on any court paperwork, and usually on that state online case search. I will mark it as still needed otherwise."
+
+  - id: plea
+    covers: [what]
+    ask: "How did you plead?"
+    criticality: required
+
+  - id: disposition-outcome
+    covers: [what]
+    ask: "What was the outcome — convicted as charged, convicted of a reduced charge, dismissed, deferred, or diverted?"
+    criticality: required
+    why: "Deferred and diverted outcomes are described imprecisely more often than any other fact in this section."
+    followups:
+      - trigger: always
+        ask: "What was the final charge, if it changed from what you were originally charged with?"
+      - trigger: pending
+        ask: "What is still outstanding, and what is the next court date?"
+        escalation_if: "pending"
+
+  - id: disposition-date
+    covers: [when]
+    ask: "What date was it resolved?"
+    criticality: required
+
+  - id: sentence-terms
+    covers: [what]
+    ask: "What was the sentence?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "How much was the fine, and has it been paid in full?"
+      - trigger: answered_yes
+        ask: "Was there jail time — imposed, suspended, or served? How long?"
+      - trigger: answered_yes
+        ask: "Was community service or a programme ordered, and is it complete?"
+
+  - id: probation-status
+    covers: [what, when]
+    ask: "Are you currently on probation, parole, or any court supervision?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "Until when, and are you in compliance?"
+      - trigger: answered_no
+        ask: "Was there supervision that has since ended? When did it end?"
+
+  - id: restitution
+    covers: [what]
+    ask: "Was restitution ordered?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "How much, and what is the current balance?"
+
   - id: firearms-nexus
+    covers: [what]
     ask: "Did the matter involve a firearm, or result in any firearms restriction?"
+    criticality: required
+
   - id: domestic-nexus
-    ask: "Did the matter involve a family member or intimate partner, or result in a protective order?"
+    covers: [who, what]
+    ask: "Did the court impose a no-contact, protective, or restraining order?"
+    applicability: "Ask only for domestic violence, intimate-partner violence, or violent conduct in which another person was injured. Do not assume an order exists."
+    criticality: required
     sensitivity: high
-  - id: victim-restitution
-    ask: "Was there a victim, and was restitution ordered? Status if so."
+    followups:
+      - trigger: answered_yes
+        ask: "Is that order still in force, and what are its dates?"
+
+  - id: prior-record
+    covers: [when, what]
+    ask: "Have there been any earlier arrests, charges, or convictions — including any that were dismissed or expunged?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "For each: roughly when, what the charge was, and how it resolved."
+      - trigger: answered_yes
+        ask: "Were any of those disclosed on a previous form or investigation?"
+        why: "Routes to the prior-disclosure check."
+
   - id: rehabilitation
-    ask: "What would you point to showing this is behind you — completed programs, employment record, time elapsed, anything else?"
-    mitigation_ref: "J — evidence of successful rehabilitation"
+    covers: [future_intent, why]
+    ask: "What would you point to showing this is behind you?"
+    criticality: mitigation
+    mitigation_ref: "J-32"

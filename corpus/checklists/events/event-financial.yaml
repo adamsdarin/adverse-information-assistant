@@ -1,0 +1,207 @@
+# EVENT: bankruptcy, delinquency over 120 days, garnishment, and unusual
+#        infusions of assets of $10,000 or greater.
+#
+# ===========================================================================
+# TWO TABLES, TWO POPULATIONS — DO NOT MERGE THEM
+# ===========================================================================
+# Bankruptcy and 120-day delinquency apply to ALL covered individuals.
+# Garnishment and the $10,000 asset infusion are ADDITIONAL requirements at the
+# Top Secret / "Q" level. A Secret-cleared user who inherits $40,000 is in a
+# different position from a TS-cleared user who does, and this file must not
+# flatten that. The requirements advisor holds the access level; this checklist
+# collects the facts either way and lets the advisor decide what is required.
+#
+# When in doubt the answer is consult_fso. Never tell a user an amount is below
+# a threshold and therefore fine.
+#
+# ===========================================================================
+# THE TONE PROBLEM
+# ===========================================================================
+# Financial matters are the highest-volume adjudicative issue there is, and they
+# arrive with more shame attached than almost anything else in this corpus. A
+# person reporting a delinquency has usually had a bad two years and is
+# expecting to be judged for it.
+#
+# The mitigating conditions in Guideline F are unusually concrete — conditions
+# largely beyond the person's control, a good-faith effort to repay, acting
+# responsibly under the circumstances. They are gettable, and they are gettable
+# only if the questions are asked without flinching and answered without
+# embarrassment. Ask about numbers the way a bank does: plainly, as facts.
+#
+# The infusion side is the mirror image: money arriving is not adverse
+# information, and a user reporting an inheritance is not confessing anything.
+# Do not run the same tone over both.
+event_checklist: event-financial
+event_ids: [aci.finance.bankruptcy-delinquency, tsq.finance.anomalies]
+guidelines: [F]
+channel_refs: [diss-incident]
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/reporting/tables/top-secret-q.yaml
+access_level_note: |
+  Bankruptcy and 120-day delinquency: all covered individuals.
+  Garnishment and unusual asset infusions of $10,000 or more: additional at TS/Q.
+  Never assert that a matter falls below a threshold. State the requirement that
+  applies, and where the access level is unclear, return consult_fso.
+never_do: |
+  Never compute what someone can afford. Never characterise a debt as
+  irresponsible, manageable, or serious. Never advise on bankruptcy, settlement,
+  or repayment — those are financial and legal decisions and this tool has no
+  standing in them. Never suggest that money arriving is suspicious.
+elements:
+
+  - id: event-type
+    ask: "Which is it? A bankruptcy, a debt past due, a garnishment, or money that came in."
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 26 — Financial Record", pvq: "financial-record", incident_report: "event_type"}
+    followups:
+      - trigger: always
+        ask: "Is there more than one? We'll take them one at a time."
+        why: "Financial matters cluster. A bankruptcy usually has delinquencies behind it, and reporting one while omitting the others is the shape that reads worst."
+
+  - id: amounts
+    ask: "What is the amount?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "amounts"}
+    followups:
+      - trigger: always
+        ask: "Is that the original amount or the current balance?"
+      - trigger: vague
+        ask: "A credit report or a statement will have it exactly. Shall I mark this approximate for now?"
+        why: "An adjudicator can work with a stated approximation. They cannot work with a figure that is silently wrong, and a credit report will be pulled."
+      - trigger: quantitative_tension
+        ask: "The payments you've described and the balance don't quite reconcile for me. I'd rather state it accurately — have I got the figures right?"
+        why: "See corpus/checks/plausibility.yaml. State the tension, never the conclusion, and never tell someone what their numbers mean."
+
+  - id: creditor-or-source
+    ask: "Who is the creditor, or where did the money come from?"
+    criticality: required
+    covers: [who]
+    entity_ref: organization
+    maps_to: {incident_report: "source_of_funds"}
+    why: "A creditor is an organisation, so its name and address are collectible at every privacy tier. For an infusion, the source is the required data element."
+    followups:
+      - trigger: always
+        ask: "What kind of creditor or institution? A bank, a card issuer, a medical provider, a court, or a government agency."
+      - trigger: always
+        ask: "Where are they based? City and state is enough."
+      - trigger: answered_yes
+        ask: "If money came in, was any of it from a foreign source or a foreign person?"
+        escalation_if: "yes"
+        event_refs: [tsq.foreign-bank, aci.foreign-contact.continuing]
+        why: "A foreign source turns an ordinary infusion into a Guideline B matter and possibly a separate reportable event. It is one question and it is routinely missed."
+      - trigger: answered_yes
+        ask: "If it was an inheritance or a gift, from whom, by role?"
+
+  - id: dates
+    ask: "When did this start?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: always
+        ask: "When did it go past due, or when was the filing, or when did the money arrive?"
+        why: "The 120-day clock and the reporting clock both run from specific dates, and 'last year' does not establish either."
+      - trigger: always
+        ask: "How long has it been in this state?"
+      - trigger: pending
+        ask: "Is it still open?"
+
+  - id: where-filed
+    ask: "If there's a court involved, which one?"
+    criticality: required
+    covers: [where]
+    entity_ref: court
+    why: "Bankruptcy and garnishment both generate a court record someone will have to retrieve. The court that holds it is the fact that makes retrieval possible."
+    followups:
+      - trigger: answered_yes
+        ask: "Which district or county, and in which state?"
+      - trigger: answered_yes
+        ask: "Do you know the case number?"
+      - trigger: answered_yes
+        ask: "And the court's address? Your FSO will need it to request the record."
+        note: "See corpus/courts/state-courts.yaml for recognition help. Never assert a court name the user has not confirmed."
+      - trigger: answered_no
+        ask: "So this is between you and the creditor, with nothing filed?"
+
+  - id: how-it-happened
+    ask: "How did it come about?"
+    criticality: required
+    covers: [how, why]
+    mitigation_ref: "F — the conditions that resulted in the financial problem were largely beyond the person's control"
+    why: "This is the listed mitigating condition and it is the single most valuable thing in a financial report. Job loss, illness, divorce, a business failure, a family member's costs — these are real, common, and they only appear if asked for."
+    note: |
+      Ask it as an open question and record what they say. Do not lead toward
+      "beyond my control," do not construct a sympathetic account, and do not
+      treat an answer of "I overspent" as a problem to be fixed. Candour about a
+      self-inflicted problem, paired with a real repayment record, holds up
+      better than a story.
+    followups:
+      - trigger: always
+        ask: "Was there anything going on at the time — a job loss, illness, a separation, or something else?"
+      - trigger: answered_yes
+        ask: "Is anything documented? A layoff letter, medical bills, a decree."
+        document: "whatever evidences the circumstance — this is the strongest supporting material in a financial report"
+
+  - id: current-status
+    ask: "Where does it stand today?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "current_status"}
+    mitigation_ref: "F — the individual initiated and is adhering to a good-faith effort to repay or otherwise resolve"
+    followups:
+      - trigger: always
+        ask: "Paid, in a payment plan, in collections, discharged, or still open?"
+      - trigger: answered_yes
+        ask: "If you're paying, how much and how often, and since when?"
+        why: "A payment history is the concrete form of a good-faith effort. Six months of documented payments is worth more than any explanation."
+      - trigger: answered_yes
+        ask: "Do you have anything showing it? Statements, a plan letter, or a discharge order."
+        document: "payment records, the repayment agreement, or the discharge order"
+      - trigger: pending
+        ask: "Is there a date anything is expected to resolve?"
+
+  - id: counselling-and-help
+    ask: "Have you had any financial counselling or professional help with this?"
+    criticality: required
+    covers: [what]
+    mitigation_ref: "F — the person has received counseling and there are clear indications the problem is being resolved"
+    entity_ref: organization
+    followups:
+      - trigger: answered_yes
+        ask: "With whom, and when?"
+      - trigger: answered_no
+        ask: "Nothing wrong with that — I'll note it as not applicable rather than leave a gap."
+        note: "Never suggest the user should get counselling. Record the absence neutrally; do not make it a recommendation."
+
+  - id: other-obligations
+    ask: "Is there anything else outstanding I should capture? Taxes, child support, student loans, or a judgment."
+    criticality: required
+    covers: [what]
+    why: "Unfiled taxes and unpaid support are the two that surface later and land hardest, and neither comes to mind when someone is thinking about a credit card."
+    followups:
+      - trigger: always
+        ask: "Are your federal and state tax returns filed and current?"
+        escalation_if: "no"
+      - trigger: answered_yes
+        ask: "Roughly how much, and where does each stand?"
+
+  - id: financial-forward
+    ask: "What does the plan look like from here?"
+    criticality: required
+    covers: [future_intent]
+    mitigation_ref: "F — there are clear indications the problem is being resolved or is under control"
+    note: |
+      Record what they say, in their terms. Never supply a plan, never suggest a
+      strategy, and never tell someone their plan is inadequate. A modest plan
+      being followed is worth more than an ambitious one that is not.
+    followups:
+      - trigger: always
+        ask: "Is anything different now about how the money works — income, expenses, or who handles it?"

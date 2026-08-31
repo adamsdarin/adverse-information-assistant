@@ -1,40 +1,174 @@
-# Guideline D — Sexual Behavior. REVIEW DRAFT.
-# Ask clinically and minimally. Collect only what the guideline actually
-# requires: criminality, compulsivity, coercion exposure, judgment. Do NOT
-# collect descriptive detail beyond that — it serves no adjudicative purpose.
+# Guideline D (Sexual Behavior) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 12–14.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# THE COLLECTION RULE FOR THIS GUIDELINE
+# ---------------------------------------------------------------------------
+# SEAD 4 reaches sexual behaviour only where it is criminal, compulsive, shows
+# a lack of discretion or judgment, or exposes the person to coercion. Nothing
+# else about it is adjudicatively relevant, so nothing else gets collected.
+#
+# That makes this the one checklist where MORE detail is a defect. Every other
+# guideline gets granular because a thin answer generates a request for
+# information. Here, descriptive detail beyond the four listed concerns serves
+# no purpose, would sit in a file forever, and asking for it is its own harm.
+# The ladders below are therefore short and they close early.
+#
+# The interviewer asks these clinically, one at a time, and every question is
+# skippable. "I'd rather not go into that" is a complete answer and the tool
+# moves on without comment.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: D
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-D-sexual-behavior.md]
+coverage: _COVERAGE.yaml
+how_relevant: false
+how_not_relevant_because: |
+  For every other checklist, "how" means mechanism, and mechanism is what a
+  reviewer reads for. Here it would mean descriptive sexual detail, which is
+  not a required data element under any form or table, has no adjudicative
+  purpose, and would be collected only because the schema asked for it. The
+  facets that carry real weight — whether the conduct was criminal, whether
+  anyone was unable to consent, whether it is known to others, whether it
+  touched the workplace — are covered by their own elements. Anything the
+  mechanism would legitimately establish about work systems or work premises is
+  captured by workplace-nexus.
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: high
 all_elements_sensitivity: high
+sources:
+  - corpus/sead4/guideline-D-sexual-behavior.md
+preamble: |
+  I'm going to keep this narrow. The only things that matter for a report are
+  whether the conduct was criminal, whether it's something you've had trouble
+  controlling, whether it's known to others, and whether it touched your work.
+  I'm not going to ask for details beyond that, and you can decline any
+  question here without giving a reason.
+never_ask: |
+  Descriptive detail of the conduct itself. Sexual orientation — SEAD 4 states
+  it is not a disqualifying factor and it is not a question this tool has any
+  reason to ask. The identity of any other party.
 elements:
+
   - id: conduct-category
-    ask: "In general terms, what is the conduct you need to report? A category is enough — I don't need details beyond what a reviewer requires."
+    ask: "In general terms, what is it you need to report? A category is enough."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: vague
+        ask: "I don't need more detail than a reviewer would — is it closer to a legal matter, something ongoing you've struggled with, or something that became known?"
+        why: "This is the only clarifier here, and it exists to route to the right three questions rather than to learn more."
+
   - id: criminality
-    ask: "Was the conduct criminal, or has it resulted in any charge or investigation?"
+    ask: "Was the conduct criminal, or has it led to a charge or an investigation?"
+    criticality: required
+    covers: [what]
     escalation_if: "yes"
+    why: "This adds Guideline J and, if there was an arrest, a separately reportable event with its own required data elements and its own set of questions about agencies and courts."
+    event_refs: [aci.criminal.arrest]
+    followups:
+      - trigger: answered_yes
+        ask: "Was there an arrest or a citation?"
+      - trigger: answered_yes
+        ask: "Where — which city and state?"
+        entity_ref: offense-location
+      - trigger: pending
+        ask: "Is anything still open?"
+
   - id: consent-and-parties
-    ask: "Did the conduct involve anyone unable to consent, or anyone under 18?"
-    escalation_if: "yes"
-    note: |
-      An affirmative answer here is a hard escalation: advise consulting an
-      attorney before submitting anything. Do not continue drafting a
-      narrative around this without saying so plainly.
+    ask: "Did the conduct involve anyone who was unable to consent, or anyone under 18?"
+    criticality: required
+    covers: [who]
+    hard_stop_if: "yes"
+    on_hard_stop: |
+      Stop here. Do not ask a followup, do not draft a narrative, do not
+      characterise the conduct, and do not continue any other part of the
+      session. Say plainly, once, and without editorialising, that this needs
+      to go to their security office directly rather than through this tool,
+      and that the tool is not going to help compose a written account of it.
+      Do not offer to resume. Do not tell them what will happen to them, and do
+      not speculate about consequences.
+
+      This is the only hard stop in the corpus. It is not a legal-deferral
+      offer and must not be phrased as one — see AGENTS.md on never routing a
+      user to an attorney. It is a limit on what this tool will draft.
+
   - id: dates-frequency
-    ask: "When did this occur, and was it a single instance or a pattern?"
-    mitigation_ref: "D — behavior so long ago, so infrequent, or under such unusual circumstances"
+    ask: "When did this happen?"
+    criticality: required
+    covers: [when]
+    mitigation_ref: "D — behavior so long ago, so infrequent, or under such unusual circumstances that recurrence is unlikely"
+    followups:
+      - trigger: always
+        ask: "Was it a single occasion or something that happened more than once?"
+      - trigger: vague
+        ask: "Roughly what year, and is it still going on?"
+        why: "Recency and whether it is current are the two facts the mitigating conditions turn on. Neither requires any detail about the conduct."
+
+  - id: setting
+    ask: "Where did it happen, in the sense of whose premises or platform? I don't need an address."
+    criticality: required
+    covers: [where]
+    why: "Location matters here for one reason only: whether it happened on an employer's premises, an employer's system, or a government facility. Anything beyond that is not collected."
+    followups:
+      - trigger: always
+        ask: "Was any of it on a work device, a work network, or work premises?"
+        escalation_if: "yes"
+
   - id: compulsivity
-    ask: "Do you consider the behavior compulsive, or something you've had difficulty controlling?"
-    mitigation_ref: "D — treatment and favorable prognosis"
-  - id: treatment
-    ask: "Have you sought any professional help related to this? Status if so."
-    mitigation_ref: "D"
+    ask: "Is this something you've had difficulty controlling?"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "D — the behavior no longer serves as a basis for coercion, and treatment with a favorable prognosis"
+    why: "Compulsivity is one of the four listed concerns, and the user's own account of it is the only source for it."
+    note: |
+      Ask once, accept the answer, and do not probe a negative. A person who
+      says no has answered the question.
+    followups:
+      - trigger: answered_yes
+        ask: "Have you sought any professional help for it?"
+      - trigger: answered_yes
+        ask: "Is that ongoing, and would the provider be willing to write something?"
+        document: "provider statement — a letter from a treating professional is the strongest form of this"
+
   - id: public-vs-private
-    ask: "Is the conduct known publicly, or is it something you've kept private?"
-    note: "Feeds the coercion-exposure analysis in _UNIVERSAL.yaml — conduct nobody knows about is the classic vulnerability."
+    ask: "Is this known to anyone, or is it something you've kept to yourself?"
+    criticality: required
+    covers: [who, why]
+    why: "This is the coercion question, and it is the reason this guideline exists at all. Conduct nobody knows about is the classic exposure — which is precisely why disclosing it here reduces that exposure rather than creating a problem."
+    note: |
+      If the answer is that nobody knows, state the point plainly and without
+      alarm, once: reporting it is what removes the leverage. Do not repeat it
+      and do not dramatise it.
+    followups:
+      - trigger: answered_yes
+        ask: "Has anyone ever tried to use it to pressure you into anything?"
+        escalation_if: "yes"
+        event_refs: [aci.behavior.elicitation]
+        why: "An affirmative is a separate reportable event with a counterintelligence channel and its own urgency. It is not a detail of this matter."
+
   - id: workplace-nexus
-    ask: "Did any of this occur at work, on work systems, or involve coworkers?"
+    ask: "Did any of this involve coworkers, subordinates, or anyone you have authority over?"
+    criticality: required
+    covers: [what, who]
+    why: "A workplace relationship raises judgment and possibly Guideline E independently of the conduct, and an employer will often already have a record of it."
+    followups:
+      - trigger: answered_yes
+        ask: "Was there any complaint, HR matter, or employer action?"
+        document: "employer correspondence or HR outcome letter"
+
+  - id: conduct-forward
+    ask: "Is there anything about your situation now that's different from when this happened?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Deliberately open and deliberately gentle. The universal future-intent
+      element carries the direct question; this one exists so the user can say
+      what has changed in their own terms. Never supply an answer and never
+      press for a commitment.

@@ -1,0 +1,173 @@
+# EVENT: arrest.
+#
+# ===========================================================================
+# THIS FILE DELIBERATELY DOES NOT DUPLICATE GUIDELINE G AND J
+# ===========================================================================
+# guideline-G.yaml and guideline-J.yaml already carry the deep ladders for the
+# offence itself — the stop, the testing, the charges, the court, the
+# disposition, the drinking timeline. Restating them here would create two
+# sources for the same question that drift apart, and one of them would quietly
+# lose.
+#
+# What this file adds is the REPORTING view of an arrest, which the guideline
+# checklists do not carry:
+#
+#   * the four required data elements from the table, named as such
+#   * the arrest-versus-booking agency split, which decides where the record
+#     lives and which the newer form asks about directly
+#   * the disposition clock — an arrest is reportable when it happens, not when
+#     the case ends, and this is the single most common reporting mistake
+#   * whether the arrest itself was previously disclosed on a form
+#
+# The gap analyst loads this file AND the guideline checklists. Elements with
+# the same id deduplicate; the ladders in G and J do the heavy lifting.
+#
+# ===========================================================================
+# ARRESTED IS NOT CHARGED IS NOT CONVICTED
+# ===========================================================================
+# The reportable event is the ARREST. It does not require a charge, it does not
+# require a conviction, and it is not undone by a dismissal or an acquittal.
+# Users very often believe a dropped charge means there is nothing to report.
+# Say plainly that the arrest is the event, and that the disposition is a fact
+# recorded alongside it rather than a reason to leave it out.
+event_checklist: event-arrest
+event_ids: [aci.criminal.arrest]
+guidelines: [J, G, E]
+channel_refs: [diss-incident]
+defers_to_guidelines: |
+  guideline-J.yaml and guideline-G.yaml carry the offence-level ladders. Load
+  them alongside this file; do not restate their questions here.
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/forms/entity-capture.yaml
+elements:
+
+  - id: arrest-fact
+    ask: "Were you arrested, or was it a citation you were released on?"
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 22 — Police Record", pvq: "Part B Section 11", incident_report: "description"}
+    why: "The distinction decides which records exist and where. It also matters to the user, who often does not know whether being handcuffed and released counts."
+    followups:
+      - trigger: always
+        ask: "Were you taken into custody, or released at the scene?"
+      - trigger: always
+        ask: "Were you booked or held anywhere?"
+
+  - id: event-date
+    ask: "What was the date?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "event_date"}
+    followups:
+      - trigger: vague
+        ask: "The citation or your driving record will carry it exactly. Shall I mark this approximate for now?"
+      - trigger: always
+        ask: "And when are you reporting it? If time has passed, we'll want to say what accounts for the gap."
+        note: "Delay is handled by the universal reporting-delay element. Collect the explanation; do not editorialise about whether waiting was wrong."
+
+  - id: charges
+    ask: "What were you charged with, as it was written?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "charges"}
+    why: "A required data element. The charge as written on the paperwork, not the user's summary of it — the two frequently differ, and the paperwork is what a record check returns."
+    followups:
+      - trigger: always
+        ask: "Was it a felony or a misdemeanour, if you know?"
+        why: "In several states this decides which clerk holds the file — a felony with the district clerk and a misdemeanour with the county clerk, for instance."
+      - trigger: always
+        ask: "Was there more than one charge?"
+      - trigger: vague
+        ask: "The citation or the court's docket will have the exact wording. Shall I note it as approximate?"
+
+  - id: arresting-and-booking-agency
+    ask: "Which agency arrested you, and did anyone else take you in?"
+    criticality: required
+    covers: [who]
+    entity_ref: arresting-agency-if-different
+    why: "A municipal officer often makes the stop while the county sheriff does the booking. Two agencies, two separate records, and the newer form asks about this directly. A records request has to go to whichever agency created the record."
+    followups:
+      - trigger: always
+        ask: "What is that department's full name? No acronyms — the newer form asks for it spelled out."
+      - trigger: always
+        ask: "What city and state is it in, and its street address if you can find it?"
+      - trigger: answered_no
+        ask: "Which agency booked you, and where were you held?"
+      - trigger: answered_no
+        ask: "And that one's city, state, and street address?"
+
+  - id: location
+    ask: "Where did this happen? City, county, and state."
+    criticality: required
+    covers: [where]
+    entity_ref: offense-location
+    maps_to: {sf86: "Section 22 — location of the offense", pvq: "Part B Section 11"}
+    followups:
+      - trigger: always
+        ask: "Inside city limits, or out in the county? The citation usually names the agency if you're not sure."
+        why: "City versus county decides municipal court or county court, and it is the most common dead end when someone goes looking for a record."
+
+  - id: how-it-came-about
+    ask: "How did it come about?"
+    criticality: required
+    covers: [how, why]
+    note: "Keep this brief here — guideline-J and guideline-G carry the detailed circumstance ladders. This element exists so the reporting view is not left without a mechanism."
+    followups:
+      - trigger: always
+        ask: "Was it a stop, a call, an incident at a business, or something else?"
+
+  - id: disposition-status
+    ask: "Where does the case stand?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "disposition_status"}
+    why: "A required data element, and the one people wait on. The arrest is reportable now; the disposition is recorded alongside it as pending."
+    followups:
+      - trigger: pending
+        ask: "Is there a next court date?"
+        note: "Say plainly: an open case does not postpone the report. Waiting for the outcome is a reporting delay, and it is a common and entirely fixable mistake."
+      - trigger: answered_yes
+        ask: "What was the outcome, and when?"
+      - trigger: answered_yes
+        ask: "Was anything dismissed, reduced, or deferred?"
+        why: "A dismissal does not undo the arrest and does not remove the obligation. Record it as the favourable fact it is, not as a reason the matter goes away."
+
+  - id: court
+    ask: "Which court is or was handling it?"
+    criticality: required
+    covers: [where]
+    entity_ref: court
+    followups:
+      - trigger: always
+        ask: "In which county and state?"
+      - trigger: always
+        ask: "Do you know its address? Your FSO will need it to request the record, and small-jurisdiction courts are genuinely hard to find without one."
+        note: "See corpus/courts/state-courts.yaml for recognition help. Offer the entity-resolver lookup with consent; never assert a court the user has not confirmed."
+
+  - id: prior-disclosure
+    ask: "Was this arrest on a previous security form, or reported before?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    why: "If it was fully disclosed on a prior investigation and nothing has changed, the report may be an update rather than a fresh matter. If it should have been on a form and was not, that is a candour issue that needs addressing in its own right."
+    followups:
+      - trigger: answered_yes
+        ask: "Which form, roughly when, and has anything changed since — a disposition, a new charge?"
+      - trigger: answered_no
+        ask: "Was there a form since then that asked about arrests?"
+        note: "If the answer indicates a question was answered incorrectly, that is a concealment indicator and Guideline E attaches. Handle it plainly — the omission is usually the larger matter and a report that addresses only the arrest leaves it open."
+
+  - id: arrest-forward
+    ask: "Is anything still ahead — a court date, probation, a programme, or a licence matter?"
+    criticality: required
+    covers: [future_intent]
+    why: "Outstanding obligations are what generate the next report. Capturing them now means the user knows what is coming rather than being surprised by it."
+    followups:
+      - trigger: pending
+        ask: "When, and would you want to note that you'll update your FSO once it resolves?"

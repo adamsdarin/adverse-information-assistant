@@ -215,6 +215,142 @@ def check_citations(text: str, corpus: Path, library: Path | None) -> None:
             )
 
 
+# ---------------------------------------------------------------------------
+# DIRECTIVE QUOTATIONS
+# ---------------------------------------------------------------------------
+# The section split guarantees a guideline outside the matter never enters the
+# context window. It does not guarantee that what gets quoted is what the file
+# says. This closes that loop: a quotation attributed to a directive section
+# must actually appear in that section's file.
+#
+# The contract is an attribution line at the end of the blockquote:
+#
+#     > Conditions that could raise a security concern include...
+#     > — SEAD 4, Guideline G
+#
+# Recognised attributions: SEAD 4 Guideline A-M · SEAD 3 Section A-J or
+# Appendix A · ISL 2021-02 Table 1-4.
+#
+# An unverifiable quotation is treated exactly like an unverifiable case
+# citation: as fabricated. If the library is absent, a package that quotes a
+# directive does not ship — the honest alternative is not to quote.
+ATTRIB = re.compile(
+    r"^>\s*[—-]{1,2}\s*(?P<src>SEAD\s*4|SEAD\s*3|ISL\s*2021-02)\s*,\s*"
+    r"(?P<part>Guideline\s+[A-M]|Section\s+[A-J]|Appendix\s+[A-C]|Table\s+[1-4])\s*$",
+    re.I | re.M)
+
+# The same line with the part left unconstrained. A blockquote signed
+# "ISL 2021-02, Table 9" names no part that exists, so the strict pattern does
+# not match it — and a check that only inspects what it recognises can be
+# stepped around by attributing a passage to a section number that was never
+# written. Anything claiming one of these three sources is therefore checked;
+# a part this tool cannot resolve is a failure, not a pass.
+ATTRIB_LOOSE = re.compile(
+    r"^>\s*[—-]{1,2}\s*(?P<src>SEAD\s*4|SEAD\s*3|ISL\s*2021-02)\s*,\s*"
+    r"(?P<part>.+?)\s*$", re.I | re.M)
+
+
+def _sig(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", s.lower())
+
+
+def check_directive_quotes(text: str, library: Path | None) -> None:
+    blocks = []
+    current: list[str] = []
+    for line in text.splitlines():
+        if line.lstrip().startswith(">"):
+            current.append(line)
+        else:
+            if current:
+                blocks.append("\n".join(current))
+            current = []
+    if current:
+        blocks.append("\n".join(current))
+
+    quotes = []
+    for b in blocks:
+        m = ATTRIB.search(b)
+        if not m:
+            loose = ATTRIB_LOOSE.search(b)
+            if loose:
+                failures.append(
+                    f"A passage is attributed to {loose.group('src')}, "
+                    f"{loose.group('part')} — which is not a part of that "
+                    "document this tool can resolve. Cite a real section, or "
+                    "do not quote.")
+            continue
+        body = ATTRIB.sub("", b)
+        body = "\n".join(re.sub(r"^>\s?", "", l) for l in body.splitlines())
+        if len(_sig(body)) >= 40:
+            quotes.append((m.group("src"), m.group("part"), body.strip()))
+    if not quotes:
+        return
+
+    if library is None:
+        failures.append(
+            f"Draft quotes {len(quotes)} directive passage(s) but the DCSA "
+            "Library is not available, so none can be checked against its "
+            "source. An unverifiable quotation is treated as fabricated — "
+            "remove the quotes or locate the library.")
+        return
+
+    import library_paths as lp
+    for src, part, body in quotes:
+        src_n = re.sub(r"\s+", "", src).upper()
+        kind = part.split()[0].title()
+        ident = part.split()[-1].upper()
+        paths: list[Path] = []
+        if src_n == "SEAD4" and kind == "Guideline":
+            paths, _ = lp.guideline_text(library, [ident])
+            paths = [x for x in paths if f"Guideline_{ident}_" in x.name]
+        else:
+            # Every split directive resolves the same way: name -> folder ->
+            # manifest -> the one section file that owns this part. Resolve the
+            # file through find_ci rather than joining the path directly, or a
+            # library whose folder case differs reads as a fabricated quote.
+            directive = {"SEAD3": "SEAD-3", "ISL2021-02": "ISL-2021-02"}.get(src_n)
+            folder = lp.SPLIT_FOLDERS.get(directive) if directive else None
+            manifest = lp.sead_manifest(library, directive) if directive else None
+            for sec in (manifest or {}).get("sections", []):
+                if kind == "Table":
+                    hit = f"Table_{ident}_" in sec["file"]
+                elif kind in ("Section", "Appendix"):
+                    hit = _matches_part(sec, kind, ident)
+                else:
+                    hit = False
+                if hit:
+                    resolved, _ = lp.find_ci(library, f"{folder}/{sec['file']}")
+                    if resolved:
+                        paths = [resolved]
+                    break
+        if not paths:
+            failures.append(
+                f"Draft quotes {src} {part}, but no section file for it was "
+                "found in the library. The quotation cannot be checked.")
+            continue
+        haystack = ""
+        for pth in paths:
+            try:
+                haystack += _sig(pth.read_text(encoding="utf-8", errors="replace"))
+            except OSError:
+                pass
+        if _sig(body) not in haystack:
+            failures.append(
+                f"A passage attributed to {src} {part} does not appear in that "
+                f"section's file. Quoted: {body.strip()[:90]!r}")
+
+
+def _matches_part(section: dict, kind: str, ident: str) -> bool:
+    """Map 'Section F' / 'Appendix A' onto a SEAD-3 section filename."""
+    f = section["file"]
+    if kind == "Appendix":
+        return f"Appendix_{ident}" in f
+    return {"F": "02_All_Covered", "G": "03_Secret", "H": "04_Top_Secret",
+            "I": "05_Responsibilities", "J": "05_Responsibilities",
+            "A": "01_Overview", "B": "01_Overview", "C": "01_Overview",
+            "D": "01_Overview", "E": "01_Overview"}.get(ident, "\0") in f
+
+
 def _entity_allowed(value: str, entities: list[dict]) -> bool:
     """True if this string appears in a confirmed entity record."""
     v = re.sub(r"\s+", " ", value).strip().lower()
@@ -368,6 +504,7 @@ def main() -> int:
     check_outstanding(text, session_path)
 
     check_citations(text, corpus, library)
+    check_directive_quotes(text, library)
     check_pii(text, tier, entities)
     check_entities(text, entities)
     check_persons(text)

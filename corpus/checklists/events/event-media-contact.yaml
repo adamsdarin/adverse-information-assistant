@@ -1,0 +1,186 @@
+# EVENT: media contact where classified information is sought.
+#
+# ===========================================================================
+# READ THE TABLE ENTRY CAREFULLY BEFORE USING THIS FILE
+# ===========================================================================
+# The table entry is `reportable: consult_fso`, not `yes`, and that is
+# deliberate. The ISL's reporting requirement is not "you talked to a
+# journalist." It is scoped to contact where classified information is SOUGHT,
+# or where mishandling or unauthorized disclosure is indicated.
+#
+# That distinction is the whole file. Talking to the press is not itself a
+# security matter, and a tool that implied otherwise would be teaching cleared
+# people that ordinary speech is reportable. It would also be wrong.
+#
+# So this checklist does two things and only two things:
+#   1. establishes whether protected information was sought or disclosed
+#   2. hands the reportability determination to the FSO
+#
+# It never tells the user their contact was not reportable. It never tells them
+# it was. It collects the facts and routes.
+#
+# ===========================================================================
+# WHAT THIS FILE MUST NOT BECOME
+# ===========================================================================
+# Never ask what the user's views are, what they were trying to say, what they
+# think of their employer or the government, or whether the coverage was
+# favourable. None of it is a required data element and none of it is any of
+# this tool's business.
+#
+# If the contact was a protected disclosure — a report of waste, fraud, abuse, or
+# a violation made through a channel that protects it — say so plainly and
+# neutrally, once: those protections exist independently and this tool is not
+# the place to work out how they apply. Then route to the FSO and stop. Do not
+# advise on whistleblower law, and do not suggest the user needs a lawyer.
+event_checklist: event-media-contact
+event_ids: [aci.media]
+guidelines: [K, E]
+channel_refs: [fso]
+reportability_default: consult_fso
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+never_ask: |
+  The user's opinions, their politics, what they think of their employer or the
+  government, whether the resulting coverage was fair, or the substance of any
+  protected information. Never characterise the journalist or the outlet.
+elements:
+
+  - id: contact-nature
+    ask: "What kind of contact was it? A journalist reaching out, an interview, a conversation at an event, or something you initiated."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: vague
+        ask: "Was it on the record, off the record, or unclear at the time?"
+
+  - id: who-and-outlet
+    ask: "Which outlet, if you know it?"
+    criticality: required
+    covers: [who]
+    entity_ref: organization
+    privacy_notice: |
+      The outlet is an organisation, so I'll take its name. I don't need the
+      journalist's name unless you want it in there.
+    followups:
+      - trigger: always
+        ask: "Was it a US outlet or a foreign one?"
+        why: "A foreign outlet, or a foreign state-affiliated one, adds Guideline B and possibly a separate foreign-contact obligation. It is a materially different fact."
+        event_refs: [aci.foreign-contact.continuing]
+      - trigger: answered_yes
+        ask: "Is the outlet state-owned or state-affiliated, as far as you know?"
+        escalation_if: "yes"
+      - trigger: always
+        ask: "Was it a freelancer, or someone you couldn't verify?"
+
+  - id: when
+    ask: "When did this happen?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "Was it one conversation, or has there been ongoing contact?"
+      - trigger: answered_yes
+        ask: "When was the most recent, and do you expect more?"
+      - trigger: always
+        ask: "Has anything been published?"
+
+  - id: where
+    ask: "Where did it take place?"
+    criticality: required
+    covers: [where]
+    followups:
+      - trigger: always
+        ask: "In person, by phone, or in writing? If in person, where."
+      - trigger: always
+        ask: "Was it at a work event, on work premises, or connected to your job?"
+        why: "A workplace nexus usually means the employer has an interest and often a policy, independent of the security question."
+
+  - id: how-they-reached-you
+    ask: "How did they get to you?"
+    criticality: required
+    covers: [how]
+    why: "Whether the user was sought out because of their access, or was simply present at a conference, is the fact that separates a routine contact from a targeted one."
+    followups:
+      - trigger: always
+        ask: "Did they seem to know what you work on?"
+      - trigger: always
+        ask: "Did anyone introduce you, or did they approach you directly?"
+      - trigger: always
+        ask: "Do you still have the messages or emails?"
+        document: "the original correspondence — keep it"
+
+  - id: information-sought
+    ask: "Did they ask you for anything classified or otherwise protected?"
+    criticality: required
+    covers: [what]
+    escalation_if: "yes"
+    why: "This is the fact the ISL entry actually turns on. Everything else in this file is context for it."
+    followups:
+      - trigger: answered_yes
+        ask: "What did they ask about? The subject area is enough — not the substance."
+      - trigger: answered_yes
+        ask: "Did they seem to already have information they shouldn't?"
+        escalation_if: "yes"
+        note: "An affirmative is a possible unauthorized disclosure by someone else and goes to the security office promptly. Do not investigate it and do not speculate about the source."
+      - trigger: answered_no
+        ask: "Was any of it about your work at all, even in general terms?"
+
+  - id: what-you-said
+    ask: "What did you tell them?"
+    criticality: required
+    covers: [what]
+    note: |
+      The only thing being established is whether protected information left. Do
+      not collect the content of any protected material. If the answer is that
+      something was disclosed, record that a disclosure occurred, stop, and say
+      the substance goes to the security office rather than into this document.
+    followups:
+      - trigger: always
+        ask: "Did you say anything about your work beyond what's publicly known?"
+      - trigger: answered_yes
+        ask: "Did you realise at the time, or afterwards?"
+      - trigger: answered_no
+        ask: "Did you decline to answer anything, or refer them to a public affairs office?"
+        why: "Referring a journalist to public affairs is exactly the right answer and belongs on the record. Users leave it out because it feels like nothing happened."
+
+  - id: authorization
+    ask: "Did you have approval to speak? A public affairs release, or your employer's permission."
+    criticality: required
+    covers: [why]
+    followups:
+      - trigger: answered_yes
+        ask: "From whom, and do you have it in writing?"
+        document: "the public affairs or employer approval"
+      - trigger: answered_no
+        ask: "Does your employer have a policy on talking to media?"
+      - trigger: answered_no
+        ask: "Is your employer aware of the contact now?"
+
+  - id: protected-disclosure-check
+    ask: "Was any part of this you reporting a concern about waste, fraud, abuse, or a violation?"
+    criticality: required
+    covers: [why]
+    note: |
+      Ask neutrally and record the answer. If yes, say once and plainly that
+      legal protections for that kind of disclosure exist independently of the
+      reporting question, that this tool is not the place to work out how they
+      apply, and that their security office is the next stop for the reporting
+      obligation. Do not analyse the protections. Do not tell them to get a
+      lawyer. Do not suggest they were right or wrong to do it.
+    followups:
+      - trigger: answered_yes
+        ask: "Did you raise it internally first, and through what channel?"
+
+  - id: media-forward
+    ask: "Do you expect any further contact with them?"
+    criticality: required
+    covers: [future_intent]
+    followups:
+      - trigger: answered_yes
+        ask: "Is there anything you'd want a reviewer to know about how you plan to handle it?"
+        note: "Record what they say. Never advise the user to stop talking to the press or to keep going. That is not a security determination and not this tool's call."

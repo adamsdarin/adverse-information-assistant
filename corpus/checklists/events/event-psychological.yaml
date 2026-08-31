@@ -1,0 +1,198 @@
+# EVENT: court declaration of incompetency; a court or administrative order to
+#        consult a mental health professional; mental-health-related
+#        hospitalization; the ISL's enumerated diagnoses; and failure to consult
+#        the treating professional before altering or discontinuing prescribed
+#        treatment.
+#
+# ===========================================================================
+# THE NARROWNESS IS THE POINT
+# ===========================================================================
+# The ISL enumerates specific circumstances. It does not make mental health
+# reportable. A course of therapy, absent a court order, a hospitalisation, or
+# one of the listed diagnoses, generally falls outside these entries entirely.
+#
+# This checklist therefore starts by establishing WHICH enumerated circumstance
+# applies, and it does not go fishing. If none of them fits, the tool does not
+# say "not reportable" — it returns consult_fso and stops. That is the polarity
+# rule, and it matters more here than anywhere else, because the cost of getting
+# it wrong in either direction is high: over-reporting teaches cleared people
+# that seeking help is dangerous, and under-reporting leaves a real obligation
+# unmet.
+#
+# ===========================================================================
+# SAY THE SEAD 4 SENTENCE FIRST, ONCE
+# ===========================================================================
+# SEAD 4 states that seeking mental health care is not by itself a reason to
+# question judgment or reliability. Say it before the first question. Say it
+# once. Repeating reassurance reads as bracing someone for bad news, and this is
+# the population most likely to hear it that way.
+#
+# ===========================================================================
+# INDUSTRY TABLE
+# ===========================================================================
+# These entries come from the ISL's adverse-information table, which is DCSA's
+# industry implementation. Federal and military users are bound by SEAD 3 but
+# their agency's enumerations may differ. State the requirement, name the
+# population, and route non-industry users to their own security office.
+event_checklist: event-psychological
+event_ids: [adv.psych.legal-events, adv.psych.diagnoses, adv.psych.treatment-deviation]
+guidelines: [I]
+channel_refs: [diss-incident]
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+all_elements_sensitivity: high
+sources:
+  - corpus/reporting/tables/adverse-information.yaml
+preamble: |
+  Before anything else: SEAD 4 says that seeking mental health care is not, by
+  itself, a reason to question anyone's judgment or reliability. A lot of people
+  hold clearances while in treatment.
+
+  What the policy actually asks about is a short, specific list — a court order,
+  a hospitalisation, particular diagnoses, or stopping a prescribed treatment
+  without talking to the provider first. So I'm going to work out which of those
+  applies, and then keep this as short as it can be.
+
+  Any question here you can skip, or hand to your FSO instead of answering me.
+never_ask: |
+  The content of any therapy session. Anything a provider said beyond a
+  diagnosis, treatment status, or prognosis. Symptoms, history, or detail beyond
+  what a listed data element requires. Never ask why someone was in distress.
+elements:
+
+  - id: which-circumstance
+    ask: "Which of these is it? A court declaring incompetency, an order to see a professional, a hospitalisation, a diagnosis you've been told is on the list, or a change to prescribed treatment."
+    criticality: required
+    covers: [what]
+    why: "The entries are specific and everything downstream depends on which applies. This is the only question in the file whose purpose is routing."
+    followups:
+      - trigger: vague
+        ask: "If none of those fits exactly, describe it in your own words and I'll flag it for your FSO rather than guess."
+        note: "The honest branch. Do not decide an unclear case falls outside the list — return consult_fso."
+      - trigger: always
+        ask: "Is more than one of them true?"
+
+  - id: diagnosis
+    ask: "Was a diagnosis made?"
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 21", pvq: "psychological", incident_report: "diagnosis"}
+    followups:
+      - trigger: answered_yes
+        ask: "What was it, and when?"
+      - trigger: answered_yes
+        ask: "Has it since been revised or ruled out?"
+        why: "A superseded diagnosis is a materially different fact, and people report the first thing they were told rather than where it landed."
+      - trigger: answered_no
+        ask: "So there's a reportable circumstance but no diagnosis attached?"
+
+  - id: who-and-where
+    ask: "Which facility or practice was involved?"
+    criticality: required
+    covers: [who, where]
+    entity_ref: treatment-provider
+    privacy_notice: |
+      The practice, clinic, or hospital — that's an organisation and I'll take
+      its name and address. Not the individual clinician; the package leaves a
+      blank for that if a form needs it.
+    followups:
+      - trigger: always
+        ask: "What city and state?"
+      - trigger: always
+        ask: "And the street address, if you can find it? Your FSO may need it."
+      - trigger: always
+        ask: "Was any of it inpatient?"
+
+  - id: when
+    ask: "When did this happen?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: always
+        ask: "How long did it last, and is it ongoing?"
+      - trigger: vague
+        ask: "A month and year is enough."
+
+  - id: how-it-arose
+    ask: "Was it voluntary, or was it ordered or required?"
+    criticality: required
+    covers: [how, why]
+    why: "The single most consequential fact here. A voluntary admission and a court-ordered evaluation are the same category and nothing like the same report."
+    followups:
+      - trigger: answered_no
+        ask: "Who ordered it — a court, an employer, or a licensing body?"
+        escalation_if: "yes"
+      - trigger: answered_no
+        ask: "Is there paperwork? The order, or a discharge summary."
+        document: "the court order or administrative directive"
+      - trigger: answered_yes
+        ask: "What led you to seek it out?"
+        note: "Record as given. This is the user's own account and often the most credible thing in the report. Do not shape it, and do not ask a follow-up about the underlying distress."
+
+  - id: court-detail
+    ask: "If a court was involved, which one?"
+    criticality: required
+    covers: [where]
+    entity_ref: court
+    event_refs: [adv.psych.legal-events]
+    followups:
+      - trigger: answered_yes
+        ask: "Which county and state, and do you know the address?"
+        note: "See corpus/courts/state-courts.yaml. Never assert a court the user has not confirmed."
+      - trigger: answered_yes
+        ask: "What was the order, and has it been lifted or satisfied?"
+      - trigger: pending
+        ask: "Is there a review date, or is anything still open?"
+
+  - id: treatment-change
+    ask: "Have you changed or stopped a prescribed treatment?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "treatment_status"}
+    event_refs: [adv.psych.treatment-deviation]
+    why: "Altering or discontinuing prescribed treatment without first consulting the treating professional is its own enumerated entry. Almost nobody knows that, which is why it is asked directly and without implication."
+    followups:
+      - trigger: answered_yes
+        ask: "Did you speak to the provider before making the change?"
+      - trigger: answered_yes
+        ask: "When, and what changed?"
+      - trigger: answered_no
+        ask: "So you're following it as prescribed?"
+
+  - id: current-status
+    ask: "Where do things stand now?"
+    criticality: required
+    covers: [what]
+    mitigation_ref: "I — ongoing and consistent treatment with a favorable prognosis"
+    followups:
+      - trigger: always
+        ask: "Are you in treatment currently?"
+      - trigger: always
+        ask: "Has a provider given an opinion on your prognosis?"
+        document: "provider statement or letter — the strongest single document in this area"
+      - trigger: answered_no
+        ask: "Would your provider be willing to write one? You don't have to decide now; I'll note it as available to ask for."
+
+  - id: prior-reporting
+    ask: "Has any of this been reported to your security office, or been on a form before?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    followups:
+      - trigger: answered_yes
+        ask: "When, and what has changed since?"
+
+  - id: psych-forward
+    ask: "What does the plan look like from here, in your words?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Record what they say. Never coach toward optimism, never suggest that
+      continuing treatment is the answer a reviewer wants to hear, and never
+      soften a candid account of something unresolved. "It's managed, it's not
+      gone" is more credible than a claim of recovery, and it should survive into
+      the narrative intact.

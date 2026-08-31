@@ -17,10 +17,34 @@ cross_check_rule: |
   field as a required narrative element unless the user states it is not
   applicable. Report unmatched fields as gaps, not as assumptions.
 
+# ---------------------------------------------------------------------------
+# FIELD SHAPE — two are in use, deliberately, and both are honest about it.
+# ---------------------------------------------------------------------------
+# Most sections below still carry `fields` as a flat list of ids — a skeleton
+# nobody has yet paired with the form's own wording. Two sections (23, 26 —
+# the ones an interview most often actually reaches) carry the richer shape
+# instead: each field is `{id, question}`, where `question` closely
+# paraphrases what that item is understood to ask. This is NOT a verified
+# transcription of the current eApp screen text, and it carries no separate
+# verified flag of its own — it inherits the file's single
+# `maintainer_verified: false` exactly like the flat-list sections do.
+#
+# What it is NOT verified for: the exact block/item number (26.3 vs 26.4,
+# whichever the current form revision uses). Don't assert one. The package
+# renderer says so plainly rather than guessing — "confirm the exact block
+# with your FSO or in eApp" is the honest answer until a maintainer checks
+# this against the live form and flips the flag section by section.
 sections:
   "22":
     title: "Police Record"
     guidelines: [G, H, J]
+    items:
+      "22.1":
+        applies_to:
+          - felony_charge
+          - domestic_violence_charge
+          - firearms_or_explosives_charge
+          - alcohol_or_drug_related_charge
     fields:
       - offense_date
       - offense_description
@@ -40,19 +64,32 @@ sections:
     title: "Illegal Use of Drugs or Drug Activity"
     guidelines: [H]
     fields:
-      - substance
-      - first_use_date
-      - most_recent_use_date
-      - nature_frequency_of_use
-      - use_while_possessing_clearance_flag
-      - prescription_misuse_detail
-      - involvement_in_manufacture_or_distribution
-      - treatment_received_flag
-      - treatment_provider_name
-      - treatment_provider_address
-      - treatment_dates
-      - treatment_successfully_completed_flag
-      - intent_to_use_in_future
+      - id: substance
+        question: "Provide the specific drug or controlled substance involved."
+      - id: first_use_date
+        question: "Provide the date of first involvement."
+      - id: most_recent_use_date
+        question: "Provide the date of most recent involvement."
+      - id: nature_frequency_of_use
+        question: "Describe the nature of your involvement and its frequency (e.g., how many times, over what period)."
+      - id: use_while_possessing_clearance_flag
+        question: "Did any of this occur while you held a security clearance or occupied a position of trust?"
+      - id: prescription_misuse_detail
+        question: "If this involved the misuse of a prescription medication, describe the circumstances — whose prescription it was and how it was used other than as prescribed."
+      - id: involvement_in_manufacture_or_distribution
+        question: "Have you ever been involved in the illegal purchase, manufacture, cultivation, transfer, or distribution (including intent to distribute or sell) of any controlled substance?"
+      - id: treatment_received_flag
+        question: "Have you ever been involved in treatment or counseling for drug use?"
+      - id: treatment_provider_name
+        question: "Provide the name of the treatment provider or facility."
+      - id: treatment_provider_address
+        question: "Provide the address of the treatment provider or facility."
+      - id: treatment_dates
+        question: "Provide the dates of treatment."
+      - id: treatment_successfully_completed_flag
+        question: "Was treatment successfully completed? If not, explain the circumstances."
+      - id: intent_to_use_in_future
+        question: "What is your intention regarding future use or involvement?"
   "24":
     title: "Use of Alcohol"
     guidelines: [G]
@@ -70,19 +107,32 @@ sections:
     title: "Financial Record"
     guidelines: [F]
     fields:
-      - event_type
-      - bankruptcy_chapter
-      - bankruptcy_filing_date
-      - court_docket_number
-      - creditor_name
-      - creditor_address
-      - amount
-      - date_incurred
-      - reason_for_delinquency
-      - current_status
-      - resolution_actions_taken
-      - tax_filing_delinquency_detail
-      - gambling_related_flag
+      - id: event_type
+        question: "In the last seven years, has any of the following applied to you: filed for bankruptcy, had a lien placed against you for failing to pay a debt or tax, had a judgment entered against you, had wages garnished, had a debt referred to a collection agency, defaulted on a loan, or had a debt more than 120 days delinquent?"
+      - id: bankruptcy_chapter
+        question: "If bankruptcy was filed, provide the chapter (e.g., Chapter 7, Chapter 13)."
+      - id: bankruptcy_filing_date
+        question: "Provide the date the bankruptcy was filed."
+      - id: court_docket_number
+        question: "Provide the court name and the docket or case number for the bankruptcy, judgment, or garnishment."
+      - id: creditor_name
+        question: "Provide the name of the creditor, claimant, or party involved."
+      - id: creditor_address
+        question: "Provide the address of the creditor, claimant, or party involved."
+      - id: amount
+        question: "Provide the amount involved."
+      - id: date_incurred
+        question: "Provide the date the debt was incurred, or the date it became delinquent."
+      - id: reason_for_delinquency
+        question: "Describe the circumstances — how the debt arose and why it became delinquent, was garnished, or was defaulted on."
+      - id: current_status
+        question: "Provide the current status of the debt (e.g., satisfied, in a repayment arrangement, still delinquent)."
+      - id: resolution_actions_taken
+        question: "Describe what you have done, or intend to do, to resolve this."
+      - id: tax_filing_delinquency_detail
+        question: "If this involves unpaid taxes, provide the tax type, the tax year(s), the amount owed, and whether you have an arrangement with the tax authority and are current on it."
+      - id: gambling_related_flag
+        question: "Has your indebtedness ever been caused by gambling?"
   "19":
     title: "Foreign Contacts"
     guidelines: [B]

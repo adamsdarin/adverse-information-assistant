@@ -1,28 +1,185 @@
-# Guideline C — Foreign Preference. REVIEW DRAFT.
+# Guideline C (Foreign Preference) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 9–11 (foreign preference),
+# the ISL 2021-02 foreign-affiliation entries, and the SF-86 / PVQ
+# dual-citizenship and foreign-passport sections.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# THE DISTINCTION THIS CHECKLIST HAS TO HOLD
+# ---------------------------------------------------------------------------
+# Holding another citizenship is not, by itself, the concern. SEAD 4 is
+# concerned with the EXERCISE of foreign citizenship in a way that indicates a
+# preference — using the passport, voting, serving, taking benefits. Millions of
+# Americans hold a second citizenship by birth or descent and have never
+# exercised any of it.
+#
+# So the questions separate three things people run together: what you HOLD,
+# what you have USED, and what you INTEND. The tool must not imply that the
+# first is a problem, and must not let the second go unasked because the user
+# volunteered the first.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: C
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-C-foreign-preference.md, corpus/reporting/tables/all-covered-individuals.yaml, corpus/reporting/tables/top-secret-q.yaml]
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: medium
+sources:
+  - corpus/sead4/guideline-C-foreign-preference.md
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/reporting/tables/top-secret-q.yaml
+preamble: |
+  Holding citizenship in another country is not by itself a security concern —
+  a great many cleared people hold one by birth or descent. What follows is
+  about specific facts the forms ask for and specific events the policy makes
+  reportable, not about whether having it is acceptable.
 elements:
+
   - id: foreign-citizenship
-    ask: "Do you hold citizenship in another country? Which country, and how was it acquired — birth, descent, marriage, application?"
-  - id: foreign-passport
-    ask: "Do you possess, or have you applied for, a foreign passport or national identity card? Issuing country, document number if you have it, and expiration."
-    format: [issuing_country, document_type, number, issued, expires]
-    maps_to: {sf86: "Section 10", incident_report: "foreign_document"}
-  - id: passport-use
-    ask: "Have you used that document for travel? When, and to where?"
+    ask: "Which country's citizenship do you hold, besides the United States?"
+    criticality: required
+    covers: [who, what, where]
+    maps_to: {sf86: "Section 10 — Dual/Multiple Citizenship", pvq: "citizenship"}
+    followups:
+      - trigger: always
+        ask: "How did you acquire it? Birth, descent through a parent, marriage, naturalisation, or application."
+        why: "Acquired at birth and applied for last year are the same status with very different weight, and the form asks."
+      - trigger: answered_yes
+        ask: "When did you acquire it?"
+      - trigger: answered_yes
+        ask: "Any others beyond that one?"
+
+  - id: citizenship-application
+    ask: "Have you applied for foreign citizenship, or received it, at any point since your last security form?"
+    criticality: required
+    covers: [what, when]
+    event_refs: [aci.foreign-affiliation.citizenship]
+    why: "Application for or receipt of foreign citizenship is an enumerated reportable event in its own right, separate from simply holding one."
+    followups:
+      - trigger: answered_yes
+        ask: "When did you apply, and where does the application stand?"
+      - trigger: answered_yes
+        ask: "How did you apply? Through an embassy, a consulate, an online process, or a lawyer or agent abroad."
+      - trigger: pending
+        ask: "Has it been decided, or is it still outstanding?"
+        why: "A pending application is reportable now, not when it is granted. Leaving it until the outcome is a reporting delay."
+
+  - id: foreign-document
+    ask: "Do you have a foreign passport or national identity card?"
+    criticality: required
+    covers: [what]
+    entity_ref: foreign-entity
+    format: [issuing_country, document_type, issued, expires]
+    maps_to: {sf86: "Section 10 — foreign passport", pvq: "foreign-document", incident_report: "foreign_document"}
+    event_refs: [aci.foreign-affiliation.passport]
+    privacy_notice: |
+      The form asks for the document number. This tool does not collect it —
+      the package leaves a blank for it, the same way it handles your other
+      identifiers. Country, type and dates are enough here.
+    followups:
+      - trigger: answered_yes
+        ask: "Which country issued it, and what type of document is it?"
+      - trigger: answered_yes
+        ask: "When was it issued, and when does it expire?"
+      - trigger: answered_yes
+        ask: "Where is it physically now? In your possession, surrendered to your security office, or somewhere else."
+        why: "Location is what an FSO will ask first, and 'surrendered to my FSO in 2022' is a materially different answer from 'in a drawer at home'."
+      - trigger: answered_no
+        ask: "Have you ever held one, even one that has since expired?"
+        why: "The question reaches past tense. An expired passport that was used is still a use."
+
+  - id: document-use
+    ask: "Have you used that document for anything?"
+    criticality: required
+    covers: [what, how]
+    why: "Use is the fact the guideline turns on. Possession without use is a much shorter report — but only if the question was actually asked."
+    followups:
+      - trigger: answered_yes
+        ask: "What did you use it for? Travel, identification, employment, banking, or property."
+      - trigger: answered_yes
+        ask: "When, and to or in which country?"
+        event_refs: [aci.travel.unofficial]
+      - trigger: answered_yes
+        ask: "Did you enter or leave the United States on it?"
+        why: "Entering the US on a foreign passport is a specific fact reviewers ask about, and users often do not realise it is distinct from using it abroad."
+      - trigger: answered_no
+        ask: "So it has never been used for travel or identification since you received it?"
+        why: "An explicit negative on the record is worth having. An unasked question looks the same as a hidden answer."
+
   - id: exercise-of-rights
-    ask: "Have you exercised any other rights of that citizenship — voting, foreign military service, government employment, benefits, or property rights available only to citizens?"
+    ask: "Have you exercised any other right that comes with that citizenship?"
+    criticality: required
+    covers: [what]
+    why: "This is where the substance usually is. Benefits, service and property rights available only to citizens are all exercises of the citizenship, and none of them feel like one to the user."
+    followups:
+      - trigger: always
+        ask: "Have you received any benefit from that government? Education, health care, a pension, or a subsidy."
+      - trigger: always
+        ask: "Have you served in its military, or worked for its government?"
+        escalation_if: "yes"
+      - trigger: always
+        ask: "Do you hold property or a bank account there that is only available to citizens?"
+        event_refs: [tsq.foreign-property, tsq.foreign-bank]
+
   - id: foreign-vote
     ask: "Have you voted in a foreign election?"
-    note: "Separately reportable for Top Secret/Q holders — re-run requirements advisor."
+    criticality: required
+    covers: [what, when]
+    event_refs: [tsq.foreign-vote]
+    why: "Separately reportable at the Top Secret level. The requirements advisor re-runs on an affirmative because it can add an obligation the user did not come here for."
+    followups:
+      - trigger: answered_yes
+        ask: "Which election, and when?"
+      - trigger: answered_yes
+        ask: "How did you vote? In person there, at a consulate, or by post."
+        covers_note: "mechanism — an in-person vote implies travel that may itself be reportable"
+
+  - id: obligations-owed
+    ask: "Does that citizenship carry any obligation you owe — military service, tax filing, or registration?"
+    criticality: required
+    covers: [what, why]
+    why: "An unmet or unmentioned obligation is the thing most likely to surface later. Stating it now costs nothing."
+    followups:
+      - trigger: answered_yes
+        ask: "What is required, and where do you stand on it?"
+
   - id: renunciation-status
-    ask: "Have you taken any steps to renounce the foreign citizenship or surrender the document?"
-    mitigation_ref: "C — expressed willingness to renounce or surrender"
+    ask: "Have you taken any steps to renounce the citizenship or surrender the document?"
+    criticality: required
+    covers: [what, when]
+    mitigation_ref: "C — expressed willingness to renounce dual citizenship, or surrender of the document"
+    note: |
+      Ask this as a factual question about steps already taken. Never advise
+      renouncing a citizenship, never suggest surrendering a document, and never
+      imply that declining to do either is a problem. Those are consequential
+      personal decisions and this tool has no business steering them.
+    followups:
+      - trigger: answered_yes
+        ask: "What did you do, and when?"
+      - trigger: answered_yes
+        ask: "Do you have anything in writing confirming it?"
+        document: "renunciation certificate, or the security office receipt for a surrendered document"
+
   - id: us-preference-evidence
-    ask: "Is there anything you'd point to showing your preference for the United States — military service, oath, long-term residence, family ties?"
+    ask: "Is there anything you would point to showing where your allegiance sits? Military service, an oath, long residence, family here."
+    criticality: required
+    covers: [why]
+    mitigation_ref: "C — the individual has expressed a willingness to renounce, or has only a nominal foreign connection"
+    note: |
+      Open question, recorded as answered. Do not enumerate for them, do not
+      rank the items, and do not characterise the result.
+
+  - id: preference-forward
+    ask: "Going forward, do you expect to use the document or exercise any of those rights?"
+    criticality: required
+    covers: [future_intent]
+    why: "Prospective use is the question a reviewer actually has, and it is answerable in one sentence. Silence on it invites the assumption."
+    followups:
+      - trigger: answered_yes
+        ask: "For what, and roughly when?"

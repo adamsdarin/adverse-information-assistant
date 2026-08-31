@@ -1,10 +1,39 @@
 # Guideline G (Alcohol) — required narrative elements.
+#
+# REFERENCE IMPLEMENTATION for the granular question style. The other
+# checklists follow this shape.
+#
 # Maintainer-authored, derived from SEAD 4 ¶¶ 21–23, ISL 2021-02 data elements,
 # and recurring factual questions in published DOHA decisions.
 # KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# WHY THIS IS SO GRANULAR
+# ---------------------------------------------------------------------------
+# A narrative has to survive a reader who was not there and who will not call
+# to clarify. "I was arrested for OWI and it was resolved in court" invites
+# every question it fails to answer, and each one becomes a request for
+# information weeks later.
+#
+# But granularity is not an interrogation. Each element has a PARENT question
+# that always gets asked, and `followups` that fire only when the parent
+# answer is thin, when the form demands the detail, or when something does not
+# add up. A clean, complete answer closes the element in one exchange. A vague
+# one gets exactly one more layer.
+#
+# followups[].trigger is one of:
+#   always                the parent alone is insufficient — ask every time
+#   vague                 the answer lacks a date, number, name, or outcome
+#   answered_yes          the parent was affirmative
+#   answered_no           the parent was negative (often the more useful branch)
+#   pending               something is unresolved
+#   quantitative_tension  numbers in the account do not sit comfortably
+#                         together — see corpus/checks/plausibility.yaml
 guideline: G
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
@@ -13,38 +42,348 @@ sources:
   - corpus/sead4/guideline-G-alcohol.md
   - corpus/reporting/tables/all-covered-individuals.yaml
 elements:
+
+  # ---------------------------------------------------------------- event
   - id: incident-date
-    ask: "When did the incident occur (month/year)?"
+    covers: [when]
+    ask: "What was the date of the incident? A full date if you have it — month and year if that's all you're sure of."
+    criticality: required
     maps_to: {sf86: "Section 22 — Police Record", pvq: "criminal-history", incident_report: "event_date"}
-  - id: incident-description
-    ask: "What happened, factually — location type, circumstances, BAC if known?"
-    maps_to: {sf86: "Section 22", pvq: "criminal-history", incident_report: "description"}
-  - id: charges
-    ask: "What exactly were you charged with, if anything?"
+    followups:
+      - trigger: vague
+        ask: "Your driving record usually carries the exact date and can often be pulled online the same day. Shall I mark this approximate for now?"
+        why: "An adjudicator can work with a stated approximation. They cannot work with a date that is silently wrong."
+
+  - id: incident-location
+    covers: [where]
+    ask: "Where exactly did this happen — what city and county, and what state?"
+    criticality: required
+    entity_ref: offense-location
+    why: "The form asks for the location of the offence by city, county, state and ZIP. It also decides which court heard it and which agency holds the report."
+    maps_to: {sf86: "Section 22 — location where the offense occurred", pvq: "Part B Section 11"}
+    followups:
+      - trigger: always
+        ask: "Was the stop inside city limits, or out in the county? The citation usually names the agency if you're not sure."
+        why: "City versus county decides municipal court or county court — a common dead end when someone goes looking for the record."
+      - trigger: always
+        ask: "Where were you stopped — which road or area?"
+        why: "For an OWI the offence location is where you were stopped, not where you had been drinking. People give the wrong one."
+
+  - id: citing-agency
+    covers: [who, where]
+    ask: "Which agency issued the citation — the city police department, the county sheriff, or the state patrol?"
+    criticality: required
+    entity_ref: citing-agency
+    record: "arrest or incident report — request it from this agency"
+    why: "Both forms ask for the agency by name. Spell it out in full; the PVQ says no acronyms."
+    maps_to: {sf86: "Section 22 — name of the law enforcement agency", pvq: "Part B Section 11"}
+    followups:
+      - trigger: always
+        ask: "What city and state is that department in?"
+      - trigger: always
+        ask: "And its street address, if you can find it? The PVQ asks for it, and your FSO needs it to request the report."
+
+  - id: arresting-agency-if-different
+    covers: [who, where]
+    ask: "Was it the same agency that actually arrested you, or did someone else take you in?"
+    criticality: required
+    entity_ref: arresting-agency-if-different
+    why: "A municipal officer often makes the stop while the county sheriff does the booking. Two agencies, two separate records — and the PVQ asks about this directly."
+    maps_to: {pvq: "Part B Section 11 — did the same agency arrest you?"}
+    followups:
+      - trigger: answered_no
+        ask: "Which agency booked you, and where were you held?"
+      - trigger: answered_no
+        ask: "What city and state is that one in, and its street address if you can find it?"
+        why: "A records request has to go to the agency that created the record. The arrest report sits with whoever made the stop; the booking record sits with whoever ran the jail."
+
+  - id: venue
+    covers: [where, who]
+    ask: "Where had you been beforehand — a bar, a restaurant, a private home, a work event?"
+    criticality: required
+    entity_ref: venue
+    why: "Not a form field, but 'I had been at a bar' reads as evasion when the rest of the account is specific. It is also what establishes whether this was a work event."
+    followups:
+      - trigger: answered_yes
+        ask: "What is the name of the place, and what city and state?"
+        why: "A business is an organisation, so this is collectible at every privacy tier. A private residence is not — that follows the tier and gets no address."
+
+  # -------------------------------------------- lead-up and decision chain
+  # An arrest summary starts at the traffic stop. A candid account starts
+  # earlier, with the circumstances and choices that put the person there.
+  - id: pre-incident-activity
+    covers: [what, when]
+    ask: "What were you doing in the hours before you began drinking?"
+    criticality: required
+    sensitivity: high
+    why: "The lead-up distinguishes an isolated set of circumstances from an established routine and prevents the narrative from reading like the incident began at the traffic stop."
+
+  - id: drinking-circumstances
+    covers: [why]
+    ask: "What was happening that led you to drink on that occasion?"
+    criticality: required
+    sensitivity: high
+    why: "This asks for the person's stated circumstances, not an excuse or a diagnosis. The account should explain the setting without inventing a motive."
+
+  - id: decision-to-drive
+    covers: [how, why]
+    ask: "How did you come to decide to drive after drinking?"
+    criticality: required
+    sensitivity: high
+    why: "An OWI results from a sequence of choices. The narrative must identify the decision point and the person's own explanation rather than jumping from consumption to the stop."
+    followups:
+      - trigger: vague
+        ask: "What other way home, if any, did you consider at the time?"
+        why: "Record what was actually considered. Do not supply hypothetical alternatives or turn the question into coaching."
+
+  - id: behavior-typicality
+    covers: [what]
+    ask: "Was that sequence typical for you at that time?"
+    criticality: required
+    sensitivity: high
+    followups:
+      - trigger: answered_no
+        ask: "What was different about that occasion?"
+        why: "A claimed departure from ordinary behavior needs the concrete circumstances that made it different; do not accept 'out of character' as a complete answer."
+      - trigger: answered_yes
+        ask: "How often had that happened before?"
+        why: "Typical conduct is a pattern fact even if it never previously led to a stop or arrest."
+
+  - id: stop-circumstances
+    covers: [how, why]
+    ask: "How did the stop come about — routine traffic stop, checkpoint, collision, or someone calling it in?"
+    criticality: required
+    followups:
+      - trigger: always
+        ask: "Where had you come from, and where were you going?"
+        why: "A work event in the account changes how the matter reads. Omitting it and having it emerge later is worse than stating it."
+
+  - id: harm-and-damage
+    covers: [who, what]
+    ask: "Was anyone else in the vehicle, and was anyone injured or any property damaged?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "Who was involved, what were the injuries or damage, and was there a separate civil claim or lawsuit?"
+        why: "Injury or damage often creates a second matter — a civil suit or a judgment — that is separately reportable."
+
+  # ------------------------------------------------------------- testing
+  - id: field-testing
+    covers: [what, how]
+    ask: "Were you given field sobriety tests at the roadside?"
+    criticality: context
+
+  - id: chemical-test
+    covers: [what, how]
+    ask: "Was a breath or blood test taken, or did you refuse one?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "Breath or blood, and what was the reading?"
+      - trigger: answered_yes
+        ask: "Roughly how long after the stop was the test taken?"
+        why: "Timing affects how the number reads, and the report will state it."
+      - trigger: answered_no
+        ask: "Was the refusal itself charged, or did it trigger a separate licence action?"
+        why: "In most states refusal carries its own administrative penalty, and it gets omitted because it wasn't a criminal charge."
+
+  # -------------------------------------------------- consumption ladder
+  # Asked plainly, and it drills down only where the account is vague or sits
+  # uneasily with a stated test result. See corpus/checks/plausibility.yaml.
+  # The point is never to catch the user out — it is that an adjudicator will
+  # do this arithmetic, and the statement should already answer it.
+  - id: consumption-account
+    covers: [what, how, when]
+    ask: "What had you had to drink that day?"
+    criticality: required
+    sensitivity: high
+    followups:
+      - trigger: vague
+        ask: "Roughly how many drinks, and over how long?"
+      - trigger: quantitative_tension
+        ask: "What were you drinking — beer, wine, spirits — and do you know roughly how strong it was?"
+      - trigger: quantitative_tension
+        ask: "How long before you drove was your last drink, and had you eaten?"
+        why: "Not to challenge the account, but because a reader comparing the drinks described against the test result will ask this. A statement that already answers it doesn't generate a follow-up."
+
+  # -------------------------------------------------------------- charge
+  - id: charge-language
+    covers: [what]
+    ask: "What exactly were you charged with? The precise wording from the citation or court paperwork, if you have it."
+    criticality: required
+    why: "'DUI' is shorthand. The actual charge — OWI, DWI, OUI, DUII, driving while ability impaired — and its statute number are what the record shows."
     maps_to: {sf86: "Section 22", pvq: "criminal-history"}
-  - id: disposition
-    ask: "What was the legal outcome — plea, conviction, sentence, fines, court dates? Is anything still pending?"
+    followups:
+      - trigger: vague
+        ask: "If you don't have the wording, the statute or code number on the citation is just as good."
+
+  - id: charge-level
+    covers: [what]
+    ask: "Was it charged as a misdemeanour, a felony, or a civil or traffic infraction?"
+    criticality: required
+    why: "Decides which court heard it and how form questions about criminal history should be answered. In some states a first offence is not a crime at all — see corpus/courts/state-courts.yaml."
+    followups:
+      - trigger: vague
+        ask: "Did you appear before a judge in a criminal court, or was it handled more like a traffic matter?"
+
+  - id: enhancements
+    covers: [what]
+    ask: "Were any aggravating elements charged — a high test result, a passenger under 18, an accident, or a prior-offence enhancement?"
+    criticality: required
+
+  - id: additional-charges
+    covers: [what]
+    ask: "Were you charged with anything else arising from the same stop?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "What were the other charges, and how did each one resolve?"
+        why: "Open container, possession, resisting, driving on a suspended licence — these travel with the stop and get omitted because the user thinks of the event as 'the OWI'."
+
+  # --------------------------------------------------------------- court
+  - id: court-identity
+    covers: [where, who]
+    ask: "Which court handled the case?"
+    criticality: required
+    entity_ref: court
+    why: "Both forms ask for the court by name. Spell it out in full — the PVQ says no acronyms. The clerk of that court also holds the disposition a security officer will need."
+    tool: "scripts/court_lookup.py — offer the nudge only if they don't know; record their answer, never the suggestion"
+    record: "certified court disposition"
+    maps_to: {sf86: "Section 22 — name of the court", pvq: "Part B Section 11"}
+    followups:
+      - trigger: always
+        ask: "What city and county is that court in?"
+        why: "The SF-86 asks for the court's location by city, county, state and ZIP."
+      - trigger: always
+        ask: "And its street address, if you can find it? The PVQ asks for it, and it's where a records request goes."
+
+  - id: case-number
+    covers: [what]
+    ask: "What was the case or docket number?"
+    criticality: required
+    why: "Without it, retrieving the record means a name search — slower, and it can surface the wrong person."
+    followups:
+      - trigger: vague
+        ask: "It's on any court paperwork you kept, and usually on that state's online case search. I'll mark it as still needed if you don't have it to hand."
+
+  - id: plea
+    covers: [what]
+    ask: "How did you plead?"
+    criticality: required
+
+  - id: disposition-outcome
+    covers: [what]
+    ask: "What was the outcome — convicted as charged, convicted of a reduced charge, dismissed, deferred, or diverted?"
+    criticality: required
+    why: "A reduced or deferred outcome is materially different from a conviction and is frequently described imprecisely."
     maps_to: {sf86: "Section 22", pvq: "criminal-history"}
-    document: "certified court disposition"
-    escalation_if: "pending"
-  - id: license-consequences
-    ask: "Any license suspension, restricted driving privileges, or interlock requirement?"
+    followups:
+      - trigger: always
+        ask: "What was the final charge — the exact wording again, if it changed from what you were originally charged with?"
+      - trigger: pending
+        ask: "What is still outstanding, and what is the next date?"
+        escalation_if: "pending"
+
+  - id: disposition-date
+    covers: [when]
+    ask: "What date was the case resolved?"
+    criticality: required
+
+  - id: sentence-terms
+    covers: [what]
+    ask: "What was the sentence — jail, probation, community service, a fine, or a combination?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "How much was the fine, and has it been paid in full?"
+      - trigger: answered_yes
+        ask: "How long was the probation or supervision, and has it ended?"
+      - trigger: pending
+        ask: "When does it end, and are you currently in compliance?"
+
+  # ------------------------------------------------- administrative track
+  # A different proceeding from the criminal case, and constantly conflated
+  # with it.
+  - id: licence-action
+    covers: [what]
+    ask: "Separately from the court case — was your driving licence suspended, revoked, or restricted?"
+    criticality: required
+    why: "The DMV action is its own proceeding with its own dates. People report one and omit the other."
+    record: "state driving record — usually obtainable online the same day"
+    followups:
+      - trigger: answered_yes
+        ask: "What were the start and end dates of that action?"
+      - trigger: answered_yes
+        ask: "Was an ignition interlock required, and is it still installed?"
+      - trigger: answered_yes
+        ask: "Has your licence been fully reinstated?"
+
+  # ----------------------------------------------------------- treatment
+  - id: evaluation-ordered
+    covers: [what]
+    ask: "Was an alcohol evaluation or assessment ordered?"
+    criticality: required
+    sensitivity: high
+    mitigation_ref: "G-23"
+    followups:
+      - trigger: answered_yes
+        ask: "What did the evaluation recommend?"
+
   - id: treatment-status
-    ask: "Was any evaluation, education, or treatment ordered or undertaken voluntarily? Completed, in progress, or not started?"
-    mitigation_ref: "G-23"
-    document: "completion certificate or provider letter, if any"
+    covers: [what, future_intent]
+    ask: "Was any education, counselling, or treatment ordered — or did you undertake any voluntarily?"
+    criticality: required
     sensitivity: high
-  - id: pattern-check
-    ask: "Any prior alcohol-related incidents — including any never charged or reported?"
     mitigation_ref: "G-23"
+    record: "completion certificate or provider letter"
+    followups:
+      - trigger: answered_yes
+        ask: "What kind of programme, and over what dates?"
+      - trigger: answered_yes
+        ask: "Is it completed, in progress, or not yet started?"
+      - trigger: answered_yes
+        ask: "Voluntary, or required by the court?"
+        why: "Voluntary participation is a recognised mitigating consideration and is worth stating plainly rather than leaving to inference."
+
+  # ----------------------------------------------------------- reporting
+  - id: who-was-notified
+    covers: [who]
+    ask: "Who at work has been told, and when?"
+    criticality: required
+    followups:
+      - trigger: answered_no
+        ask: "Has your security office been notified at all yet?"
+
+  # ------------------------------------------------------------- pattern
+  - id: prior-incidents
+    covers: [when, what]
+    ask: "Have there been any earlier alcohol-related incidents — including any never charged?"
+    criticality: required
+    mitigation_ref: "G-23"
+    followups:
+      - trigger: answered_yes
+        ask: "For each one: roughly when, what happened, and how it resolved."
+      - trigger: answered_yes
+        ask: "Were any of those disclosed on a previous form or investigation?"
+        why: "Routes to the prior-disclosure check — an already-disclosed prior does not need re-litigating."
+
+  # ---------------------------------------------------------- mitigation
   - id: current-relationship
-    ask: "Describe your current alcohol use, in your own words."
+    covers: [why, future_intent]
+    ask: "How would you describe your drinking now?"
+    criticality: mitigation
     mitigation_ref: "G-23"
     sensitivity: high
+
+  - id: changes-made
+    covers: [future_intent]
+    ask: "What has changed since — habits, circumstances, support, anything you've put in place?"
+    criticality: mitigation
+    mitigation_ref: "G-23"
+
   - id: age-at-conduct
+    covers: [when]
     ask: "Roughly how old were you at the time?"
+    criticality: mitigation
     mitigation_ref: "whole-person"
     optional: true
-  - id: changes-made
-    ask: "What, if anything, have you changed since — habits, circumstances, support?"
-    mitigation_ref: "G-23"

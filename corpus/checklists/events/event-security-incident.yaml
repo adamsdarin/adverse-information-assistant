@@ -1,0 +1,195 @@
+# EVENT: security violations and infractions, and the loss or suspected
+#        compromise of protected information.
+#
+# ===========================================================================
+# THE ONE FILE WITH NO TABLE ENTRY — AND WHY IT SAYS SO OUT LOUD
+# ===========================================================================
+# event_ids is empty, deliberately. Security violations and the loss or
+# suspected compromise of protected information are reported under the NISPOM
+# reporting requirements for industry, not under an ISL 2021-02 SEAD 3 table
+# entry. This corpus does not contain verified NISPOM text.
+#
+# So this file does NOT assert an obligation. The requirements advisor returns
+# consult_fso for it. The questions are still worth asking — the facts are the
+# same facts either way, and an FSO with a complete account can make the call in
+# a minute — but the tool does not tell the user what the rule is when it cannot
+# cite the rule.
+#
+# The alternative was to invent a table entry so this file looked like the
+# others. That would have been indistinguishable from the real entries to anyone
+# reading the corpus, which is exactly the failure mode the provenance rules
+# exist to prevent. An honest gap is better than a convincing fabrication.
+#
+# ===========================================================================
+# RELATIONSHIP TO GUIDELINE K AND M
+# ===========================================================================
+# guideline-K.yaml carries the deep ladders for mishandling, and guideline-M for
+# the IT dimension. Load them alongside this file. What this adds is the
+# INCIDENT view: the inquiry, the determination, the case reference, and the
+# fact that a user's own security office is usually already involved — which
+# makes this the one area where the FSO very likely knows more than the user
+# does.
+#
+# ===========================================================================
+# CONTENT RULE
+# ===========================================================================
+# Same as Guideline K, and it is not boilerplate: do not describe the protected
+# material. This tool is not an approved system for it, and a user who types the
+# thing they mishandled into an unapproved assistant has turned a procedural
+# problem into a much larger one.
+event_checklist: event-security-incident
+event_ids: []
+no_table_entry_because: |
+  Security violations, infractions, and loss or suspected compromise are NISPOM
+  reporting requirements rather than ISL 2021-02 SEAD 3 table entries. This
+  corpus contains no verified NISPOM text, so no obligation is asserted and the
+  requirements advisor returns consult_fso.
+guidelines: [K, M]
+channel_refs: [fso]
+reportability_default: consult_fso
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: high
+sources:
+  - corpus/sead4/guideline-K-protected-info.md
+  - corpus/reporting/tables/channels.yaml
+preamble: |
+  One thing before we start, and it matters: don't describe the protected
+  material itself — not the subject, not the substance. I'm not an approved
+  system for it, and everything I need is about what happened around it.
+
+  Also worth saying plainly: your security office may already know more about
+  this than you do. If there has been an inquiry, they have a file, and the most
+  useful thing this account can do is match it.
+never_ask: |
+  The subject, substance, markings beyond the level, programme names, or code
+  words. If the user volunteers any of it, stop them, do not repeat it back, and
+  do not carry it into the narrative.
+elements:
+
+  - id: incident-nature
+    ask: "What happened? Describe it procedurally."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: vague
+        ask: "Which part of the procedure wasn't followed?"
+      - trigger: always
+        ask: "Was anything actually lost or unaccounted for, or was it contained?"
+        escalation_if: "yes"
+
+  - id: when
+    ask: "When did it happen, and when was it discovered?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "How long between the two?"
+        why: "The gap between occurrence and discovery is a fact every inquiry establishes, and it is often what separates an infraction from a violation."
+      - trigger: pending
+        ask: "Is this still unfolding?"
+
+  - id: where
+    ask: "Where did it happen?"
+    criticality: required
+    covers: [where]
+    entity_ref: organization
+    followups:
+      - trigger: always
+        ask: "Which facility or site, and in what city and state?"
+      - trigger: always
+        ask: "Whose space was it? Your employer's, a customer's, a government facility, or somewhere uncleared."
+      - trigger: answered_yes
+        ask: "Did anything leave the facility?"
+        escalation_if: "yes"
+
+  - id: who-involved
+    ask: "Who was involved or present? Roles, not names."
+    criticality: required
+    covers: [who]
+    privacy_notice: |
+      Roles are enough — "a coworker," "the FSO." I won't ask for names.
+    followups:
+      - trigger: always
+        ask: "Were they cleared, and did they have need-to-know?"
+      - trigger: answered_no
+        ask: "Could anyone uncleared have seen or heard it?"
+        escalation_if: "yes"
+
+  - id: how
+    ask: "How did it happen, mechanically?"
+    criticality: required
+    covers: [how]
+    followups:
+      - trigger: always
+        ask: "Was any system, device, or account involved that shouldn't have been?"
+        note: "An affirmative adds Guideline M. Re-run the classifier."
+      - trigger: always
+        ask: "Was it a one-off, or a practice that had been going on?"
+        why: "A standing workaround is a different report from a single lapse, and it is usually what an inquiry finds. Better stated than discovered."
+
+  - id: why-it-happened
+    ask: "What was going on that led to it?"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "K — the conduct was inadvertent, followed by a prompt and good-faith effort to correct"
+    note: |
+      Record it as given. Deadline pressure, a broken process, a practice the
+      user had seen others follow — these are real explanations and they make a
+      lapse comprehensible. Do not lead toward "inadvertent" and do not
+      construct a justification the user has not offered.
+    followups:
+      - trigger: always
+        ask: "Did you know at the time it was contrary to procedure?"
+
+  - id: reporting-and-inquiry
+    ask: "Did you report it yourself, or was it discovered?"
+    criticality: required
+    covers: [who, when]
+    mitigation_ref: "K — a prompt, good-faith report to appropriate officials"
+    why: "The strongest fact available in most of these, and the one most often omitted because stating it feels like arguing your own case."
+    followups:
+      - trigger: answered_yes
+        ask: "To whom, and how soon after?"
+      - trigger: answered_yes
+        ask: "Is there anything showing when? An email, a log entry, an incident number."
+        document: "the self-report, or the security office's acknowledgement"
+      - trigger: always
+        ask: "Was there an inquiry or investigation?"
+      - trigger: pending
+        ask: "Is it still open, and do you know who is handling it?"
+
+  - id: determination
+    ask: "Was a violation or an infraction issued?"
+    criticality: required
+    covers: [what]
+    why: "These are distinct determinations with distinct consequences, and the security office made one of them in writing. The user's report should match their record rather than approximate it."
+    followups:
+      - trigger: answered_yes
+        ask: "Which, and is there a reference or case number?"
+      - trigger: answered_yes
+        ask: "What followed for you? Retraining, counselling, or a change to your access."
+        document: "the determination, the training record, or the access decision"
+      - trigger: answered_no
+        ask: "Handled informally, or is a determination still to come?"
+
+  - id: pattern
+    ask: "Have there been prior violations or infractions, however minor?"
+    criticality: required
+    covers: [what]
+    why: "The security office holds this list. A report that omits a prior infraction the FSO can see in their own file does more damage than the infraction did."
+    followups:
+      - trigger: answered_yes
+        ask: "Roughly when, and what were they?"
+
+  - id: incident-forward
+    ask: "What's different now in how you handle this?"
+    criticality: required
+    covers: [future_intent]
+    mitigation_ref: "K — the individual has taken action to eliminate the vulnerability"
+    note: |
+      Concrete and real only — a changed workflow, a checklist, a rule about
+      where a device goes. A stated intention to be more careful is worth very
+      little. Never invent one and never upgrade a vague answer.

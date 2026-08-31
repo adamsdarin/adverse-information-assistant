@@ -1,0 +1,45 @@
+{
+  "directive": "SEAD-3",
+  "source_file": "SEAD-3_Reporting-Requirements.txt",
+  "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "generated_by": "test fixture",
+  "cut_method": "section headings, reassembly-verified",
+  "sections": [
+    {
+      "file": "01_Overview_Policy_and_General_Requirements.md",
+      "title": "Overview",
+      "body_sha256": "b6520151be170dc9d689ce9874bc0967044b529068a00deb8f6c071a1b027461",
+      "lines": 1
+    },
+    {
+      "file": "02_All_Covered_Individuals.md",
+      "title": "All Covered Individuals",
+      "body_sha256": "019b95ade330a022786f8d25b2e4710f09390ae26093564a5aad37cbc7c67adf",
+      "lines": 1
+    },
+    {
+      "file": "03_Secret_Confidential_L_Noncritical.md",
+      "title": "Secret/Confidential/L",
+      "body_sha256": "7af6a75d806b7c345895bd718956e855f6863d386c215a41f33024fee9d95f46",
+      "lines": 1
+    },
+    {
+      "file": "04_Top_Secret_Q_Critical_Special.md",
+      "title": "Top Secret/Q",
+      "body_sha256": "ed4ab8d6db04e0e33d3aafae7d70ef94c546169b98eeaf9f454b3b1ac5faf67f",
+      "lines": 1
+    },
+    {
+      "file": "05_Responsibilities_and_Effective_Date.md",
+      "title": "Responsibilities",
+      "body_sha256": "f870b1725fc35ab55ab8b9e950116fd5e5a6fd50fb7c3f0cc08170838a555d8d",
+      "lines": 1
+    },
+    {
+      "file": "06_Appendix_A_Required_Data_Elements.md",
+      "title": "Appendix A",
+      "body_sha256": "ca5bd2bb1e1aaea6e98b5969f2e3853332748a12c7c81225642fdc953046f98a",
+      "lines": 1
+    }
+  ]
+}

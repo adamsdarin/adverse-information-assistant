@@ -1,0 +1,201 @@
+# EVENT: foreign state-backed, hosted, or managed cryptocurrency, and wallets
+#        hosted by foreign exchanges.
+#
+# ===========================================================================
+# WHY THIS IS ITS OWN CHECKLIST
+# ===========================================================================
+# It sits between two guidelines and belongs to neither. Asked through Guideline
+# F it becomes a debt question, which it is not. Asked through Guideline B it
+# becomes a relationship question, which it also is not. The reportable fact is
+# structural: WHERE the thing is hosted, and WHO controls the host.
+#
+# ===========================================================================
+# THE PROBLEM THIS FILE HAS TO SOLVE
+# ===========================================================================
+# Most users do not know where their exchange is incorporated, and there is no
+# reason they should. The information is genuinely hard to find, the industry
+# restructures constantly, and the same brand may operate through different
+# entities in different countries.
+#
+# This tool does not look it up. It has no network access by design, and an
+# out-of-date answer asserted confidently is worse than no answer. So the ladder
+# does something more useful: it collects the facts that let the FSO or the user
+# determine it — the exact platform name, which country's version they signed up
+# to, what the terms of service said, what currency and payment rails were used,
+# whether they had to do a country-specific identity verification.
+#
+# Then it says, plainly, that this is a question for the FSO. It never guesses,
+# never names an exchange's jurisdiction from memory, and never tells a user
+# their holding is or is not reportable.
+#
+# ===========================================================================
+# THE SELF-CUSTODY DISTINCTION
+# ===========================================================================
+# A wallet whose keys the user holds is not "hosted by a foreign exchange," and
+# treating it as though it were would sweep in a large amount of activity the
+# entry does not reach. But the coin may still be state-backed, and the user may
+# still have acquired it through a foreign exchange. Ask all three separately:
+# what it is, where it is held, and where it came from.
+event_checklist: event-crypto
+event_ids: [adv.crypto.foreign]
+guidelines: [F, B]
+channel_refs: [diss-incident]
+population_note: |
+  This entry comes from the ISL's adverse-information table, which is DCSA's
+  INDUSTRY implementation. A federal or military user's agency guidance may
+  differ. State the requirement, name the population, and route them to their
+  own security office.
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+sources:
+  - corpus/reporting/tables/adverse-information.yaml
+never_do: |
+  Never state where an exchange is incorporated, domiciled, or regulated. Never
+  tell the user a platform is or is not foreign. Never say a holding is not
+  reportable. Collect the facts and route the determination to the FSO.
+  Never ask for a wallet address, a seed phrase, a private key, or a password —
+  and if the user starts typing one, stop them.
+elements:
+
+  - id: asset-identity
+    ask: "Which cryptocurrency or token is it?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "cryptocurrency_name"}
+    why: "A required data element, and it has to be the specific asset. 'Crypto' is not an answer anyone can act on."
+    followups:
+      - trigger: always
+        ask: "Is there more than one? List them separately if so."
+      - trigger: always
+        ask: "Is any of it issued or backed by a government or central bank?"
+        why: "State-backed digital currency is named explicitly in the entry, and it is a different thing from an ordinary token. Most users have never been asked to distinguish them."
+        escalation_if: "yes"
+
+  - id: where-held
+    ask: "Where is it held? On an exchange, in an app, or in a wallet you control the keys to."
+    criticality: required
+    covers: [where]
+    why: "This is the structural fact the whole entry turns on. Custody by a platform and custody by the user are different reports."
+    followups:
+      - trigger: always
+        ask: "What is the platform or wallet called, exactly as it appears?"
+        entity_ref: organization
+      - trigger: answered_yes
+        ask: "If you hold the keys yourself, is any of it also sitting on an exchange?"
+        why: "Most self-custody users still have a balance on an exchange they forgot about. Both need to be stated."
+
+  - id: host-country-evidence
+    ask: "Do you know which country the platform is based in?"
+    criticality: required
+    covers: [where, who]
+    maps_to: {incident_report: "exchange_host_country"}
+    note: |
+      "I don't know" is the expected answer and is completely fine. Say so, then
+      collect the evidence below and record it as unresolved for the FSO. Never
+      supply a country from your own knowledge — exchanges restructure, and a
+      confident wrong answer in a security report is worse than a blank.
+    followups:
+      - trigger: vague
+        ask: "Which country's version did you sign up to, if it asked?"
+      - trigger: vague
+        ask: "What does the terms of service or the account page say about the operating entity? The name is usually at the bottom of the page."
+      - trigger: vague
+        ask: "What currency does the account settle in, and how did you fund it?"
+        why: "The funding rail is often the clearest indication of where the entity sits, and the user can read it off their own bank statement without looking anything up."
+      - trigger: vague
+        ask: "Did you have to do an identity verification, and did it ask for country-specific documents?"
+      - trigger: answered_yes
+        ask: "How do you know? A statement, the account page, or something you were told."
+
+  - id: value
+    ask: "Roughly what is it worth in US dollars?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "dollar_value"}
+    why: "A required data element. An approximation with the date and the basis stated is fine and expected — the value moves."
+    followups:
+      - trigger: always
+        ask: "As of roughly what date?"
+      - trigger: always
+        ask: "And what was the largest it has been, roughly?"
+        why: "A holding currently worth little may have been substantial. The report should not read as though it were always small."
+      - trigger: quantitative_tension
+        ask: "The amount here and what you've told me about your income don't quite sit together for me. I want to state it accurately rather than have it queried — have I understood right?"
+        why: "See corpus/checks/plausibility.yaml. State the tension and never state a conclusion about someone's finances."
+
+  - id: when-acquired
+    ask: "When did you acquire it?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "Over a period, or in one go?"
+      - trigger: always
+        ask: "Do you still hold it, and has any of it been sold?"
+      - trigger: vague
+        ask: "The exchange will have a transaction history with dates. Shall I mark this approximate for now?"
+
+  - id: how-acquired
+    ask: "How did you acquire it? Bought, mined, earned, received as a gift, or from an airdrop."
+    criticality: required
+    covers: [how, why]
+    followups:
+      - trigger: always
+        ask: "How did you pay — a bank transfer, a card, or another cryptocurrency?"
+      - trigger: answered_yes
+        ask: "If it was payment for work, who paid you and for what?"
+        note: "Payment in cryptocurrency is also income, and if it was from a foreign source it is a Guideline B and L question too."
+        event_refs: [tsq.foreign-business]
+      - trigger: answered_yes
+        ask: "If it was a gift or an inheritance, from whom, by role, and from which country?"
+        event_refs: [tsq.finance.anomalies]
+
+  - id: who-else-has-access
+    ask: "Does anyone else have access to it or control over it?"
+    criticality: required
+    covers: [who]
+    followups:
+      - trigger: answered_yes
+        ask: "Who, by role, and are they a foreign national?"
+        event_refs: [aci.foreign-contact.continuing]
+      - trigger: always
+        ask: "Is it held jointly, or in anyone else's name?"
+
+  - id: purpose-and-use
+    ask: "What do you use it for?"
+    criticality: required
+    covers: [why]
+    followups:
+      - trigger: always
+        ask: "Is it an investment you hold, or something you actually transact with?"
+      - trigger: always
+        ask: "Have you used it to move money across a border?"
+        escalation_if: "yes"
+      - trigger: always
+        ask: "Is it reported on your taxes?"
+        why: "Unreported gains are a Guideline F matter of their own, and better surfaced here than found later."
+
+  - id: prior-reporting
+    ask: "Have you reported this holding before — on a form or to your security office?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    followups:
+      - trigger: answered_yes
+        ask: "When, and has anything changed since — the platform, the value, or where it's held?"
+
+  - id: crypto-forward
+    ask: "Do you intend to keep holding it, and on the same platform?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Record the answer. Never advise the user to move, sell, or close a holding
+      — that is a financial decision with tax and legal consequences this tool has
+      no basis to weigh in on, and suggesting it could look like disposing of an
+      asset ahead of a report.
+    followups:
+      - trigger: answered_yes
+        ask: "Anything you'd want a reviewer to know about how you'll keep it recorded?"

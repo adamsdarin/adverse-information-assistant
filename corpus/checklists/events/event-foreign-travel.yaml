@@ -1,0 +1,206 @@
+# EVENT: unofficial foreign travel.
+#
+# The only PROSPECTIVE obligation in the whole scheme. Every other event in this
+# corpus is something that already happened; unofficial foreign travel requires
+# PRE-APPROVAL, which means a user who arrives here before a trip is in a
+# completely different conversation from one who arrives after.
+#
+# It also maps to no SEAD 4 guideline. Nobody is adjudicated under "travel."
+# That is precisely why it needs a checklist on the reporting axis — without one
+# the single most commonly missed obligation had no questions behind it.
+#
+# THE TIMING FACTS THAT MATTER (ISL 2021-02 Table 4, industry):
+#   * unofficial foreign travel requires pre-approval
+#   * itinerary deviations are reported within five business days of return
+#   * unplanned day trips to Canada or Mexico are reported within five business
+#     days
+#
+# TIMING IS UNVERIFIED until maintainer_verified is true. Until then the
+# advisor states the requirement and tells the user to confirm the deadline with
+# their FSO rather than asserting a date.
+event_checklist: event-foreign-travel
+event_ids: [aci.travel.unofficial]
+guidelines: [B, C]
+channel_refs: [diss-foreign-travel]
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/reporting/tables/channels.yaml
+opening_branch: |
+  Ask first, before anything else: has the travel already happened, or is it
+  coming up?
+
+  UPCOMING — say plainly that unofficial foreign travel generally requires
+  approval BEFORE departure, not a report afterwards, and that the sooner their
+  security office has it the better. Then run this checklist as a plan.
+
+  ALREADY HAPPENED — do not editorialise about the pre-approval requirement and
+  do not tell them they have done something wrong. Run the checklist as a
+  report, make sure the universal reporting-delay element captures the timeline,
+  and let the FSO handle it. A user who came here voluntarily after the fact is
+  doing the right thing late; treating them as a violator is how a tool teaches
+  people not to come back.
+elements:
+
+  - id: travel-timing-posture
+    ask: "Has this trip already happened, or is it still ahead of you?"
+    criticality: required
+    covers: [when]
+    why: "Everything downstream depends on this. Pre-approval and after-the-fact reporting are different obligations with different urgency."
+    followups:
+      - trigger: pending
+        ask: "When do you leave, and when do you get back?"
+      - trigger: answered_yes
+        ask: "What were the actual dates you left and returned?"
+
+  - id: countries
+    ask: "Which countries?"
+    criticality: required
+    covers: [what, where]
+    maps_to: {sf86: "Section 20B — Foreign Travel", pvq: "foreign-travel", incident_report: "countries"}
+    why: "The required data element, and it means every country entered — not just the destination."
+    followups:
+      - trigger: always
+        ask: "Any countries you passed through or changed planes in?"
+        why: "Transit counts and is routinely omitted. A layover that involved leaving the airport is a country visited."
+      - trigger: always
+        ask: "Did you cross any land border while you were there?"
+        why: "Day trips across a border are the classic omission — a drive into a neighbouring country during a holiday is unofficial foreign travel."
+
+  - id: dates
+    ask: "What are the dates, country by country?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: vague
+        ask: "Your passport stamps or boarding passes will have these. Shall I mark them approximate for now?"
+      - trigger: always
+        ask: "Did the itinerary change from what you had planned?"
+        why: "An itinerary deviation is separately reportable on return, on its own clock. Users think of it as a detail of the trip."
+
+  - id: purpose
+    ask: "What was the purpose of the trip?"
+    criticality: required
+    covers: [why]
+    followups:
+      - trigger: always
+        ask: "Was any part of it official, or connected to your work?"
+        why: "Personal travel taken immediately before, during, or after official travel is unofficial travel and separately reportable. People treat the whole trip as official because part of it was."
+      - trigger: answered_yes
+        ask: "Was there any business purpose at all — a meeting, a conference, a client?"
+
+  - id: mode-and-carrier
+    ask: "How did you travel? Airline, ship, car, or rail."
+    criticality: required
+    covers: [how]
+    maps_to: {incident_report: "modes_carriers"}
+    why: "A required data element. The carrier is routine to supply and irritating to have to go back for."
+    followups:
+      - trigger: always
+        ask: "Which carriers, and any flight numbers you still have?"
+      - trigger: always
+        ask: "Was any leg on a foreign state-owned carrier?"
+
+  - id: accommodation
+    ask: "Where did you stay?"
+    criticality: required
+    covers: [where]
+    entity_ref: organization
+    followups:
+      - trigger: always
+        ask: "Hotel, a rental, or with someone?"
+      - trigger: answered_yes
+        ask: "If it was a hotel or rental, what was it called and in which city?"
+        why: "An organisation, so collectible at every privacy tier."
+      - trigger: answered_yes
+        ask: "If you stayed with someone, who were they to you? A role is enough."
+        note: "A private residence gets no address at any tier. If the host is a foreign national this is also a foreign contact — run event-foreign-contact."
+        event_refs: [aci.foreign-contact.continuing]
+
+  - id: travel-companions
+    ask: "Who travelled with you? Roles are enough."
+    criticality: required
+    covers: [who]
+    privacy_notice: |
+      Roles, not names — "my spouse," "two colleagues." The package leaves blanks
+      for anything a form needs by name.
+    followups:
+      - trigger: always
+        ask: "Was anyone in the group a foreign national?"
+        event_refs: [aci.foreign-contact.continuing]
+
+  - id: documents-used
+    ask: "Which travel document did you use?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "passport_details"}
+    event_refs: [aci.foreign-affiliation.passport]
+    privacy_notice: |
+      I'll note the issuing country and type. I won't take the document number —
+      the package leaves a blank for it.
+    followups:
+      - trigger: always
+        ask: "Was it your US passport, or a foreign one?"
+        why: "Using a foreign passport is a separate matter under Guideline C and its own reportable event. It is a one-word answer and it changes the report."
+      - trigger: always
+        ask: "Did you need a visa, and did you apply through an embassy or consulate?"
+
+  - id: foreign-contacts-during
+    ask: "Did you meet anyone there you expect to stay in touch with?"
+    criticality: required
+    covers: [who]
+    event_refs: [aci.foreign-contact.continuing]
+    why: "This is where trips turn into continuing associations, and the user rarely connects the two. Asking it inside the travel report catches it early."
+    followups:
+      - trigger: answered_yes
+        ask: "Who, by role, and from which country?"
+      - trigger: answered_yes
+        ask: "Have you been in touch since?"
+
+  - id: unusual-events
+    ask: "Did anything unusual happen? Questioning at a border, a device taken from you, a lost passport, or someone showing an odd interest in your work."
+    criticality: required
+    covers: [what, how]
+    escalation_if: "yes"
+    event_refs: [aci.behavior.elicitation, aci.foreign-contact.fie]
+    why: "The counterintelligence question, and the reason a travel report exists at all. An affirmative is likely a separate reportable event on a faster channel."
+    followups:
+      - trigger: answered_yes
+        ask: "What happened, and when?"
+      - trigger: answered_yes
+        ask: "Did you report it to anyone at the time?"
+      - trigger: always
+        ask: "Did you take any work device or work account access with you?"
+        note: "An affirmative may add Guideline M and an employer policy question. Ask neutrally."
+
+  - id: approval-status
+    ask: "Was this travel submitted to your security office, and was it approved?"
+    criticality: required
+    covers: [what, when]
+    prior_disclosure_probe: true
+    why: "The single fact that determines whether this report is routine or is also a late report. It has to be asked directly and without implication."
+    followups:
+      - trigger: answered_yes
+        ask: "When did you submit it, and do you have the approval?"
+        document: "the travel approval, or the security office's acknowledgement"
+      - trigger: answered_no
+        ask: "Was it submitted at all, or is this the first anyone has heard of it?"
+        note: "Record it plainly. Do not characterise it as a violation — that determination belongs to the FSO."
+      - trigger: pending
+        ask: "Is a request still outstanding?"
+
+  - id: travel-forward
+    ask: "Do you have further travel planned, or expect to go back?"
+    criticality: required
+    covers: [future_intent]
+    why: "Prospective travel is reportable in advance. Asking now means the next trip is approved rather than reported late — which is the whole point of the pre-approval rule."
+    followups:
+      - trigger: answered_yes
+        ask: "Where, and roughly when?"
+      - trigger: answered_yes
+        ask: "Shall I note in the report that you'll be putting that one in for approval?"

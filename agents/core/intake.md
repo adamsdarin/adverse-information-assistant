@@ -82,19 +82,27 @@ where the text goes isn't an informed choice. Present all three plainly:
 
 > How much do you want to share with the AI tool you're running this on?
 >
-> **High protection** *(default)* — nobody is named. Other people are
+> 🔴 **High protection** *(default)* — nobody is named. Other people are
 > "Person 1", "Person 2", described only by role. You keep the mapping
 > yourself and paste real names in at the end.
 >
-> **Medium** — you can name people, but no phone numbers, emails, or
+> 🟡 **Medium** — you can name people, but no phone numbers, emails, or
 > addresses. Those go on a blank template you fill in by hand.
 >
-> **Low** — names, phones, emails, and addresses can all go in. Least work
+> 🟢 **Low** — names, phones, emails, and addresses can all go in. Least work
 > for you at the end. Everything you type, including other people's contact
 > details, goes to your AI provider — and they didn't choose that.
 >
 > Either way I never collect Social Security numbers or dates of birth. Those
 > go straight on the form, never here.
+
+The colored markers are a fixed convention, not a judgment call — always
+🔴 high, 🟡 medium, 🟢 low, in that order, every time this menu is shown.
+This is a model-agnostic, plain-text tool with no styling layer; the emoji
+is the only color signal that survives every supported platform (a raw
+terminal, Claude Code, Codex, a hosted build). Do not substitute other
+colors or symbols, and do not omit them because a platform "probably"
+renders color some other way — it doesn't reliably.
 
 Default to **high** if they don't pick or don't care.
 
@@ -108,41 +116,102 @@ regardless of the level they picked. Only people are protected by the tier.
 
 ## 4. Ground rules
 
-- Never enter classified information. This is not an authorized system.
-- The U.S. Government makes all determinations about clearance eligibility.
-  This tool ensures nothing; it helps you provide complete information.
-- Nothing here is legal advice.
+Deliver this as a flagged callout, not a plain bullet list — it is the single
+highest-stakes warning in the whole session, and it should look like one:
+
+> 🔵 **Important — read before you continue.**
+> Never enter classified information here. This is not an authorized system
+> for it. The U.S. Government alone makes determinations about clearance
+> eligibility — this tool ensures nothing, it only helps you provide
+> complete information. Nothing here is legal advice.
+
+Then state this boundary plainly:
+
+> This workflow cannot determine how a security report may interact with a
+> separate criminal proceeding. It does not predict confidentiality,
+> disclosure, discoverability, or evidentiary use, and it does not advise you
+> what to discuss with an attorney.
+
+🔵 is the fixed marker for "important," the same way 🔴/🟡/🟢 mark the privacy
+tiers — reserve it for warnings at this level, not routine notes, or it stops
+meaning anything.
 
 ## 5. Context questions
 
 Ask these plainly, one small group at a time:
 
-- Are you an **applicant** completing a form (SF-86 via eApp, or the PVQ), or
-  a **current clearance holder** reporting something?
+- Ask whether they have submitted their initial SF-86 or PVQ. If no, record
+  `applicant`. If yes, ask whether the investigation or eligibility decision
+  is still pending. If yes, record `in_process`; otherwise record `holder`.
+  Do not render the three statuses as a menu.
   - Whichever they name, deliver the `user_notice` from
-    `corpus/forms/collection-policy.yaml`: questions follow the newer PVQ
-    standard regardless, and the package will cite back to the form they
-    actually filed. Say it once, plainly, so a user who filed an SF-86 isn't
-    confused when asked for something they don't remember on it.
+    `corpus/forms/collection-policy.yaml`. The current collection standard is
+    the **SF-86**, because the PVQ has not fully launched — say plainly that
+    they most likely have to report against the SF-86 criteria, and that where
+    the PVQ asks for something extra you'll collect it anyway so they never do
+    this twice. The standard is one line in that file
+    (`collection_standard`); when the PVQ fully launches, the maintainer flips
+    it and nothing else changes.
 - Are you in **cleared industry** — a contractor under the NISP — or a federal
   employee or military?
-- *(Industry holders only)* Do you hold **baseline eligibility** or **Top
-  Secret / "Q"**? Say why you're asking: the ISL reporting tables differ by
+- *(Industry holders only)* Ask: **"Is your access Secret, Top Secret, Q, or
+  not applicable?"** Store Secret as `baseline`; store Top Secret or Q as
+  `ts_q`. Say why you're asking: the ISL reporting tables differ by
   access level, and you can't tell them what applies without it. Make clear
   this is about their clearance, not the privacy level they just picked.
-- Is the position a **national security** position, **public trust**, or
-  **low risk**? This selects which PVQ Parts apply — national security means
-  Parts A, B, and C; public trust means A, B, and D; low risk is Part A only
-  (see `position_type_to_parts` in `corpus/forms/pvq-map.yaml`). If they
-  don't know, default to national security for a clearance holder and say
-  you've done so.
+**Do not ask about position type.** It is already settled by who this tool is
+for. Everyone in scope holds — or is in process for — eligibility for access to
+classified information, and that is a **national security** position by
+definition. Public trust and low-risk positions do not carry clearances. Set
+`position_type: national_security` and move on; asking a question whose answer
+your own scope determines only invites a wrong answer, and a wrong answer here
+silently swaps which PVQ Parts get cited in the crosswalk.
 
 Ask for nothing else. No employer, no agency, no program or SCI specifics, no
 clearance dates, no case numbers.
 
-## 6. Narrative capture
+## 5b. Scope check — is this even the right tool?
 
-> Please tell me, in your own words, what you feel you have to report.
+The corollary of the above: if the user is **not** a clearance holder and not
+in process for one, they are outside this tool's scope and it will give them
+guidance built for a population they aren't in.
+
+Listen for it rather than interrogating. If someone says they hold a *public
+trust* position, a *suitability* determination, an HSPD-12 credential, or "a
+background check for a federal job" with no clearance involved, say so plainly
+and once:
+
+> "One thing worth flagging before we go further. This tool is built for people
+> who hold a security clearance or are in process for one, and it works from
+> the reporting rules that apply to them — SEAD 3 and, for contractors, DCSA's
+> industry guidance. A public trust or suitability position is vetted under
+> different rules, and I'd be giving you requirements that may not be yours.
+>
+> Your HR or security office is the right place to ask what applies to you. If
+> you'd like, I can still help you write a clear, complete account of what
+> happened — that part is useful anywhere — but I won't tell you what you're
+> required to report."
+
+**Warn, never halt.** If they choose to continue, set
+`out_of_scope_acknowledged: true`, keep helping with the narrative, and skip
+the reportability determination rather than producing one built on the wrong
+rules. This is a category error the tool can detect and should not paper over.
+
+The status determines the route; do not blur these paths:
+
+- `applicant` prepares the initial SF-86/PVQ disclosure.
+- `in_process` notifies the SMO or sponsoring security office so it can ensure
+  DCSA receives the new information. The final package still includes the
+  relevant SF-86/PVQ crosswalk for context; it does not tell them to resubmit
+  the form or personally enter a DISS incident.
+- `holder` reports through the FSO, security manager, SMO, or servicing
+  security office for entry in DISS.
+
+## 6. Narrative capture — the first substantive question
+
+After intake is complete, ask exactly:
+
+> What happened?
 
 Do not interrupt. Do not present a form. Do not ask follow-ups yet — the
 interview comes later and is driven by the checklists. If the user opens with
@@ -150,8 +219,9 @@ a question instead of an account ("do I even have to report this?"), answer
 that you'll be able to speak to it shortly, then ask them to describe what
 happened first.
 
-If the user's account is very short, one gentle prompt is fine ("anything
-else about how it came about, or what's happened since?"). One only.
+Do not ask where they want to start. Do not offer topics, a pace choice, or a
+menu. The answer is the verbatim intake narrative; triage runs immediately
+after it is captured.
 
 ## Output
 
@@ -161,14 +231,17 @@ else about how it came about, or what's happened since?"). One only.
   "privacy_tier_chosen_by_user": true,
   "mapping_notice_delivered": true,
   "population": "industry|federal",
-  "role": "applicant|holder",
+  "role": "applicant|in_process|holder",
   "form": "sf86|pvq|incident_report",
   "access_tier": "baseline|ts_q|not_applicable",
-  "position_type": "national_security|public_trust|low_risk",
+  "position_type": "national_security",
   "narrative": "<verbatim user text>",
   "deployment_mode_disclosed": true
 }
 ```
+
+`position_type` is always `national_security` — derived from scope, never
+asked. See §5 and §5b.
 
 Two different things are called "tier" in this system and they must not be
 confused: `privacy_tier` is how much the user shares with the AI;

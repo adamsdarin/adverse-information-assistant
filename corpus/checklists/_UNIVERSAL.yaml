@@ -26,6 +26,7 @@ elements:
   # placeholders; the package ships a BLANK template the user completes by
   # hand at submission time. Same pattern as "John Doe" for the user.
   - id: others-aware-count
+    covers: [who]
     ask: "How many people are aware of this? A number is all I need — no names."
     answer_type: integer
     always_ask: true
@@ -35,6 +36,7 @@ elements:
       which is why the next question matters. Do not editorialize further.
 
   - id: others-aware-roles
+    covers: [who]
     ask: |
       For each of them, just tell me how they know — their role, not their
       name. For example: my supervisor, my spouse, the arresting agency, a
@@ -58,6 +60,7 @@ elements:
       not an identity. Do not press for detail beyond the role.
 
   - id: coercion-exposure
+    covers: [what, who]
     ask: "Has anyone ever tried to use this to pressure, influence, blackmail, or get something from you?"
     answer_type: boolean_with_detail
     always_ask: true
@@ -68,18 +71,21 @@ elements:
       requirements advisor re-runs when this is answered yes.
 
   - id: employer-awareness
+    covers: [who, when]
     ask: "Does your employer, FSO, or security office already know about this — and if so, how did they learn of it and roughly when?"
     answer_type: text
     always_ask: true
 
   # ---- Timeline and context --------------------------------------------
   - id: age-at-conduct
+    covers: [when]
     ask: "Roughly how old were you when this happened? Approximate is fine."
     mitigation_ref: "whole-person — age and maturity at the time of conduct"
     optional: true
     always_ask: true
 
   - id: reporting-delay
+    covers: [when, why]
     ask: "Have you reported this before now? If time has passed since it happened, what accounts for the gap?"
     answer_type: text
     always_ask: true
@@ -88,12 +94,29 @@ elements:
       delay directly rather than omitting it. Do not editorialize about
       whether the user was wrong to wait — collect the explanation.
 
+  - id: disclosure-timing
+    covers: [why]
+    ask: "Setting aside this conversation — has this ever come up before, on an earlier form, to an investigator, or to someone who'd have wanted to know? If so, did you raise it yourself, or did it come out because someone already had reason to ask?"
+    mitigation_ref: "whole-person — candor, the single most repeated factor across every DOHA guideline studied (see corpus/checklists/_SEVERITY_LADDERS.yaml)"
+    always_ask: true
+    note: |
+      Distinct from reporting-delay, which measures time since the event.
+      This measures the person's track record with the fact itself — the
+      recurring line DOHA judges draw is not at the underlying conduct but
+      at whether it was volunteered or only conceded once confronted.
+    followups:
+      - trigger: answered_no
+        ask: "Once it came up, did you confirm it right away, or was there some back-and-forth before you gave the full picture?"
+        why: "Partial or delayed concession after confrontation is treated differently from an immediate, complete one — this is what separates most denials from most approvals on facts that otherwise look identical."
+
   - id: pattern-check
+    covers: [when]
     ask: "Has anything similar happened before — including anything that was never charged, never reported, or that you don't think 'counts'?"
     answer_type: text
     always_ask: true
 
   - id: changes-made
+    covers: [future_intent]
     ask: "What, if anything, has changed since — circumstances, habits, support, treatment, or anything else you'd want a reviewer to know?"
     mitigation_ref: "whole-person — rehabilitation and likelihood of recurrence"
     always_ask: true
@@ -103,6 +126,7 @@ elements:
   # going to happen again? These make it explicit instead of hoping the user
   # volunteers it.
   - id: prior-controls
+    covers: [why]
     ask: |
       If something like this has happened before, what was in place at the
       time that was supposed to prevent it — and why didn't it hold?
@@ -117,6 +141,7 @@ elements:
       more credible than a promise with nothing behind it.
 
   - id: current-controls
+    covers: [future_intent]
     ask: |
       What's in place now that wasn't before? Anything concrete — a rule you
       keep, a person who knows, a program you're in, a change in circumstances.
@@ -124,6 +149,7 @@ elements:
     always_ask: true
 
   - id: future-intent
+    covers: [future_intent]
     ask: "Going forward, what's your intent regarding this — in your own words?"
     mitigation_ref: |
       Explicit in several guidelines (e.g. Guideline H's demonstrated intent
@@ -137,6 +163,7 @@ elements:
       more than a confident one the user doesn't mean and can't sustain.
 
   - id: supporting-documents
-    ask: "What documentation exists — court records, letters, statements, certificates? You don't need it in hand right now; I just need to know what exists."
+    covers: [what]
+    ask: "Which offices or providers would hold records connected to this incident?"
     answer_type: text
     always_ask: true

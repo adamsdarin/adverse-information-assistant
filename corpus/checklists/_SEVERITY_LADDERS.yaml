@@ -1,0 +1,564 @@
+# Severity ladders — how far the interviewer presses on optional material,
+# derived from published DOHA decisions rather than assigned by the author.
+#
+# ===========================================================================
+# WHAT THIS FILE IS AND IS NOT
+# ===========================================================================
+# This replaces each guideline checklist's flat `severity_default` with a
+# tier the gap-analyst can actually compute from what the user has already
+# said. It does NOT compute a score, a rate, or a likelihood — see
+# ARCHITECTURE.md's non-goals and classifier.md's "never assess severity,
+# merit, or likely outcome." A tier here only ever decides how hard the
+# INTERVIEWER presses on optional/mitigation elements that already exist in
+# the guideline checklist. It never creates a new required field, never
+# downgrades one, and never appears in output shown to the user.
+#
+# Each tier's `signal_elements` names real element ids already present in
+# that guideline's checklist — this file adds no new questions. Its only
+# job is telling the interviewer which existing answers to read in order to
+# judge how deep to go on the elements marked `mitigation` or `context`.
+#
+# `case_refs` are real DOHA case numbers, verifiable against the library's
+# manifest exactly like any other citation this tool makes. They exist so
+# that when a matter's facts don't cleanly resolve to a tier, an agent (or a
+# maintainer) has something concrete to read rather than guessing — "refer
+# back to these cases" is the literal purpose of this field.
+#
+# ===========================================================================
+# HOW A TIER IS DETERMINED — READ THIS BEFORE WIRING IT INTO A PROMPT
+# ===========================================================================
+# 1. A tier is a CONCLUSION, never a starting assumption. Until enough of a
+#    tier's signal_elements have been answered, there is no tier yet — use
+#    the guideline checklist's own `severity_default` as the working depth.
+# 2. A tier is read from facts the user has ALREADY STATED, in their own
+#    account. Never ask a question in order to place a tier — the tier
+#    falls out of answers the interviewer was asking anyway.
+# 3. When the facts partially match more than one tier, use the HIGHER one.
+#    A redundant follow-up costs thirty seconds; a thin optional section on
+#    a matter that turns out to be serious costs the user an RFI.
+# 4. `ladder: false` guidelines (A, L) have no tier at all — too few real
+#    merits cases exist in the library to support one honestly. Use
+#    `fact_dimensions` as follow-up prompts directly; never force a tier.
+# 5. Nothing here EVER changes a `criticality: required` element's
+#    treatment. Severity buys brevity on optional context. It never buys
+#    brevity on the form.
+#
+# ===========================================================================
+# PROVENANCE
+# ===========================================================================
+maintainer_verified: false
+method: >
+  Thirteen retrieval passes via scripts/doha_retrieval.py, one per SEAD 4
+  guideline, against the local COMPLETE-tier DCSA Library. Each guideline's
+  Findings of Fact and Analysis sections were read in full for a balanced
+  sample (both outcomes, hearing and appeal where available). Over 260
+  decisions read in total. These are contested SOR cases — a
+  selection-biased sample of matters serious or ambiguous enough to reach a
+  hearing. They inform which follow-up question fires; they never inform a
+  prediction, a rate, or a tendency.
+source_corpus: "10,658 published DOHA decisions, DCSA Library COMPLETE tier"
+depth_values: [low, medium, high]
+
+guidelines:
+
+  # =========================================================== A ==========
+  A:
+    name: "Allegiance to the United States"
+    ladder: false
+    sample: "3 real merits cases in the entire library (6 tagged, 2 mistagged, 1 withdrawn)"
+    reason_thin: >
+      Guideline A is almost never adjudicated alone or on the merits in this
+      corpus. Forcing a tiered ladder onto 3 data points would misrepresent
+      the case law rather than ground it.
+    fact_dimensions:
+      - dimension: "subjective belief at the time"
+        note: "Did the person believe, even without proof, that what they were involved in might support violence or terrorism, and continue anyway?"
+        signal_elements: [knowledge-of-purpose]
+        case_refs: ["22-01876"]
+      - dimension: "specificity of the group's stated aims"
+        note: "Inflammatory-but-unspecific rhetoric is not disqualifying by itself; a concrete stated plan of action is."
+        signal_elements: [violence-or-force]
+        case_refs: ["16-03256"]
+      - dimension: "voluntary vs. forced severance of ties"
+        signal_elements: [current-status]
+        case_refs: ["22-00849", "22-01876"]
+    note: >
+      In this sample Guideline A never appeared charged alone — it travels
+      with Guideline E, and a matter can be found for the applicant on A
+      while still being denied on E for how the association was disclosed.
+
+  # =========================================================== B ==========
+  B:
+    name: "Foreign Influence"
+    ladder: true
+    sample: "20 cases read"
+    dominant_axis: "Whether a relative currently holds a foreign government, military, or intelligence position, weighed against the country's own intelligence posture and the applicant's own U.S. ties."
+    tiers:
+      - name: routine
+        depth: low
+        defining_facts: "No government/military tie; contact casual or infrequent"
+        signal_elements: [government-nexus, contact-frequency]
+        case_refs: ["16-02979", "16-04107"]
+      - name: standard
+        depth: medium
+        defining_facts: "Immediate family abroad, non-government, but the applicant's own U.S. ties are already deep"
+        signal_elements: [relationship-nature, us-ties]
+        case_refs: ["16-03083", "17-00333"]
+      - name: elevated
+        depth: high
+        defining_facts: "Relative attenuated/formerly tied to a government, or a recurring (not one-time) financial-support relationship"
+        signal_elements: [government-nexus, financial-support-flow]
+        case_refs: ["16-04005", "17-01758"]
+      - name: high_complexity
+        depth: high
+        defining_facts: "Relative currently in an active government/intelligence role in a flagged-adversary country, plus financial leverage or incomplete candor"
+        signal_elements: [government-nexus, financial-support-flow, prior-reporting]
+        case_refs: ["17-01499", "16-03863"]
+    modifiers:
+      - signal: "contact every two months or more"
+        effect: "Appeal Board precedent treats this as 'frequent contact'"
+        case_refs: ["17-00571", "16-04056"]
+      - signal: "relative's pension dependency on the foreign government"
+        effect: "named explicitly as a leverage point, distinct from the relationship itself"
+        case_refs: ["17-01499", "16-03625", "16-03770"]
+
+  # =========================================================== C ==========
+  C:
+    name: "Foreign Preference"
+    ladder: true
+    sample: "18 cases read"
+    dominant_axis: "How far the record shows movement from passive dual status toward active exercise of a foreign sovereign relationship — not the bare fact of holding citizenship."
+    tiers:
+      - name: dormant
+        depth: low
+        defining_facts: "Passport surrendered, destroyed, or expired and not renewed"
+        signal_elements: [renunciation-status, foreign-document]
+        case_refs: ["16-03664", "17-02568"]
+      - name: entitlement_only
+        depth: medium
+        defining_facts: "Citizenship retained, but only pension/property/ID-card use — no voting, no employment"
+        signal_elements: [exercise-of-rights, obligations-owed]
+        case_refs: ["17-00855", "19-00446"]
+      - name: active_exercise
+        depth: high
+        defining_facts: "Voted, renewed a passport with stated intent to keep it, or acquired citizenship voluntarily as an adult"
+        signal_elements: [foreign-vote, document-use, citizenship-application]
+        case_refs: ["20-03445", "18-01955"]
+      - name: foreign_office
+        depth: high
+        defining_facts: "Assumed employment or a position in a foreign government or military — substance and formality matter, not the bare fact of the job"
+        signal_elements: [exercise-of-rights]
+        case_refs: ["17-02526", "17-01145"]
+    modifiers:
+      - signal: "financial motive tied to a pending (not yet vested) benefit"
+        effect: "aggravates, vs. a benefit that predates naturalization"
+        case_refs: ["18-01955", "17-03026"]
+      - signal: "country-risk framing"
+        effect: "varies even at similar fact patterns — allied countries are not automatically treated as low-risk"
+        case_refs: ["18-01955", "20-03445"]
+
+  # =========================================================== D ==========
+  D:
+    name: "Sexual Behavior"
+    ladder: true
+    sample: "40 cases read"
+    dominant_axis: "Whether the conduct was disclosed to spouse, family, or employer before being asked — the single most repeated fact in the whole sample."
+    tiers:
+      - name: private_disclosed
+        depth: low
+        defining_facts: "Consensual, legal, not concealed from people who'd notice"
+        signal_elements: [public-vs-private]
+        case_refs: ["16-03690", "16-03763"]
+      - name: isolated_disclosed
+        depth: medium
+        defining_facts: "Paid sex or a single indecency incident, conduct ceased, disclosed voluntarily"
+        signal_elements: [public-vs-private, conduct-forward]
+        case_refs: ["19-00334", "17-02785"]
+      - name: compulsive_recurring
+        depth: high
+        defining_facts: "Diagnosed paraphilia under active treatment, or repeat criminal conduct after a prior sanction"
+        signal_elements: [compulsivity, criminality]
+        case_refs: ["20-00556", "19-02739"]
+      - name: minors_nonconsensual
+        depth: high
+        defining_facts: "Conduct involving a minor or a non-consenting adult — mitigated in this sample only via decades elapsed plus a fully served sentence"
+        signal_elements: [criminality, consent-and-parties]
+        case_refs: ["21-00717", "21-01737"]
+    modifiers:
+      - signal: "active legal supervision at time of adjudication"
+        effect: "independent aggravator even against a strong treatment record"
+        case_refs: ["19-02735"]
+      - signal: "sexual orientation alone"
+        effect: "SEAD 4 states no adverse inference may be drawn from this — recited as standing policy in all 40 decisions read, litigated in none"
+    data_quality_flag: >
+      Case 24-02358 is labeled "approved" in the library's own
+      filename/metadata; the decision text affirms a denial. Do not trust
+      the outcome tag over the text.
+
+  # =========================================================== E ==========
+  E:
+    name: "Personal Conduct"
+    ladder: true
+    sample: "21 cases read"
+    dominant_axis: "A pure candor ladder — whether an omission was corrected before or after confrontation."
+    tiers:
+      - name: no_falsification_found
+        depth: low
+        defining_facts: "Plausible non-deceptive explanation, or the omission was too minor to matter"
+        signal_elements: [omission-deliberate]
+        case_refs: ["17-00961", "16-03478"]
+      - name: self_corrected
+        depth: medium
+        defining_facts: "Volunteered the fact or correction before being confronted with contrary evidence"
+        signal_elements: [correction-status]
+        case_refs: ["16-03037", "17-01467"]
+      - name: confronted_then_admits
+        depth: high
+        defining_facts: "Denies or minimizes on first ask; concedes only once pressed or shown evidence"
+        signal_elements: [correction-status, cooperation]
+        case_refs: ["17-01105", "16-03618"]
+      - name: repeated_falsification
+        depth: high
+        defining_facts: "Multiple separately-timed false statements, or continued denial against strong corroboration"
+        signal_elements: [rule-violation-pattern, cooperation]
+        case_refs: ["17-00511", "17-00228"]
+    modifiers:
+      - signal: "E is adjudicated on its own track"
+        effect: "a matter can be found for the applicant on E even while the primary guideline is denied"
+        case_refs: ["16-03185", "16-02958"]
+      - signal: "materiality of what was hidden"
+        effect: "a felony omission weighs far more than an omitted counseling note"
+        case_refs: ["17-00511", "17-00269"]
+
+  # =========================================================== F ==========
+  F:
+    name: "Financial Considerations"
+    ladder: true
+    sample: "22 cases read"
+    dominant_axis: "Whether each debt's status is documented — not the dollar amount. A $47,635 balance with nothing behind it was denied; a $296,391 balance with 15 of 17 debts individually corroborated was approved."
+    tiers:
+      - name: contained
+        depth: low
+        defining_facts: "Few debts, already resolved or on a documented payment plan"
+        signal_elements: [account-inventory, resolution-efforts]
+        case_refs: ["16-02965", "16-03218"]
+      - name: manageable
+        depth: medium
+        defining_facts: "Larger or multiple debts, but backed by dated proof per debt"
+        signal_elements: [account-inventory, resolution-efforts]
+        case_refs: ["16-03120", "16-03397"]
+      - name: unresolved
+        depth: high
+        defining_facts: "No documented action, or a tax delinquency standing alone even when everything else is resolved"
+        signal_elements: [resolution-efforts, tax-specifics]
+        case_refs: ["16-02991", "16-03072"]
+      - name: deceptive_willful
+        depth: high
+        case_anchored: false
+        defining_facts: "Fraud, concealment, or refusal to pay despite the means to (SEAD 4 ¶19(d)(h)(i))"
+        signal_elements: [cause, unexplained-affluence]
+        note: "No case anchor in this sample — grounded in SEAD 4 ¶19 text alone. A second, deliberately filtered pull targeting ¶19(d)/(h)/(i) is needed before this tier can cite real decisions."
+    modifiers:
+      - signal: "federal or state tax delinquency present"
+        effect: "treat as its own line item even when every other debt is resolved; a general 'good-faith' statement is not enough — needs a specific, currently-compliant arrangement with the tax authority"
+        signal_elements: [tax-specifics]
+        case_refs: ["16-02981", "16-03072", "16-03111"]
+      - signal: "repayment recency vs. debt age"
+        effect: "a plan begun three months ago with one documented payment outweighs a decade-old debt with no action"
+        case_refs: ["16-03215", "16-03218"]
+      - signal: "cause within the person's control"
+        effect: "not disqualifying by itself — what matters is the response, not the cause"
+        signal_elements: [cause]
+        case_refs: ["16-03122"]
+
+  # =========================================================== G ==========
+  G:
+    name: "Alcohol Consumption"
+    ladder: true
+    sample: "19 cases read"
+    dominant_axis: "Recency of corroborated abstinence outweighs how long the drinking history runs — mirrors Financial's 'recency of action beats age of the problem' almost exactly."
+    tiers:
+      - name: isolated
+        depth: low
+        defining_facts: "One incident, no established pattern"
+        signal_elements: [prior-incidents]
+        case_refs: ["17-01577"]
+      - name: multiple_resolved
+        depth: medium
+        defining_facts: "2-3 incidents (typically DUIs), completed treatment, corroborated moderation"
+        signal_elements: [prior-incidents, treatment-status]
+        case_refs: ["17-00301", "17-02415"]
+      - name: diagnosed_recovered
+        depth: high
+        defining_facts: "Diagnosis plus a relapse history, but 2-3+ years of multi-source-corroborated recovery since"
+        signal_elements: [evaluation-ordered, treatment-status, current-relationship]
+        case_refs: ["17-02475", "17-02132"]
+      - name: unresolved
+        depth: high
+        defining_facts: "Recurrent incidents, relapse pattern still unresolved, abstinence recent and uncorroborated"
+        signal_elements: [prior-incidents, current-relationship]
+        case_refs: ["16-03272", "17-01077"]
+    modifiers:
+      - signal: "corroboration source"
+        effect: "a hierarchy recurs throughout: self-report < probation compliance < family/coworker observation < a treating professional's evaluation < several sources together"
+      - signal: "BAC roughly double the legal limit or higher"
+        effect: "cited by name when present"
+        case_refs: ["17-01077"]
+      - signal: "abstinence maintained only because of active probation"
+        effect: "named explicitly as a weakness, distinct from voluntary abstinence"
+        case_refs: ["17-01077"]
+
+  # =========================================================== H ==========
+  H:
+    name: "Drug Involvement and Substance Misuse"
+    ladder: true
+    sample: "20 cases read"
+    dominant_axis: "A signed statement of intent to abstain (SEAD 4 ¶26(b)(3)) is treated as its own distinct, weighable fact — its absence is named explicitly as why mitigation failed in several denials."
+    tiers:
+      - name: isolated_distant
+        depth: low
+        defining_facts: "A handful of uses, long ago or clearly youthful"
+        signal_elements: [frequency-amount, most-recent-use]
+        case_refs: ["16-03883", "17-00994"]
+      - name: sustained_concluded
+        depth: medium
+        defining_facts: "Regular use over years with a clear stopping point and disassociation"
+        signal_elements: [treatment, abstinence-intent]
+        case_refs: ["16-03592", "16-03718"]
+      - name: entrusted_or_contested
+        depth: high
+        defining_facts: "Use while cleared, or recency in dispute — outcome turns on self-report vs. concealment"
+        signal_elements: [while-cleared]
+        case_refs: ["17-01173", "17-00258"]
+      - name: polysubstance_dependency
+        depth: high
+        defining_facts: "Multiple substances, purchase or sale, or a diagnosis with no documented treatment completion"
+        signal_elements: [substances, acquisition, treatment]
+        case_refs: ["16-03186", "17-01589"]
+    modifiers:
+      - signal: "use while holding a clearance, self-reported promptly with full disassociation"
+        effect: "can still mitigate — the tier is not automatically fatal"
+        case_refs: ["17-01173"]
+      - signal: "state marijuana legalization"
+        effect: "never treated as mitigating in any case read — the federal-preemption position is cited every time"
+      - signal: "continued association with drug-using contacts"
+        effect: "undermines mitigation even where every other fact favors the applicant"
+
+  # =========================================================== I ==========
+  I:
+    name: "Psychological Conditions"
+    ladder: true
+    sample: "18 cases read"
+    dominant_axis: "The currency of the professional opinion matters more than its content — a stale 'guarded' evaluation was outweighed by two later, more favorable ones simply for being more recent."
+    tiers:
+      - name: no_unrebutted_impairment
+        depth: low
+        defining_facts: "History disclosed; no diagnosis, or a recent opinion states no current impact on judgment"
+        signal_elements: [diagnosis, prognosis]
+        case_refs: ["18-01484", "20-01652"]
+      - name: treated_compliant
+        depth: medium
+        defining_facts: "Diagnosed, in active provider-managed treatment, favorable prognosis"
+        signal_elements: [treatment-current, treatment-compliance]
+        case_refs: ["18-01029", "19-00090"]
+      - name: crisis_history
+        depth: high
+        defining_facts: "Hospitalization or personality-spectrum diagnosis — mitigation depends entirely on how recent and well-documented the latest opinion is"
+        signal_elements: [prognosis, functional-impact]
+        case_refs: ["21-00106", "19-02301"]
+      - name: unresolved_guarded
+        depth: high
+        defining_facts: "Current symptoms, treatment declined or absent, only an unfavorable opinion on record"
+        signal_elements: [treatment-current, prognosis]
+        case_refs: ["20-00004", "21-02199"]
+    modifiers:
+      - signal: "evaluator's government-employed-or-approved status"
+        effect: "required for the treatment-compliance mitigating condition specifically — a favorable private opinion alone does not satisfy it"
+        signal_elements: [who-and-where-treated]
+        case_refs: ["23-00571"]
+      - signal: "personality disorder or permanent developmental condition"
+        effect: "treated as enduring even when currently asymptomatic — does not fit AG ¶29(d)'s 'temporary...resolved' language"
+        case_refs: ["18-01755"]
+    always_state: >
+      SEAD 4 states plainly that seeking mental health care is not itself
+      disqualifying. Follow-up questions belong on the diagnosis, treatment
+      status, and professional opinion — never on why the person sought care.
+
+  # =========================================================== J ==========
+  J:
+    name: "Criminal Conduct"
+    ladder: true
+    sample: "22 cases read"
+    dominant_axis: "Charge level (misdemeanor to felony to multiple felonies) is the floor, confirmed by this sample — but the single most decisive factor observed BEYOND charge level is whether probation or parole is still active."
+    tiers:
+      - name: isolated_minor
+        depth: low
+        defining_facts: "Single minor offense, fully closed out"
+        signal_elements: [felony-misdemeanor, disposition-outcome]
+        case_refs: ["16-03498", "17-00191"]
+      - name: pattern_closed
+        depth: medium
+        defining_facts: "Multiple misdemeanors or one felony, but supervision fully completed and time has passed"
+        signal_elements: [probation-status, prior-record]
+        case_refs: ["17-00884", "17-02747"]
+      - name: active_supervision
+        depth: high
+        defining_facts: "A serious felony or pattern with genuine rehabilitation evidence — denied anyway in this sample solely because probation/parole hasn't ended"
+        signal_elements: [probation-status, rehabilitation]
+        case_refs: ["17-03759", "19-03978"]
+      - name: denial_against_evidence
+        depth: high
+        defining_facts: "Felony/violent pattern plus flat denial of facts the police report, video, or witnesses corroborate"
+        signal_elements: [prior-record, rehabilitation]
+        case_refs: ["22-00588", "18-01351"]
+    modifiers:
+      - signal: "active probation/parole status"
+        effect: "the single most decisive factor observed — outweighed genuine, extensive rehabilitation evidence in the sample's clearest denial"
+        signal_elements: [probation-status]
+        case_refs: ["17-03759"]
+      - signal: "rehabilitation begun before any court required it"
+        effect: "cited as decisive, distinct from court-ordered compliance"
+        signal_elements: [rehabilitation]
+        case_refs: ["23-02207"]
+
+  # =========================================================== K ==========
+  K:
+    name: "Handling Protected Information"
+    ladder: true
+    sample: "19 cases read"
+    dominant_axis: "Multiple incidents did not by itself trigger denial language — what differed was whether the judge's own analysis adopted 'pattern' language or 'isolated episode' language for the same incident count."
+    tiers:
+      - name: inadvertent_reported
+        depth: low
+        defining_facts: "Single incident, self-reported promptly, no prior counseling on the same issue"
+        signal_elements: [self-reported, intentional-vs-inadvertent]
+        case_refs: ["18-01500", "20-00659"]
+      - name: inadvertent_friction
+        depth: medium
+        defining_facts: "No confirmed compromise, but a reporting delay or ambiguity"
+        signal_elements: [self-reported, damage-assessment]
+        case_refs: ["18-01812", "20-03456"]
+      - name: recurring
+        depth: high
+        defining_facts: "Same underlying issue repeats, especially after prior counseling"
+        signal_elements: [pattern, training-adequacy]
+        case_refs: ["17-00796", "17-03588"]
+      - name: deliberate_confirmed_harm
+        depth: high
+        defining_facts: "Intentional circumvention, confirmed compromise, or dishonesty about the facts — a single incident can land here on scale and intent alone"
+        signal_elements: [intentional-vs-inadvertent, damage-assessment]
+        case_refs: ["18-01831", "18-00766", "22-02555"]
+    modifiers:
+      - signal: "compromise status"
+        effect: "its own three-step axis: none suspected, assumed, confirmed"
+        signal_elements: [damage-assessment]
+        case_refs: ["18-01812", "17-03588", "18-00766"]
+      - signal: "reporting delay"
+        effect: "judged on its own merits, independent of the underlying incident's severity — an 18-month delay was denied even though the removal itself was called excusable"
+        signal_elements: [self-reported]
+        case_refs: ["18-02968"]
+
+  # =========================================================== L ==========
+  L:
+    name: "Outside Activities"
+    ladder: false
+    sample: "14 merits cases (11 for the applicant, 3 against)"
+    reason_thin: >
+      Too thin and too skewed for a defensible ladder — none of the three
+      denials involves an adversarial-nation government employer or defiance
+      after formal notice, so the top of any severity scale would be
+      unsupported by this case law.
+    fact_dimensions:
+      - dimension: "disclosure posture"
+        note: "Proactive, logged reporting to the FSO vs. an activity left off the SCA entirely"
+        signal_elements: [approval-status]
+        case_refs: ["23-01669", "21-02921"]
+      - dimension: "formal CI/security-office evaluation sought"
+        note: "Satisfies the mitigating condition directly when obtained"
+        signal_elements: [approval-status, conflict-assessment]
+        case_refs: ["18-00791"]
+      - dimension: "status at adjudication"
+        note: "The mitigating condition is definitionally unavailable while the activity is still ongoing"
+        signal_elements: [dates]
+        case_refs: ["20-01667"]
+      - dimension: "directness of the foreign relationship"
+        note: "Direct employment draws more scrutiny than an attenuated client relationship"
+        signal_elements: [foreign-nexus]
+
+  # =========================================================== M ==========
+  M:
+    name: "Use of Information Technology"
+    ladder: true
+    sample: "17 cases read"
+    dominant_axis: "What happens AFTER discovery outranks the technical severity of the IT act itself. This guideline's dominant co-occurring partner in the library is Personal Conduct (68% of cases), not Protected Information (~20%)."
+    tiers:
+      - name: boundary_misuse
+        depth: low
+        defining_facts: "Unclear policy, inadequate training, or done in the interest of organizational efficiency"
+        signal_elements: [policy-awareness, intent]
+        case_refs: ["14-02505", "19-02686"]
+      - name: personal_use
+        depth: medium
+        defining_facts: "No data exfiltration; outcome turns on stopping voluntarily vs. only once caught"
+        signal_elements: [detection, consequences]
+        case_refs: ["17-03361", "22-02433"]
+      - name: data_removal
+        depth: high
+        defining_facts: "Proprietary files moved to unauthorized media; splits on motive and what happened once discovered"
+        signal_elements: [data-movement, intent]
+        case_refs: ["17-01584", "12-01906"]
+      - name: deliberate_deceptive
+        depth: high
+        defining_facts: "Knowing circumvention of a control, or the act was compounded by lying to investigators"
+        signal_elements: [intent, detection]
+        case_refs: ["17-01987", "18-02284"]
+    modifiers:
+      - signal: "post-discovery candor"
+        effect: "the single most decisive factor observed — one judge noted the underlying IT violation 'would likely have been mitigated' had the applicant not lied about it afterward"
+        signal_elements: [detection]
+        case_refs: ["18-02284"]
+      - signal: "immediate voluntary return of removed data on demand"
+        effect: "mitigates even at large scale (120,000 files), vs. continuing after an on-screen warning at a smaller scale (9,000 files)"
+        case_refs: ["17-01584", "19-02995"]
+
+# =============================================================================
+# THE AXIS THAT RECURRED IN ALL THIRTEEN — not a tier, a cross-cutting signal
+# =============================================================================
+# Every guideline's research, run independently, surfaced the same fact as a
+# dominant or major factor: whether something was volunteered before
+# confrontation, or admitted only once the evidence was already on the
+# table. See corpus/checklists/_UNIVERSAL.yaml's `disclosure-timing` element,
+# which this maps onto — it complements, and does not duplicate,
+# `reporting-delay` (which measures time since the event, not candor history
+# with the fact itself).
+universal_axis:
+  id: disclosure-timing
+  finding: >
+    Whether a fact was raised proactively or only conceded after
+    confrontation is the single most repeated signal across all thirteen
+    guidelines studied — including guidelines with no candor dimension on
+    their face.
+  by_guideline:
+    A: {case_refs: ["22-00849", "22-01876"]}
+    B: {case_refs: ["16-03863"]}
+    C: {case_refs: ["17-03026", "19-00446"]}
+    D: {case_refs: ["19-00334", "17-04058"]}
+    E: {case_refs: ["16-03037", "17-01105"]}
+    F: {case_refs: ["16-03218"]}
+    G: {case_refs: ["17-02619"]}
+    H: {case_refs: ["17-00994", "17-00777"]}
+    I: {case_refs: ["18-01755"]}
+    J: {case_refs: ["18-01351", "17-00884"]}
+    K: {case_refs: ["18-02968"]}
+    L: {case_refs: ["23-01669", "21-02921"]}
+    M: {case_refs: ["17-01584", "18-02284"]}
+
+# =============================================================================
+# EVENTS WITH NO REPORTABLE-EVENT CHECKLIST AT ALL
+# =============================================================================
+# Guidelines A and D surface only through the universal catch-all or what the
+# user volunteers in their own narrative — no SEAD 3/ISL 2021-02 table entry
+# in corpus/reporting/tables/ triggers either one directly. State this to the
+# user plainly if either guideline is implicated; do not imply a reporting
+# table exists where it doesn't.
+no_dedicated_reporting_trigger: [A, D]

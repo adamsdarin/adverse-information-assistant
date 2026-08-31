@@ -1,0 +1,196 @@
+# EVENT: alcohol- and drug-related treatment.
+#
+# ===========================================================================
+# TREATMENT IS THE EVENT — NOT THE UNDERLYING CONDUCT
+# ===========================================================================
+# This entry is about treatment, and treatment is reportable on its own terms.
+# A user may reach this file having reported nothing else, because entering a
+# programme is itself the reportable event.
+#
+# That produces a situation the tool has to handle carefully. Treatment implies
+# underlying conduct, and the underlying conduct may or may not have been
+# reported. The honest handling is to ask — plainly, once, without implication —
+# and to route whatever surfaces to the requirements advisor. What the tool must
+# NOT do is interrogate a person who came to report a positive step as though
+# they had come to confess something.
+#
+# ===========================================================================
+# THE MITIGATION IS THE POINT
+# ===========================================================================
+# Under Guidelines G and H, completed treatment with a favourable prognosis is a
+# named mitigating condition, and established abstinence is another. A user in
+# treatment is holding some of the strongest mitigating facts available — and
+# they routinely under-describe them, because talking about it feels like
+# advertising the problem.
+#
+# So the ladders here dig into the specifics of the programme, the provider's
+# view, and the duration of abstinence. Those details are the difference between
+# "I got help" and a report an adjudicator can weigh.
+event_checklist: event-treatment
+event_ids: [aci.treatment.alcohol-drug]
+guidelines: [G, H]
+channel_refs: [diss-incident]
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+all_elements_sensitivity: high
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+preamble: |
+  Getting treatment is the reportable event here, and it's also one of the
+  things that counts in your favour. I'm going to ask for specifics — the
+  programme, the dates, what your provider says — because those specifics are
+  what make it count. Vague is what gets questioned.
+never_do: |
+  Never characterise anyone as an alcoholic or an addict, or use any diagnostic
+  label the user has not used themselves. Never advise on treatment. Never
+  suggest that entering or leaving a programme is the right or wrong choice.
+  Never ask what was said in a group or a session.
+elements:
+
+  - id: treatment-type
+    ask: "What kind of treatment is it? Inpatient, outpatient, counselling, a group programme, or medication-assisted."
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 24 — Use of Alcohol / Section 23 — Drug Activity", pvq: "substance-use", incident_report: "treatment_type"}
+    followups:
+      - trigger: always
+        ask: "Is it for alcohol, for a substance, or both?"
+      - trigger: always
+        ask: "Was there more than one episode of treatment?"
+
+  - id: provider
+    ask: "What is the programme or provider called?"
+    criticality: required
+    covers: [who]
+    entity_ref: treatment-provider
+    why: "The forms ask for the provider by name and address. An organisation is not a natural person, so this is collectible at every privacy tier."
+    privacy_notice: |
+      The organisation's name and address — not your counsellor's name. The
+      package leaves a blank for the individual if a form needs one.
+    followups:
+      - trigger: always
+        ask: "What city and state?"
+      - trigger: always
+        ask: "And the street address, if you have it? Your FSO may need it and the newer form asks."
+      - trigger: answered_yes
+        ask: "Is it a peer support group rather than a clinical provider?"
+        note: "Anonymous peer groups have no records to request and no address to give in the usual sense. Record what the user can give and do not press for more — do not ask for the meeting location or anyone in it."
+
+  - id: where-received
+    ask: "Where did the treatment take place?"
+    criticality: required
+    covers: [where]
+    followups:
+      - trigger: always
+        ask: "Was it local, or somewhere you travelled to?"
+      - trigger: always
+        ask: "Was any of it through your employer's assistance programme?"
+        why: "An employer programme means the employer already has a record, and a report inconsistent with it is worse than the underlying matter."
+
+  - id: dates
+    ask: "When did it start?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: always
+        ask: "And when did it end, or is it ongoing?"
+      - trigger: always
+        ask: "How often were the sessions, and how many were there roughly?"
+        why: "Frequency and duration are what turn 'I went to counselling' into something specific. Both are usually easy to state."
+      - trigger: vague
+        ask: "The provider will have exact dates. Shall I mark yours approximate for now?"
+
+  - id: how-it-began
+    ask: "How did you come to be in it? Your own decision, a court order, an employer requirement, or family."
+    criticality: required
+    covers: [how, why]
+    why: "Voluntary entry is a materially different fact from a court-ordered or employer-mandated programme, and it is a listed consideration under both guidelines."
+    followups:
+      - trigger: answered_yes
+        ask: "What prompted it at that point?"
+        note: "Record as given. Do not press for the underlying incident here — the next element asks about it directly and neutrally."
+      - trigger: answered_no
+        ask: "Who required it, and is there an order or a directive?"
+        document: "the court order or the employer's requirement letter"
+        escalation_if: "yes"
+
+  - id: underlying-conduct
+    ask: "Is the conduct behind the treatment something you've already reported, or is this the first anyone is hearing of it?"
+    criticality: required
+    covers: [what]
+    prior_disclosure_probe: true
+    why: "Treatment is reportable on its own, but the conduct behind it may carry its own obligation — an arrest, a workplace incident, drug use while cleared. The tool has to ask, and it has to ask without making the user feel ambushed for having come forward."
+    note: |
+      Ask this once, plainly, and move on. Whatever surfaces goes to the
+      requirements advisor, which decides on the obligation. Do not run a second
+      interview about the conduct inside this one — if it is separately
+      reportable, the conductor opens the right checklist for it.
+    followups:
+      - trigger: answered_no
+        ask: "Was there an arrest, a citation, or anything at work connected to it?"
+        event_refs: [aci.criminal.arrest]
+      - trigger: answered_yes
+        ask: "When was that reported, and to whom?"
+
+  - id: completion-and-compliance
+    ask: "Did you complete it, or are you still in it?"
+    criticality: required
+    covers: [what]
+    mitigation_ref: "G — the individual has completed a treatment programme and complied with aftercare, with a favorable prognosis"
+    followups:
+      - trigger: answered_yes
+        ask: "Do you have anything showing completion? A certificate or a discharge letter."
+        document: "completion certificate or discharge summary"
+      - trigger: answered_no
+        ask: "Did it end early, and what happened?"
+        note: "Record it plainly. An incomplete programme is a fact, not a verdict, and the reason matters — a move, a cost, a change of provider are all common and all better stated than left blank."
+      - trigger: always
+        ask: "Is there aftercare, and are you following it?"
+
+  - id: prognosis
+    ask: "Has your provider given an opinion on how you're doing?"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "G and H — a favorable prognosis by a duly qualified professional"
+    document: "provider statement or letter"
+    why: "A named mitigating condition under both guidelines, and the strongest single document available in this whole area. It very often already exists."
+    followups:
+      - trigger: answered_yes
+        ask: "Is it in writing, and could you get a copy?"
+      - trigger: answered_no
+        ask: "Would they be willing to write something? I'll note it as available to ask for rather than as a gap."
+
+  - id: abstinence
+    ask: "Where do things stand now with drinking or use?"
+    criticality: required
+    covers: [what]
+    mitigation_ref: "G — a pattern of modified consumption or abstinence in accordance with treatment recommendations"
+    note: |
+      Ask once and take the answer as given. Never suggest that abstinence is the
+      answer a reviewer wants, and never harden "mostly" into "completely." A
+      user who says they still drink occasionally and has been steady for two
+      years is making a claim that will survive scrutiny. A claim of total
+      abstinence that is not true will not.
+    followups:
+      - trigger: answered_yes
+        ask: "Since when, roughly?"
+        why: "Duration is what the mitigating condition turns on, and a date is far stronger than an adjective."
+      - trigger: quantitative_tension
+        ask: "The date you've given me for stopping and the timeline we went through earlier don't quite line up. I'd rather get it right — can you help me square them?"
+
+  - id: treatment-forward
+    ask: "What does the plan look like from here?"
+    criticality: required
+    covers: [future_intent]
+    mitigation_ref: "G and H — established pattern of abstinence and demonstrated intent not to resume"
+    note: |
+      Record what they say, in their words. Never supply the answer, never coach
+      toward a commitment, and never soften a qualified statement of intent into
+      an unqualified one.
+    followups:
+      - trigger: always
+        ask: "What's in place now that wasn't before? Anything concrete — a person who knows, a rule you keep, a programme you're still in."

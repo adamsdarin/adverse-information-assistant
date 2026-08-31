@@ -1,0 +1,136 @@
+# Quantitative plausibility — where an account doesn't add up.
+#
+# ---------------------------------------------------------------------------
+# WHAT THIS IS FOR, AND WHAT IT IS NOT FOR
+# ---------------------------------------------------------------------------
+# A security officer or an adjudicator reads the narrative and does arithmetic
+# on it. "Three light beers" next to "0.14" does not work for almost anybody,
+# and a reader who notices that has been handed a reason to doubt the whole
+# statement. That is the harm this exists to prevent: not the drinking, the
+# APPEARANCE OF MINIMISATION, which is a Guideline E problem stacked on top of
+# a Guideline G one.
+#
+# So the tool raises the tension while the user can still address it, and
+# frames it as what a reader will ask — never as an accusation.
+#
+# THIS IS NOT A LIE DETECTOR. Most mismatches are ordinary: people forget a
+# round, misjudge pour sizes, repeat what they told the officer at the
+# roadside, or simply never knew the strength of what they drank. The tool
+# surfaces and moves on. The user decides what the truth is.
+#
+# THE TOOL NEVER COMPUTES OR STATES A BAC. A Widmark estimate needs body
+# weight, sex, elapsed time, and food — data this tool deliberately does not
+# collect — and any number it produced would be an estimate with wide error
+# bars that a reader would treat as fact. Flag the tension; never assert a
+# figure. Never say "your BAC would have been X."
+
+schema_version: "1.0"
+maintainer_verified: false
+principle: |
+  Surface the tension, never the calculation. Never accuse. The register is
+  "a reader will ask about this," not "that cannot be true."
+
+checks:
+
+  - id: drinks-vs-test-result
+    applies_to: [G, J]
+    describe: |
+      A stated chemical test result that sits uneasily with the drinks
+      described. The classic shape is a small number of ordinary-strength
+      drinks alongside a result well above the legal limit.
+    trigger_when: |
+      The account states BOTH a chemical test result AND a quantity of
+      alcohol, and the quantity is small — roughly three or fewer standard
+      drinks — while the result is at or above about 0.12. Do not attempt a
+      precise threshold; the point is the obvious mismatch, not a borderline
+      one.
+    say: |
+      "One thing worth thinking about before this goes anywhere. You've
+      described three beers, and a reading of 0.14. Someone reading this will
+      probably do that arithmetic and find it doesn't quite line up — and when
+      that happens the risk isn't the drinking, it's that the whole statement
+      starts to look like it's understating things.
+
+      So: is it possible there was more than you're remembering, or that the
+      timing was different? Or is the reading itself something you dispute? Any
+      of those is a fine answer — I'd just rather your statement addressed it
+      than left the reader to wonder."
+    never_say:
+      - "Your BAC would have been approximately X."
+      - "That's not possible."
+      - "You must have had more than that."
+      - Anything asserting a computed blood alcohol figure.
+    resolution: |
+      Whatever the user says, record it in their words. If they revise the
+      account, the revision stands. If they hold to it, the statement should
+      say so plainly — "I recall three drinks; the test showed 0.14" is a
+      defensible sentence and far better than a silent gap.
+
+  - id: stated-strength-off
+    applies_to: [G]
+    describe: |
+      A stated ABV that doesn't match the category of drink named. Usually
+      a genuine misremembering, and cheap to correct.
+    trigger_when: |
+      The user gives both a drink type and a percentage, and the percentage
+      falls well outside the typical range for that category below.
+    say: |
+      "Small thing — you mentioned [drink] at [X]%. Most [category] runs
+      nearer [range]. Worth checking before it goes in writing, since a
+      number that's easy to check is an easy thing for a reader to catch."
+    never_say:
+      - Any claim about a specific brand's strength as fact.
+
+  - id: timeline-vs-elapsed
+    applies_to: [G, F, H, J]
+    describe: |
+      Durations that don't fit the dates given — probation said to be
+      complete before it could have run, a debt "paid off over two years"
+      inside a twelve-month window, treatment completed in a period shorter
+      than the programme described.
+    trigger_when: "A stated duration exceeds the interval between the dates given."
+    say: |
+      "The dates and the timeframe don't quite fit together — [restate both].
+      Which one should I go with?"
+
+  - id: amount-vs-payment
+    applies_to: [F]
+    describe: |
+      A balance and a payment history that cannot both be right — a sum
+      "paid in full" that exceeds what the stated payments over the stated
+      period could cover.
+    trigger_when: "Stated payments over the stated period cannot reach the stated balance."
+    say: |
+      "Just so the numbers hold up — [restate]. Is there something else that
+      accounts for the difference, like a lump sum or a settlement?"
+
+# ---------------------------------------------------------------------------
+# TYPICAL STRENGTH BY CATEGORY — reference only, deliberately not by brand.
+# ---------------------------------------------------------------------------
+# Categories are stable; brands change formulation and vary by market, and a
+# brand table would rot and read as authority it hasn't earned. These are
+# rough ranges for spotting an obvious mismatch, nothing more.
+#
+# UNVERIFIED until a maintainer checks them against a citable source. While
+# unverified the tool may reference them conversationally but must not state
+# them as fact.
+typical_abv_by_category:
+  light_beer:       {range: "3.5–4.5%", note: "US 'light' lagers sit near the top of this"}
+  standard_beer:    {range: "4.5–6%"}
+  craft_beer_ipa:   {range: "6–9%", note: "one of these can be closer to two standard drinks"}
+  wine:             {range: "11–14%"}
+  fortified_wine:   {range: "17–20%"}
+  spirits:          {range: "35–50%", note: "a 1.5 oz shot is roughly one standard drink"}
+
+standard_drink_note: |
+  A US standard drink is about 0.6 fl oz of pure alcohol — roughly a 12 oz
+  regular beer, a 5 oz glass of wine, or a 1.5 oz shot of spirits. A pint of
+  craft IPA, or a home pour of spirits, is commonly more than one. Useful when
+  someone counts "drinks" but means glasses.
+
+user_facing_rule: |
+  Raise a flag at most once per matter. If the user addresses it, move on. If
+  they hold to their account, accept it and make sure the statement carries
+  both facts plainly. Never return to it, never re-argue it, and never let it
+  become the tone of the interview — the user came here to disclose, not to
+  be cross-examined.

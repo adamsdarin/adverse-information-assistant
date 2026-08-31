@@ -103,22 +103,29 @@ def main() -> int:
     if vf.is_file():
         version = vf.read_text(encoding="utf-8").split()[0]
 
-    # SEAD 4 guideline coverage
-    verified_g, present_g = [], []
-    for g in GUIDELINES:
-        hits = list((path / "sead4").glob(f"guideline-{g}-*.md")) if (path / "sead4").is_dir() else []
-        if hits:
-            present_g.append(g)
-            if frontmatter(hits[0]).get("verbatim"):
-                verified_g.append(g)
-
-    # DOHA cases
-    cases_dir = path / "doha" / "cases"
-    cases = [p for p in cases_dir.glob("*.md") if not p.name.startswith("_")] if cases_dir.is_dir() else []
-    outcomes: dict[str, int] = {}
-    for c in cases:
-        o = frontmatter(c).get("outcome", "?")
-        outcomes[o] = outcomes.get(o, 0) + 1
+    # ------------------------------------------------------------------
+    # WHAT THIS REPO IS AND IS NOT RESPONSIBLE FOR
+    #
+    # This script used to report two things as repo deficiencies that the repo
+    # is not supposed to hold, which made a correctly-assembled installation
+    # look broken:
+    #
+    #   * SEAD 4 guideline TEXT. That is verbatim Government text and belongs in
+    #     the DCSA Library, which carries it in machine-readable form. The repo
+    #     is required to stay free of it, so counting "1/13 guidelines present"
+    #     here was measuring the wrong folder and asking the maintainer to
+    #     hand-author twelve files that already exist officially.
+    #
+    #   * DOHA cases. Also library content. A test in this repo enforces that
+    #     the shipped corpus stays a skeleton, so "0 cases" is the correct and
+    #     intended state — yet the output announced "no case precedent
+    #     available", which is only true if the library is also absent.
+    #
+    # Both are now reported by scripts/check_library.py, which looks in the
+    # place they actually live. What this script measures is what the repo is
+    # genuinely responsible for: the authored analysis and its verification.
+    # ------------------------------------------------------------------
+    notes = list((path / "sead4").glob("guideline-*.md")) if (path / "sead4").is_dir() else []
 
     # Reporting tables verified?
     tables_dir = path / "reporting" / "tables"
@@ -132,33 +139,42 @@ def main() -> int:
             except Exception:
                 pass
 
+    checklists_dir = path / "checklists"
+    checklists = sorted(p.name for p in checklists_dir.glob("guideline-*.yaml")) \
+        if checklists_dir.is_dir() else []
+    events_dir = checklists_dir / "events"
+    events = sorted(p.name for p in events_dir.glob("*.yaml")
+                    if not p.name.startswith("_")) if events_dir.is_dir() else []
+
     print(f"Corpus version:     {version}")
-    print(f"SEAD 4 guidelines:  {len(present_g)}/13 present, {len(verified_g)}/13 verified")
-    print(f"DOHA cases:         {len(cases)}" + (f"  ({outcomes})" if outcomes else ""))
+    print(f"Question checklists: {len(checklists)}/13 guidelines, "
+          f"{len(events)} reportable events")
     print(f"Reporting tables:   {len(tables)} present, {len(verified_tables)} verified")
+    print(f"Guideline notes:    {len(notes)} authored "
+          "(analysis only — the directive text lives in the DCSA Library)")
 
     # --- What this costs the user ---------------------------------------
     print("\nWhat this means for a session:")
-    if len(verified_g) < 13:
-        print("  · Guideline text cannot be quoted for unverified guidelines.")
-    if not cases:
-        print("  · No case precedent available — the interview runs off checklists alone.")
-    elif len(outcomes) == 1:
-        print(f"  · Only '{list(outcomes)[0]}' outcomes present. The corpus should hold both,")
-        print("    or precedent-derived questions will be one-sided.")
+    if len(checklists) < 13:
+        print(f"  · Only {len(checklists)} of 13 guideline checklists present — the "
+              "interview will be thin on the rest.")
     if not verified_tables:
         print("  · Reportability degrades to 'check with your security office' — the tool")
         print("    will not assert that something IS reportable from unverified tables.")
-    if len(verified_g) == 13 and cases and verified_tables:
-        print("  · Fully grounded. No degradation.")
+        print(f"    THIS IS THE ONE THAT MATTERS: {len(tables)} table(s) to verify, and")
+        print("    verifying them is what turns deferrals into answers.")
+    else:
+        print("  · Reporting tables verified — reportability can be asserted.")
+    print("  · Directive text and case precedent come from the DCSA Library, not")
+    print("    from here. Run scripts/check_library.py to see what is available.")
 
     if remember:
         target = ROOT / spec.get("remembered_path_file", ".corpus-location.json")
         target.write_text(json.dumps({
             "corpus_path": str(path.resolve()),
             "corpus_version": version,
-            "guidelines_verified": len(verified_g),
-            "cases": len(cases),
+            "checklists_present": len(checklists),
+            "tables_verified": len(verified_tables),
             "structure_deviations": missing_dirs + missing_files,
         }, indent=2) + "\n", encoding="utf-8")
         print(f"\nRemembered in {target.name} (gitignored). Every script will "

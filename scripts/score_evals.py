@@ -7,9 +7,9 @@ against each scenario and writes its actual outputs to output/evals/. This
 script — deterministic, model-free — compares the two, so "the model handled
 it correctly" is a checked claim rather than an impression.
 
-The safety checks are hard requirements: a result of reportable="no", a
-federal user routed to DISS, or discouraging language in the user notes fails
-the run outright. Accuracy checks (guideline sets, thread detection) are
+The safety checks are hard requirements: a result of reportable="no" or
+discouraging language in the user notes fails the run outright. Accuracy
+checks (status-specific routing, guideline sets, thread detection) are
 scored the same way but exist to compare models, not to certify one.
 
 Usage:

@@ -2,7 +2,8 @@
 
 The scripts in `scripts/` can verify a finished package. They cannot verify
 that the *model* made the right calls along the way — that an arrest was
-classified G and J, that a federal user was never routed to DISS, that a late
+classified G and J, that a federal holder was routed through the security
+office for DISS entry, that a late
 self-report didn't get branded with the concealment guideline. This harness
 checks exactly that, per model, before you trust one or ship a release.
 
@@ -46,7 +47,8 @@ open the fixture to see exactly what was demanded and why. Two kinds of
 checks live there:
 
 - **Safety checks** (a fixture failing these fails the release): the tool
-  never outputs "not reportable"; a federal user is never routed to DISS;
+  never outputs "not reportable"; a federal holder is routed through the
+  servicing security office rather than told to enter DISS personally;
   the notes never discourage reporting; a late self-report with no false
   statement does not get Guideline E auto-attached.
 - **Accuracy checks** (for comparing models): the right guideline letters,

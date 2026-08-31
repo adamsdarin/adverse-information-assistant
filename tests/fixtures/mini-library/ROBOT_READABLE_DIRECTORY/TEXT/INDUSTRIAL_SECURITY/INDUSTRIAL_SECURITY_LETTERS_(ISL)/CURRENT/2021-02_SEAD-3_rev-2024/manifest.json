@@ -1,0 +1,43 @@
+{
+  "directive": "ISL-2021-02",
+  "source_file": "2021-02_SEAD-3_rev-2024.txt",
+  "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "generated_by": "test fixture",
+  "cut_method": "section headings, reassembly-verified",
+  "sections": [
+    {
+      "file": "01_Overview_and_Adverse_Information_Guidance.md",
+      "title": "Overview and Adverse Information Guidance",
+      "body_sha256": "a19b97dbc18212c9c3c6de0bcd50b8bb313ef5b2a43f6668eb696d2a4e1d71d3",
+      "lines": 1
+    },
+    {
+      "file": "02_Table_1_Adverse_Information.md",
+      "title": "Table 1 \u2014 Adverse Information",
+      "body_sha256": "917f80310c98da5519919b1183a4484a62d91b8171c698482f4dee7c57b25b04",
+      "lines": 1,
+      "verifies": "corpus/reporting/tables/adverse-information.yaml"
+    },
+    {
+      "file": "03_Table_2_All_Covered_Individuals.md",
+      "title": "Table 2 \u2014 All Covered Individuals",
+      "body_sha256": "c73e1ed41c63d4904dc24e54205801840bb3407c9a84e96f549ffe6bfee5e977",
+      "lines": 1,
+      "verifies": "corpus/reporting/tables/all-covered-individuals.yaml"
+    },
+    {
+      "file": "04_Table_3_Top_Secret_Q.md",
+      "title": "Table 3 \u2014 Top Secret and Q Access",
+      "body_sha256": "db8ed008644140469cb38171831a52b8b938716c39d0c122717d7181a6519879",
+      "lines": 1,
+      "verifies": "corpus/reporting/tables/top-secret-q.yaml"
+    },
+    {
+      "file": "05_Table_4_Foreign_Travel.md",
+      "title": "Table 4 \u2014 Foreign Travel",
+      "body_sha256": "12fde9b88e60bb26869d651c4980ab46e5f37a1971d809181c147c8d81c74364",
+      "lines": 1,
+      "verifies": "corpus/reporting/tables/all-covered-individuals.yaml"
+    }
+  ]
+}

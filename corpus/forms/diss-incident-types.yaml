@@ -1,0 +1,39 @@
+# DISS "Select Incident Type(s)" values supplied by the maintainer from the
+# current incident-entry screen. Multiple values may apply to one real-world
+# incident; selecting several values never creates several narratives.
+maintainer_verified: false
+source: "Maintainer-provided DISS incident-entry screenshot, 2026-08-30"
+incident_types:
+  - Allegiance to the United States
+  - Foreign Influence
+  - Foreign Preference
+  - Sexual Behavior
+  - Use of Information Technology
+  - Personal Conduct
+  - Financial Considerations
+  - Alcohol Consumption
+  - Psychological Conditions
+  - Drug Involvement and Substance Misuse
+  - Criminal Conduct
+  - Handling Protected Information
+  - Outside Activities
+  - Continuous Evaluations
+guideline_defaults:
+  A: Allegiance to the United States
+  B: Foreign Influence
+  C: Foreign Preference
+  D: Sexual Behavior
+  E: Personal Conduct
+  F: Financial Considerations
+  G: Alcohol Consumption
+  H: Drug Involvement and Substance Misuse
+  I: Psychological Conditions
+  J: Criminal Conduct
+  K: Handling Protected Information
+  L: Outside Activities
+  M: Use of Information Technology
+grouping_rule: |
+  Group by the factually independent real-world incident. Attach every
+  applicable incident type to that incident's single complete narrative.
+  Do not split one causal chain into repetitive narratives merely because
+  several incident types apply.

@@ -35,6 +35,35 @@ in library-sources.yaml, unzip it anywhere you like, and point this script
 at the folder that contains START_HERE_FOR_ROBOTS.json."""
 
 
+def looks_like_path(v: str) -> bool:
+    """Is this JSON string a path claim, or prose that mentions one?
+
+    The real library's retrieval_config.json contains the value
+    "Resolve aliases from CATALOG/ALIASES.json." — an instruction to a reader,
+    not a path. Treating every string with a slash in it as a claim made this
+    script report a missing file that was never claimed to exist.
+
+    That matters more than it looks. This is a trust-anchor script, and its
+    output is only worth reading if the maintainer believes it. One confident
+    false alarm teaches them to skim past the section, which is where the real
+    findings live.
+
+    THE TRADEOFF, stated rather than hidden: a genuine path containing a space
+    is skipped and would go unreported here. That is accepted because this
+    claim scan is a secondary check — the files that actually matter are covered
+    by the essentials and tier checks, which read a fixed list rather than
+    whatever the entry point says — and because a false negative in a secondary
+    check is cheaper than noise in a primary one.
+    """
+    if not v or v.startswith("http") or "/" not in v:
+        return False
+    if " " in v:            # prose, or a path this scan declines to guess at
+        return False
+    if v.endswith("."):     # a sentence ending in what looks like a filename
+        return False
+    return True
+
+
 def report(root: Path, as_json: bool) -> dict:
     tier = lp.detect_tier(root)
     missing_ess = lp.missing_from(root, lp.ESSENTIALS)
@@ -46,6 +75,8 @@ def report(root: Path, as_json: bool) -> dict:
     # collections.json is kept on Windows and broken everywhere else.
     case_issues: list[str] = []
     broken_claims: list[str] = []
+    # See looks_like_path — the entry point mixes real paths with prose that
+    # happens to mention one.
     for entry_rel in (lp.ENTRY_POINT,
                       "ROBOT_READABLE_DIRECTORY/RETRIEVAL/retrieval_config.json"):
         entry, _ = lp.find_ci(root, entry_rel)
@@ -58,10 +89,11 @@ def report(root: Path, as_json: bool) -> dict:
             continue
         claims: list[str] = []
         for v in declared.values():
-            if isinstance(v, str) and "/" in v and not v.startswith("http"):
-                claims.append(v)
+            if isinstance(v, str):
+                if looks_like_path(v):
+                    claims.append(v)
             elif isinstance(v, list):
-                claims += [x for x in v if isinstance(x, str) and "/" in x]
+                claims += [x for x in v if isinstance(x, str) and looks_like_path(x)]
         for claim in claims:
             resolved, exact = lp.find_ci(root, claim)
             if resolved is None:
@@ -154,6 +186,21 @@ def report(root: Path, as_json: bool) -> dict:
         print("  Fine on your own machine. These should NOT be in a bundle you")
         print("  distribute — they are build history, not reference material.\n")
 
+    # Directive text availability is a separate question from bundle tier: it
+    # depends on whether the section split has been generated. Reporting it here
+    # is what stops "guideline text" being claimed by a tier description while
+    # nothing in the tool can actually read it.
+    st = lp.sead_split_status(root)
+    print("Directive text (section level):")
+    print(f"  SEAD-3 sections:  {'present' if st['sead3'] else 'ABSENT'}")
+    print(f"  SEAD-4 sections:  {'present' if st['sead4'] else 'ABSENT'}"
+          + (f"   guidelines {''.join(st['guidelines'])}" if st["guidelines"] else ""))
+    print(f"  ISL 2021-02:      {'present' if st['isl'] else 'ABSENT'}"
+          + (f"   tables {','.join(st['isl_tables'])}" if st["isl_tables"] else ""))
+    for prob in st["problems"]:
+        print(f"  ! {prob}")
+    print()
+
     print("What this means for a session:")
     if tier in ("none", "partial"):
         print("  · The tool runs, but cannot quote guideline text.")
@@ -161,6 +208,12 @@ def report(root: Path, as_json: bool) -> dict:
         print("  · Reportability degrades to 'check with your security office'.")
     else:
         print("  · Guideline text and reporting authorities can be quoted.")
+    if st["problems"]:
+        print("  · Directive text cannot be loaded section by section. Agents")
+        print("    must NOT read a whole directive as a substitute.")
+    else:
+        print("  · Directive text loads one section at a time, so a guideline")
+        print("    outside the matter never enters the context window.")
         print("  · Decisions can be cited, and every citation is checked against")
         print("    this library before any package is delivered.")
         if tier == "essentials":

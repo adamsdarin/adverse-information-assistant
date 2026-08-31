@@ -208,12 +208,363 @@ def check_checklists() -> None:
         if not data.get("maintainer_verified"):
             warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT, questions unvetted")
         require_provenance(data, path, "maintainer_verified")
+        check_followups(data, path)
+        check_granularity(data, path)
+        check_coverage(data, path)
         uni = data.get("universal")
         if uni and not (CORPUS / "checklists" / uni).exists():
             errors.append(f"{path}: universal file '{uni}' not found")
         sev = data.get("severity_default")
         if sev and sev not in ("low", "medium", "high"):
             errors.append(f"{path}: invalid severity_default '{sev}'")
+
+
+VALID_TRIGGERS = {"always", "vague", "answered_yes", "answered_no",
+                  "pending", "quantitative_tension"}
+# Every guideline, not a subset. The five high-frequency ones were made granular
+# first; the rest followed. A future checklist that reverts to bundled asks is a
+# regression and gets flagged as one.
+GRANULAR_REQUIRED = set(GUIDELINES)
+
+
+# ---------------------------------------------------------------------------
+# THE COVERAGE SPINE — who / what / when / where / why / how / future intent
+# ---------------------------------------------------------------------------
+_coverage_spec_cache: dict | None = None
+
+
+def coverage_spec() -> dict:
+    """Load _COVERAGE.yaml once. It is the authority for the facet names."""
+    global _coverage_spec_cache
+    if _coverage_spec_cache is None:
+        path = CORPUS / "checklists" / "_COVERAGE.yaml"
+        if not path.exists():
+            errors.append(f"{path}: missing — the coverage spine is unenforced")
+            _coverage_spec_cache = {}
+        else:
+            _coverage_spec_cache = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return _coverage_spec_cache
+
+
+def check_coverage(data: dict, path: Path) -> None:
+    """A checklist must be able to answer the questions any report answers.
+
+    Granularity gets the facts. Coverage proves the facts add up to an account.
+    A checklist that collects nine precise details about a court disposition and
+    never asks why the thing happened is not 90% complete — it reads as evasive
+    on the one it skipped, because a reader cannot distinguish "nothing to say"
+    from "not saying it".
+    """
+    spec = coverage_spec()
+    if not spec:
+        return
+    known = {f.get("id") for f in spec.get("facets", []) if isinstance(f, dict)}
+    required = list(spec.get("required_facets", []))
+    inheritable = set(spec.get("inheritable_from_universal", []))
+
+    covered: set[str] = set()
+    covered_by_required_element: set[str] = set()
+    for el in data.get("elements", []):
+        if not isinstance(el, dict):
+            continue
+        facets = el.get("covers")
+        if facets is None:
+            errors.append(
+                f"{path}: element '{el.get('id')}' has no 'covers' — every element "
+                f"declares which of {sorted(known)} it carries"
+            )
+            continue
+        if not isinstance(facets, list):
+            errors.append(f"{path}: element '{el.get('id')}' covers must be a list")
+            continue
+        for f in facets:
+            if f not in known:
+                # Same failure mode as an unknown followup trigger: it satisfies
+                # nothing and hides the gap it was meant to close.
+                errors.append(
+                    f"{path}: element '{el.get('id')}' covers {f!r}, which is not a "
+                    f"facet in _COVERAGE.yaml — it satisfies nothing"
+                )
+                continue
+            covered.add(f)
+            if el.get("criticality") == "required":
+                covered_by_required_element.add(f)
+
+    if "how_relevant" not in data:
+        errors.append(
+            f"{path}: must declare how_relevant (true or false). Mechanism is what a "
+            "reviewer reads for; silence on whether it applies is not permitted"
+        )
+    if data.get("how_relevant") is False and not str(data.get("how_not_relevant_because", "")).strip():
+        errors.append(
+            f"{path}: how_relevant is false but how_not_relevant_because is empty — "
+            "declining a facet requires the reason in prose"
+        )
+
+    for facet in required:
+        if facet in covered:
+            if facet not in covered_by_required_element and facet not in inheritable:
+                warnings.append(
+                    f"{path}: facet '{facet}' is carried only by optional elements — "
+                    "it disappears silently if the user declines them"
+                )
+            continue
+        if facet in inheritable and data.get("universal"):
+            continue
+        if facet == "how" and data.get("how_relevant") is False:
+            continue
+        errors.append(f"{path}: no element covers the '{facet}' facet")
+
+
+# ---------------------------------------------------------------------------
+# THE REPORTING AXIS — every reportable event has questions behind it
+# ---------------------------------------------------------------------------
+def check_event_checklists() -> None:
+    """Reportable events do not map 1:1 onto SEAD 4 guidelines, so they get
+    their own checklists — and every entry in the reporting tables must be
+    claimed by exactly one of them.
+
+    Not zero: an unclaimed table entry is a reportable matter with no questions
+    behind it, which is precisely the gap that let unofficial foreign travel —
+    the only obligation in the scheme that has to be met BEFORE the event — go
+    unasked for months.
+
+    Not two: duplicate claims mean two files drift and one of them silently
+    loses.
+    """
+    events_dir = CORPUS / "checklists" / "events"
+    if not events_dir.is_dir():
+        errors.append(f"{events_dir}: missing — the reporting axis is unimplemented")
+        return
+
+    # What the tables actually require, which is the authority here.
+    table_ids: dict[str, Path] = {}
+    for tpath in sorted((CORPUS / "reporting" / "tables").glob("*.yaml")):
+        tdata = yaml.safe_load(tpath.read_text(encoding="utf-8")) or {}
+        for entry in tdata.get("entries", []) or []:
+            if isinstance(entry, dict) and entry.get("id"):
+                table_ids[entry["id"]] = tpath
+
+    channels = yaml.safe_load(
+        (CORPUS / "reporting" / "tables" / "channels.yaml").read_text(encoding="utf-8")
+    ) or {}
+    known_channels = set()
+    for group in ("industry_channels", "federal_military_channels", "applicant_channels"):
+        known_channels |= set((channels.get(group) or {}).keys())
+
+    claimed: dict[str, list[str]] = {}
+    for path in sorted(events_dir.glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        name = data.get("event_checklist")
+        if name != path.stem:
+            errors.append(f"{path}: event_checklist '{name}' does not match the filename")
+        if not data.get("sources"):
+            errors.append(f"{path}: 'sources' is required")
+        ids = [e.get("id") for e in data.get("elements", []) if isinstance(e, dict)]
+        if not ids:
+            errors.append(f"{path}: no elements")
+        if len(ids) != len(set(ids)):
+            errors.append(f"{path}: duplicate element ids")
+        if not data.get("maintainer_verified"):
+            warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT, questions unvetted")
+        require_provenance(data, path, "maintainer_verified")
+        check_followups(data, path)
+        check_coverage(data, path)
+
+        evs = data.get("event_ids")
+        if evs is None:
+            errors.append(f"{path}: 'event_ids' is required (use [] with no_table_entry_because)")
+            evs = []
+        if not evs and not str(data.get("no_table_entry_because", "")).strip():
+            errors.append(
+                f"{path}: claims no table entry but gives no no_table_entry_because — "
+                "an event checklist with no authority behind it must say so in prose"
+            )
+        if not evs and data.get("reportability_default") != "consult_fso":
+            errors.append(
+                f"{path}: has no table entry, so reportability_default must be "
+                "'consult_fso' — the tool does not assert an obligation it cannot cite"
+            )
+        for ev in evs:
+            if ev not in table_ids:
+                errors.append(f"{path}: event id '{ev}' is in no reporting table")
+            claimed.setdefault(ev, []).append(path.name)
+
+        for g in data.get("guidelines", []) or []:
+            if g not in GUIDELINES:
+                errors.append(f"{path}: guideline '{g}' is not a SEAD 4 guideline")
+            elif not (CORPUS / "checklists" / f"guideline-{g}.yaml").exists():
+                errors.append(f"{path}: guideline '{g}' has no checklist file")
+        for ch in data.get("channel_refs", []) or []:
+            if ch not in known_channels:
+                errors.append(f"{path}: channel_ref '{ch}' is not defined in channels.yaml")
+
+    for ev, tpath in sorted(table_ids.items()):
+        who = claimed.get(ev, [])
+        if not who:
+            errors.append(
+                f"{tpath}: reportable event '{ev}' is claimed by no event checklist — "
+                "a reporting obligation with no questions behind it"
+            )
+        elif len(who) > 1:
+            errors.append(
+                f"reportable event '{ev}' is claimed by more than one event checklist "
+                f"({', '.join(who)}) — the two will drift and one will lose"
+            )
+
+
+def check_followups(data: dict, path: Path) -> None:
+    """Conditional question ladders.
+
+    A followup with an unknown trigger never fires — the question silently
+    disappears and the gap it was meant to close reappears as an agency
+    request weeks later. So an unknown trigger is an error, not a warning.
+    """
+    for el in data.get("elements", []):
+        if not isinstance(el, dict):
+            continue
+        fups = el.get("followups")
+        if fups is None:
+            continue
+        if not isinstance(fups, list):
+            errors.append(f"{path}: element '{el.get('id')}' followups must be a list")
+            continue
+        for i, f in enumerate(fups):
+            where = f"{path}: element '{el.get('id')}' followup[{i}]"
+            if not isinstance(f, dict):
+                errors.append(f"{where}: must be a mapping")
+                continue
+            if f.get("trigger") not in VALID_TRIGGERS:
+                errors.append(
+                    f"{where}: trigger {f.get('trigger')!r} is not one of "
+                    f"{sorted(VALID_TRIGGERS)} — it would never fire"
+                )
+            if not str(f.get("ask", "")).strip():
+                errors.append(f"{where}: has no 'ask'")
+
+
+def check_granularity(data: dict, path: Path) -> None:
+    """The high-frequency guidelines must be question-per-fact.
+
+    A bundled ask returns one answer and loses the rest, which is how a
+    package reaches an adjudicator with holes in it.
+    """
+    g = data.get("guideline")
+    if g not in GRANULAR_REQUIRED:
+        return
+    els = data.get("elements", [])
+    if not any(e.get("followups") for e in els if isinstance(e, dict)):
+        warnings.append(
+            f"{path}: guideline {g} is in the granular set but has no "
+            "conditional followups — check it was not reverted to bundled asks"
+        )
+    for el in els:
+        if not isinstance(el, dict):
+            continue
+        q = str(el.get("ask", ""))
+        # Three or more comma-separated clauses in one ask is the shape of a
+        # bundled question. Two is usually a legitimate either/or.
+        if q.count(",") >= 3 and "—" in q:
+            warnings.append(
+                f"{path}: element '{el.get('id')}' may bundle several facts "
+                f"into one question: {q[:70]!r}"
+            )
+
+
+def check_entity_capture() -> None:
+    """The name-and-location fields both questionnaires demand.
+
+    A beta session worked out the right court and never asked for its address,
+    the arresting agency's address, or the venue. Those are form fields and
+    retrieval anchors; missing them produces a package an FSO cannot act on.
+    """
+    path = CORPUS / "forms" / "entity-capture.yaml"
+    if not path.exists():
+        errors.append(f"{path}: missing — the forms' entity/location fields are unenforced")
+        return
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    ents = {e.get("id") for e in data.get("entities", []) if isinstance(e, dict)}
+    for required in ("offense-location", "citing-agency",
+                     "arresting-agency-if-different", "court", "venue"):
+        if required not in ents:
+            errors.append(f"{path}: missing entity '{required}'")
+    for e in data.get("entities", []):
+        if not isinstance(e, dict):
+            continue
+        if not e.get("ask"):
+            errors.append(f"{path}: entity '{e.get('id')}' has no 'ask'")
+    # The citing/arresting split is the finding this file exists to encode.
+    blob = path.read_text(encoding="utf-8").lower()
+    if "booking" not in blob or "sheriff" not in blob:
+        errors.append(
+            f"{path}: must explain that the citing agency and the arresting or "
+            "booking agency can differ — a records request goes to whichever "
+            "agency created the record"
+        )
+    require_provenance(data, path, "maintainer_verified")
+
+    # Checklist elements referencing an entity must reference one that exists.
+    for cl in sorted((CORPUS / "checklists").glob("guideline-*.yaml")):
+        d = yaml.safe_load(cl.read_text(encoding="utf-8")) or {}
+        for el in d.get("elements", []):
+            ref = isinstance(el, dict) and el.get("entity_ref")
+            if ref and ref not in ents:
+                errors.append(f"{cl}: element '{el.get('id')}' references unknown "
+                              f"entity '{ref}'")
+
+
+def check_collection_policy() -> None:
+    """Which form standard the tool collects to, and the one-line switch."""
+    path = CORPUS / "forms" / "collection-policy.yaml"
+    if not path.exists():
+        errors.append(f"{path}: missing")
+        return
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    std = data.get("collection_standard")
+    if std not in ("sf86", "pvq"):
+        errors.append(f"{path}: collection_standard is {std!r}; must be 'sf86' or 'pvq'")
+    diffs = data.get("material_differences", {})
+    for required in ("criminal_lookback", "traffic_fine_threshold"):
+        if required not in diffs:
+            errors.append(
+                f"{path}: material_differences must record '{required}' — the two "
+                "forms differ on it and using the wrong one produces a wrong answer"
+            )
+    if std == "sf86" and data.get("pvq_status") != "not_fully_launched":
+        warnings.append(
+            f"{path}: collection_standard is 'sf86' but pvq_status is "
+            f"{data.get('pvq_status')!r} — if the PVQ has launched, flip the switch"
+        )
+
+
+def check_plausibility() -> None:
+    path = CORPUS / "checks" / "plausibility.yaml"
+    if not path.exists():
+        warnings.append(f"{path}: missing — quantitative tension checks unavailable")
+        return
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    ids = set()
+    for c in data.get("checks", []):
+        cid = c.get("id")
+        if not cid:
+            errors.append(f"{path}: a check has no id")
+            continue
+        if cid in ids:
+            errors.append(f"{path}: duplicate check id '{cid}'")
+        ids.add(cid)
+        for key in ("applies_to", "trigger_when", "say"):
+            if not c.get(key):
+                errors.append(f"{path}: check '{cid}' missing '{key}'")
+    # The hard rule: the tool must never assert a computed BAC.
+    blob = path.read_text(encoding="utf-8").lower()
+    if "never_say" not in blob or "blood alcohol" not in blob:
+        errors.append(
+            f"{path}: must carry an explicit prohibition on stating a computed "
+            "blood alcohol figure — that is the whole guardrail on this check"
+        )
+    require_provenance(data, path, "maintainer_verified")
 
 
 def check_universal() -> None:
@@ -231,6 +582,134 @@ def check_universal() -> None:
     if not data.get("maintainer_verified"):
         warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT")
     require_provenance(data, path, "maintainer_verified")
+
+
+def check_severity_ladders() -> None:
+    """The depth-scaling framework: one entry per guideline, each tier's
+    signal_elements pointing at real ids in that guideline's own checklist.
+
+    This file replaces each guideline's flat severity_default with a tier
+    computed from facts the user already stated. It adds no new questions —
+    every signal_elements id must already exist in guideline-<X>.yaml, or
+    the tier is pointing the interviewer at a question that was never asked.
+    """
+    path = CORPUS / "checklists" / "_SEVERITY_LADDERS.yaml"
+    if not path.exists():
+        errors.append(f"{path}: missing — depth scaling has no case-grounded basis, "
+                       "falls back to each checklist's flat severity_default")
+        return
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not data.get("maintainer_verified"):
+        warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT, "
+                         "case citations unvetted")
+    require_provenance(data, path, "maintainer_verified")
+
+    guidelines = data.get("guidelines", {})
+    missing = GUIDELINES - set(guidelines)
+    if missing:
+        errors.append(f"{path}: no entry for guideline(s) {sorted(missing)}")
+
+    real_ids: dict[str, set] = {}
+    for g, entry in guidelines.items():
+        if g not in GUIDELINES:
+            errors.append(f"{path}: '{g}' is not a valid guideline letter")
+            continue
+        gpath = CORPUS / "checklists" / f"guideline-{g}.yaml"
+        if gpath not in real_ids:
+            if not gpath.exists():
+                errors.append(f"{path}: guideline-{g}.yaml not found for cross-check")
+                real_ids[gpath] = set()
+            else:
+                gdata = yaml.safe_load(gpath.read_text(encoding="utf-8")) or {}
+                real_ids[gpath] = {e.get("id") for e in gdata.get("elements", [])}
+
+        ladder = entry.get("ladder", True)
+        if ladder:
+            tiers = entry.get("tiers") or []
+            if not tiers:
+                errors.append(f"{path}: {g} has ladder: true but no tiers")
+            for tier in tiers:
+                if tier.get("depth") not in ("low", "medium", "high"):
+                    errors.append(f"{path}: {g} tier '{tier.get('name')}' has invalid "
+                                   f"depth {tier.get('depth')!r}")
+                if not tier.get("defining_facts") and not tier.get("note"):
+                    errors.append(f"{path}: {g} tier '{tier.get('name')}' has no "
+                                   "defining_facts or note")
+        else:
+            if not entry.get("fact_dimensions"):
+                errors.append(f"{path}: {g} has ladder: false but no fact_dimensions "
+                               "— thin guidelines still need something to ask from")
+            if not entry.get("reason_thin"):
+                warnings.append(f"{path}: {g} has ladder: false with no reason_thin "
+                                 "stated — a thin sample should say so")
+
+        entries = entry.get("tiers", []) + entry.get("fact_dimensions", []) \
+            + entry.get("modifiers", [])
+        for sub in entries:
+            for sid in sub.get("signal_elements", []):
+                if sid not in real_ids[gpath]:
+                    errors.append(f"{path}: {g} signal_elements references "
+                                   f"'{sid}', which is not an element id in "
+                                   f"guideline-{g}.yaml — question drifted or was renamed")
+
+    axis = data.get("universal_axis", {})
+    axis_guidelines = set(axis.get("by_guideline", {}))
+    missing_axis = GUIDELINES - axis_guidelines
+    if missing_axis:
+        warnings.append(f"{path}: universal_axis.by_guideline has no entry for "
+                         f"{sorted(missing_axis)}")
+
+    uni_path = CORPUS / "checklists" / "_UNIVERSAL.yaml"
+    if uni_path.exists():
+        uni_data = yaml.safe_load(uni_path.read_text(encoding="utf-8")) or {}
+        uni_ids = {e.get("id") for e in uni_data.get("elements", [])}
+        axis_id = axis.get("id")
+        if axis_id and axis_id not in uni_ids:
+            errors.append(f"{path}: universal_axis.id '{axis_id}' is not an "
+                           "element in _UNIVERSAL.yaml")
+
+
+def check_document_evidence() -> None:
+    """The DOHA-case-grounded catalog of what documents judges actually
+    treated as persuasive, per guideline — what documents-advisor.md reads
+    instead of defaulting to a court/police pattern that doesn't generalize.
+    """
+    path = CORPUS / "checklists" / "_DOCUMENT_EVIDENCE.yaml"
+    if not path.exists():
+        errors.append(f"{path}: missing — documents-advisor.md has no "
+                       "case-grounded basis for what to recommend")
+        return
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not data.get("maintainer_verified"):
+        warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT, "
+                         "case citations unvetted")
+    require_provenance(data, path, "maintainer_verified")
+
+    guidelines = data.get("guidelines", {})
+    missing = GUIDELINES - set(guidelines)
+    if missing:
+        errors.append(f"{path}: no entry for guideline(s) {sorted(missing)}")
+
+    for g, entry in guidelines.items():
+        if g not in GUIDELINES:
+            errors.append(f"{path}: '{g}' is not a valid guideline letter")
+            continue
+        docs = entry.get("documents") or []
+        bare = entry.get("bare_claim_pattern") or []
+        if not docs and not entry.get("note"):
+            errors.append(f"{path}: {g} has no documents and no explanatory "
+                           "note — say the sample was thin rather than leaving it empty")
+        for d in docs:
+            if d.get("weight") not in ("strong", "moderate", "weak"):
+                errors.append(f"{path}: {g} document '{d.get('type')}' has "
+                               f"invalid weight {d.get('weight')!r}")
+            if not d.get("corroborates") or not d.get("custodian"):
+                errors.append(f"{path}: {g} document '{d.get('type')}' is "
+                               "missing corroborates or custodian")
+        for b in bare:
+            if not b.get("finding") or not b.get("case_ref"):
+                errors.append(f"{path}: {g} bare_claim_pattern entry missing "
+                               "finding or case_ref")
 
 
 def check_courts() -> None:
@@ -296,8 +775,14 @@ def main() -> int:
     check_reporting()
     check_authority_layers()
     check_checklists()
+    check_event_checklists()
     check_universal()
+    check_severity_ladders()
+    check_document_evidence()
     check_courts()
+    check_entity_capture()
+    check_collection_policy()
+    check_plausibility()
     check_index(cases)
     for w in warnings:
         print(f"WARN  {w}")

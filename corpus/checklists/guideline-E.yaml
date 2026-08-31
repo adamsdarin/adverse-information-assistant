@@ -1,36 +1,96 @@
-# Guideline E — Personal Conduct. REVIEW DRAFT.
-# NOTE: E is auto-attached by the classifier whenever a narrative reveals a
-# prior non-disclosure, omission, or falsification — even if the user did not
-# raise it. See agents/classifier.md.
+# Guideline E (Personal Conduct) — required narrative elements.
+# Maintainer-authored from SEAD 4 ¶¶ 15–17 and recurring factual questions in
+# published DOHA decisions.
+# KNOWN LIMITATION: not validated against agency RFI data (ARCHITECTURE.md §5.2).
+#
+# Granular by design, with conditional ladders — see guideline-G.yaml.
+# This guideline usually attaches to something else. The precision matters
+# because the difference between a mistake and a false statement lives in
+# exactly what was asked and exactly what was answered.
 guideline: E
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-E-personal-conduct.md]
-# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
-# not from data. It controls interview depth on OPTIONAL material only and
-# can never downgrade a required form field. Review before relying on it.
+coverage: _COVERAGE.yaml
+how_relevant: true
 severity_default: high
+sources:
+  - corpus/sead4/guideline-E-personal-conduct.md
 elements:
-  - id: omission-what
-    ask: "What specifically was left out, understated, or answered incorrectly?"
+
   - id: omission-where
-    ask: "Where did that happen — which form, interview, or process, and when?"
-    maps_to: {sf86: "form-wide", pvq: "form-wide"}
-  - id: omission-why
-    ask: "What accounts for it? Misunderstanding the question, not having the information, deciding not to include it, or something else? A straight answer serves you better than a flattering one."
-    sensitivity: high
+    covers: [where]
+    ask: "Which form or process was it — an SF-86, a PVQ, a subject interview, a polygraph session, or something else?"
+    criticality: required
+
+  - id: omission-when
+    covers: [when]
+    ask: "What was the date of that form or interview?"
+    criticality: required
+    followups:
+      - trigger: vague
+        ask: "Approximately what year? Your security office can confirm the exact date from the record."
+
+  - id: omission-question
+    covers: [what]
+    ask: "Which question was it, and what did it actually ask?"
+    criticality: required
+    why: "Whether an answer was wrong depends on what was asked. A question about arrests is not a question about charges, and people are held to the wording."
+
+  - id: omission-answer-given
+    covers: [what]
+    ask: "What answer did you give?"
+    criticality: required
+
+  - id: omission-what
+    covers: [what]
+    ask: "What should the answer have included?"
+    criticality: required
+
   - id: omission-deliberate
-    ask: "At the time, was the omission deliberate?"
-    answer_type: boolean_with_detail
+    covers: [why, how]
+    ask: "At the time, was leaving it out a deliberate choice?"
+    criticality: required
     sensitivity: high
-    note: "Do not coach toward a favorable answer. Record what the user says."
+    why: "This is the fact that separates an error from a falsification. Ask it plainly, take the answer, and do not editorialise either way."
+    followups:
+      - trigger: answered_no
+        ask: "What do you think accounts for it — misreading the question, not having the information, or assuming it was already known?"
+      - trigger: answered_yes
+        ask: "What were you weighing at the time?"
+
   - id: correction-status
-    ask: "Has it been corrected since — and if so, when, how, and did you raise it or did someone else?"
-    mitigation_ref: "E — prompt, good-faith correction before being confronted"
+    covers: [what, future_intent]
+    ask: "Has it been corrected since?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "When and how?"
+      - trigger: answered_yes
+        ask: "Did you raise it, or did someone else find it?"
+        why: "A correction volunteered before anyone asked is a recognised mitigating consideration. It only counts if the record says who raised it."
+      - trigger: answered_no
+        ask: "Is this session the correction?"
+
+  - id: underlying-conduct-status
+    covers: [what]
+    ask: "Is the underlying matter itself now fully disclosed, or is there still part of it that has not been reported?"
+    criticality: required
+
   - id: rule-violation-pattern
+    covers: [when, what]
     ask: "Are there other instances of rules, policies, or agreements not being followed — security, employment, or otherwise?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "For each: roughly when, what happened, and what came of it."
+
   - id: cooperation
+    covers: [who, what]
     ask: "Have you ever declined or failed to cooperate with a security or investigative process?"
-  - id: underlying-conduct-reported
-    ask: "Is the underlying matter itself now fully disclosed, or is there anything still not reported?"
-    note: "If anything remains undisclosed, say plainly that continuing non-disclosure is itself the Guideline E problem — then let the user decide."
+    criticality: required
+
+  - id: changes-made
+    covers: [future_intent]
+    ask: "What has changed so this does not recur?"
+    criticality: mitigation
+    mitigation_ref: "E-17"

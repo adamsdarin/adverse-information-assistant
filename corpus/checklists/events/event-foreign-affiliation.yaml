@@ -1,0 +1,192 @@
+# EVENT: application for or receipt of foreign citizenship; application for,
+#        possession, or use of a foreign passport or identity card; voting in a
+#        foreign election.
+#
+# ===========================================================================
+# THREE ENTRIES, ONE FILE, DIFFERENT POPULATIONS
+# ===========================================================================
+#   aci.foreign-affiliation.citizenship   all covered individuals
+#   aci.foreign-affiliation.passport      all covered individuals
+#   tsq.foreign-vote                      additional at Top Secret / "Q"
+#
+# They live together because a user who has one usually has another and would
+# otherwise be walked through three near-identical interviews. The requirements
+# advisor still applies each entry's own population — never state that voting is
+# reportable to a Secret-cleared user as though the table said so.
+#
+# ===========================================================================
+# THE DISTINCTION THAT DOES ALL THE WORK
+# ===========================================================================
+# HOLDING is not USING. Millions of Americans hold a second citizenship by birth
+# or descent and have never exercised any part of it. The ISL entries are about
+# specific acts — applying, receiving, possessing, using, voting — and this file
+# asks about acts.
+#
+# The tone follows from that. Nothing here is an accusation, and the preamble
+# says so before the first question. A tool that makes someone feel their
+# parents' nationality is a problem has failed at the only thing that matters:
+# getting an accurate, complete report from a person who is willing to keep
+# talking.
+event_checklist: event-foreign-affiliation
+event_ids: [aci.foreign-affiliation.citizenship, aci.foreign-affiliation.passport, tsq.foreign-vote]
+guidelines: [C, B]
+channel_refs: [diss-incident]
+access_level_note: |
+  Citizenship and passport entries: all covered individuals.
+  Voting in a foreign election: additional at Top Secret / "Q".
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/reporting/tables/top-secret-q.yaml
+preamble: |
+  Holding another citizenship isn't itself a security concern, and a lot of
+  cleared people have one. What the policy asks about is specific things —
+  applying for one, getting one, having or using a foreign passport, voting. So
+  these questions are about what you've done with it, not about having it.
+never_do: |
+  Never advise renouncing a citizenship or surrendering a document. Those are
+  consequential personal decisions with immigration and family implications this
+  tool cannot weigh. Never collect a passport or identity document number.
+elements:
+
+  - id: affiliation-type
+    ask: "Which of these applies? Citizenship you've applied for or received, a foreign passport or ID card, or voting in a foreign election."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: always
+        ask: "More than one? We'll go through them one at a time."
+
+  - id: country
+    ask: "Which country?"
+    criticality: required
+    covers: [where]
+    maps_to: {sf86: "Section 10 — Dual/Multiple Citizenship", pvq: "citizenship", incident_report: "issuing_country"}
+    followups:
+      - trigger: always
+        ask: "Any others?"
+
+  - id: who-issued-or-processed
+    ask: "Which office handled it? An embassy, a consulate, or a ministry."
+    criticality: required
+    covers: [who]
+    entity_ref: foreign-entity
+    why: "The issuing authority is a form-level fact and an organisation, so it is collectible at every privacy tier. It is also where a record of the act exists."
+    followups:
+      - trigger: always
+        ask: "Where is that office — which city and country?"
+      - trigger: answered_yes
+        ask: "Did anyone act for you? A lawyer, an agent, or a family member."
+      - trigger: always
+        ask: "Does anyone else in your household hold the same citizenship or document?"
+        why: "Family status is usually the reason the user has it, and it is context a reviewer will want rather than a further concern."
+
+  - id: dates
+    ask: "When did this happen?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: always
+        ask: "When did you apply, and when was it granted or issued?"
+      - trigger: always
+        ask: "If it's a document, when does it expire?"
+      - trigger: pending
+        ask: "Is the application still outstanding?"
+        note: "A pending application is reportable now. Waiting for a decision is a reporting delay, and the advisor should say so plainly and without blame."
+
+  - id: how-acquired
+    ask: "How did it come about? Birth, descent through a parent, marriage, or an application you made."
+    criticality: required
+    covers: [how, why]
+    why: "Acquired at birth and applied for last year are the same status with entirely different weight, and both forms ask."
+    followups:
+      - trigger: answered_yes
+        ask: "What did you have to do to get it?"
+      - trigger: always
+        ask: "Was it automatic, or did you take a step to claim it?"
+
+  - id: document-status
+    ask: "If there's a physical document, where is it now?"
+    criticality: required
+    covers: [what]
+    format: [issuing_country, document_type, issued, expires]
+    maps_to: {incident_report: "document_type"}
+    privacy_notice: |
+      I'll take the country, the type, and the dates. Not the number — the
+      package leaves a blank for that, the same as your other identifiers.
+    followups:
+      - trigger: always
+        ask: "In your possession, surrendered to your security office, expired, or lost?"
+        why: "'Surrendered to my FSO in 2022' and 'in a drawer at home' are the same document and completely different reports."
+      - trigger: answered_yes
+        ask: "Do you have anything showing it was surrendered?"
+        document: "the security office receipt for a surrendered document"
+
+  - id: use
+    ask: "Have you used it for anything?"
+    criticality: required
+    covers: [what, how]
+    why: "Use is what the guideline turns on. Possession without use is a much shorter report — but only if the question was actually put."
+    followups:
+      - trigger: answered_yes
+        ask: "What for? Travel, identification, work, banking, or property."
+      - trigger: answered_yes
+        ask: "When and where, and did you enter or leave the US on it?"
+        event_refs: [aci.travel.unofficial]
+      - trigger: answered_no
+        ask: "So it's never been used since you got it?"
+        why: "An explicit negative on the record is worth having. An unasked question looks the same as a withheld answer."
+
+  - id: voting
+    ask: "Have you voted in a foreign election?"
+    criticality: required
+    covers: [what]
+    event_refs: [tsq.foreign-vote]
+    followups:
+      - trigger: answered_yes
+        ask: "Which election, and when?"
+      - trigger: answered_yes
+        ask: "How did you vote? In person there, at a consulate, or by post."
+      - trigger: answered_yes
+        ask: "Was it a national election or a local one?"
+    note: |
+      Ask about the fact of voting only. Never ask who they voted for, what
+      party, or why. None of it is a required data element and none of it is
+      this tool's business.
+
+  - id: obligations-and-benefits
+    ask: "Does the citizenship carry anything with it? Military service, tax filing, registration, or benefits you receive."
+    criticality: required
+    covers: [why]
+    followups:
+      - trigger: answered_yes
+        ask: "What is required or received, and where does it stand?"
+      - trigger: always
+        ask: "Have you served in that country's military or worked for its government?"
+        escalation_if: "yes"
+
+  - id: prior-reporting
+    ask: "Has any of this been on a previous security form, or reported to your security office?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    followups:
+      - trigger: answered_yes
+        ask: "Which form or which report, and has anything changed since?"
+
+  - id: affiliation-forward
+    ask: "Going forward, do you expect to use it or exercise any of those rights?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Record the answer as given. Never advise renunciation or surrender, and
+      never imply that keeping it is a problem. If they ask whether they should
+      give something up, that goes to their FSO, not to this tool.
+    followups:
+      - trigger: answered_yes
+        ask: "For what, and roughly when?"

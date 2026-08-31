@@ -1,34 +1,258 @@
-# Guideline B — Foreign Influence. REVIEW DRAFT.
+# Guideline B (Foreign Influence) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 6–8, the ISL 2021-02 data
+# elements for foreign contacts and affiliations, and recurring factual
+# questions in published DOHA decisions.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# WHAT MAKES THIS GUIDELINE DIFFERENT
+# ---------------------------------------------------------------------------
+# Alcohol and criminal matters are events: they happened, they are over, and
+# the questions are archaeological. Foreign influence is usually a CONDITION —
+# ongoing, with no end date, and the adjudicative question is prospective. So
+# the ladders here press on the present tense and on future intent, and every
+# element asks about the relationship as it stands today.
+#
+# The second difference: the subject of most of these questions is a person who
+# is not in the room and did not consent to anything. The privacy tier governs
+# how much of their identity is collected. Where a form field demands a name,
+# the tool says so and says why, and the user decides.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: B
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-B-foreign-influence.md, corpus/reporting/tables/all-covered-individuals.yaml]
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: medium
+sources:
+  - corpus/sead4/guideline-B-foreign-influence.md
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/reporting/tables/top-secret-q.yaml
 elements:
+
+  # ----------------------------------------------------------- who / identity
+  - id: contact-country
+    ask: "Which country is the person or organisation connected to?"
+    criticality: required
+    covers: [who, what]
+    why: "The country is the fact the reporting tables turn on, and it is collectible at every privacy tier because on its own it identifies nobody."
+    maps_to: {sf86: "Section 19 — Foreign Contacts", pvq: "foreign-contacts", incident_report: "national_identity_country"}
+    followups:
+      - trigger: always
+        ask: "Is that their citizenship, where they live, or both?"
+        why: "Citizenship and residence often differ and the form asks for both. A dual national living in a third country is three separate facts."
+      - trigger: answered_yes
+        ask: "Do they hold any other citizenship?"
+
   - id: contact-identity
-    ask: "Who is the foreign national or entity involved? Name and country of citizenship."
-    format: [name, country_of_citizenship, country_of_residence]
+    ask: "How should I refer to this person in the report? Their relationship to you is enough — I don't need a name unless you want to give one."
+    criticality: required
+    covers: [who]
+    privacy_notice: |
+      The form asks for their full name, address and employer. This tool does
+      not collect those. The package ships a blank template you complete by
+      hand at submission, the same way it handles your own identifiers.
+    why: "The narrative has to be readable. 'My wife's brother' works; 'a foreign national' does not. A role is not an identity."
+    followups:
+      - trigger: always
+        ask: "Is this one person, or a family or group?"
+        why: "A single contact and a spouse's whole family in-country are very different reports, and people describe both as 'a foreign contact'."
+
   - id: relationship-nature
-    ask: "What is your relationship — family, friend, romantic partner, business associate, professional contact?"
+    ask: "What is the relationship? Family, marriage or partnership, friendship, romantic, business, or professional."
+    criticality: required
+    covers: [who, what]
+    why: "The ISL's threshold is bonds of affection or personal obligation. The category is what tells the FSO whether that threshold is met."
+    maps_to: {incident_report: "nature_of_association"}
+    followups:
+      - trigger: always
+        ask: "Is there any sense of obligation between you, financial or otherwise?"
+        why: "Obligation is the operative word in the policy. Ask it directly rather than inferring it from the category."
+
+  - id: household-status
+    ask: "Does this person live with you, or have they at any point?"
+    criticality: required
+    covers: [who, where]
+    why: "A cohabitant and a foreign national roommate are separately enumerated reportable events at the Top Secret level, and nobody thinks of their roommate as a 'foreign contact'."
+    maps_to: {sf86: "Section 18 — Relatives", pvq: "cohabitant"}
+    event_refs: [tsq.cohabitant, tsq.foreign-roommate, tsq.marriage]
+    followups:
+      - trigger: answered_yes
+        ask: "Since when, and is that still the case?"
+      - trigger: answered_yes
+        ask: "Is it a shared home with bonds of affection or commitment, or a lease with someone you have no other ties to?"
+        why: "The policy distinguishes these. Both may be reportable at TS; they are not the same fact."
+
+  # ------------------------------------------------------------------- how
   - id: how-met
-    ask: "How and when did you first meet or come into contact?"
+    ask: "How did you first come into contact with them?"
+    criticality: required
+    covers: [how, why]
+    why: "The manner of introduction is what a counterintelligence reviewer reads first. It is also the fact most often left out, because it feels like background rather than substance."
+    followups:
+      - trigger: always
+        ask: "When was that, roughly?"
+      - trigger: always
+        ask: "Did they approach you, did you approach them, or did someone introduce you?"
+        why: "An unsolicited approach reads differently from a mutual introduction, and it is the distinction the FIE question downstream depends on."
+      - trigger: answered_yes
+        ask: "Who introduced you, and in what setting?"
+
+  - id: contact-method
+    ask: "How are you in touch? In person, phone, text, email, or an app."
+    criticality: required
+    covers: [how]
+    why: "The channel matters, and an encrypted or foreign-hosted platform is a fact a reviewer will want stated plainly rather than discovered."
+    followups:
+      - trigger: always
+        ask: "Which platform or service, specifically?"
+
   - id: contact-frequency
-    ask: "How often are you in contact, and by what means?"
+    ask: "How often are you in contact?"
+    criticality: required
+    covers: [when, what]
     mitigation_ref: "B — infrequent or casual contact"
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: vague
+        ask: "Roughly how many times in the last year? An estimate is fine."
+        why: "'Occasionally' is the answer that generates a request for information. A stated estimate is not."
+      - trigger: always
+        ask: "When was the most recent contact?"
+      - trigger: quantitative_tension
+        ask: "You've described this as a close relationship, and also as contact once or twice a year. I want to state both accurately — which is it, or is there something in between?"
+        why: "Closeness and frequency pulling in opposite directions is not necessarily a contradiction, but an unexplained gap between them reads as minimising."
+
+  # ------------------------------------------------------------------ where
+  - id: contact-location
+    ask: "Where do they live? City and country."
+    criticality: required
+    covers: [where]
+    entity_ref: foreign-entity
+    followups:
+      - trigger: always
+        ask: "Have they ever visited you in the United States?"
+      - trigger: answered_yes
+        ask: "When, for how long, and did they stay with you?"
+
   - id: government-nexus
-    ask: "To your knowledge, is this person or entity connected to a foreign government, military, intelligence service, or state-owned enterprise?"
+    ask: "As far as you know, is this person connected to a foreign government, military, intelligence service, police force, political party, or state-owned company?"
+    criticality: required
+    covers: [who, what]
     escalation_if: "yes"
+    why: "This is the fact the guideline is built around. Asking it plainly beats hoping it emerges, and 'I don't know' is a legitimate answer that gets recorded as such."
+    followups:
+      - trigger: answered_yes
+        ask: "What is their role there, and how long have they held it?"
+      - trigger: answered_yes
+        ask: "Have they ever asked you about your work, your clearance, or your access?"
+        why: "An affirmative here is very likely a separate reportable event through the counterintelligence channel, not a detail of this one. The requirements advisor re-runs."
+        escalation_if: "yes"
+      - trigger: answered_no
+        ask: "Do you know what they do for a living?"
+        why: "A negative answer is worth much more when the tool can also state what the person does. Otherwise a reader cannot tell whether the user checked or assumed."
+
+  - id: elicitation-check
+    ask: "Has anyone connected to this ever asked you for information about your work, your colleagues, or your access?"
+    criticality: required
+    covers: [what, how]
+    escalation_if: "yes"
+    event_refs: [aci.behavior.elicitation, aci.foreign-contact.fie]
+    why: "Attempted elicitation is its own reportable event with its own channel and its own urgency. It cannot be a footnote inside a contact report."
+    followups:
+      - trigger: answered_yes
+        ask: "What were you asked, and when?"
+      - trigger: answered_yes
+        ask: "What did you do?"
+        why: "The response is as material as the approach, and the user should get credit for having refused or reported it."
+
+  # --------------------------------------------------------------- financial
   - id: foreign-financial-interest
-    ask: "Do you have any financial interest, property, or business involvement in a foreign country? Approximate value if so."
-    maps_to: {incident_report: "foreign_financial_interest"}
-  - id: foreign-travel-nexus
-    ask: "Has this relationship involved foreign travel on your part, or theirs to the U.S.?"
+    ask: "Do you have any money, property, or business interests in a foreign country?"
+    criticality: required
+    covers: [what, where]
+    maps_to: {sf86: "Section 20A — Foreign Financial Interests", pvq: "foreign-financial", incident_report: "foreign_financial_interest"}
+    event_refs: [tsq.foreign-business, tsq.foreign-bank, tsq.foreign-property]
+    followups:
+      - trigger: answered_yes
+        ask: "What is it, and in which country?"
+      - trigger: answered_yes
+        ask: "Roughly what is it worth in US dollars?"
+        why: "The form asks for value. An approximation with the basis stated is fine; a blank is a request for information."
+      - trigger: answered_yes
+        ask: "How did you come to hold it? Purchase, inheritance, gift, or marriage."
+      - trigger: answered_no
+        ask: "Does anyone you live with, or anyone in your immediate family, hold foreign property or accounts that you know of?"
+        why: "The guideline reaches interests held by people whose welfare the user cares about. The user's own 'no' does not close it."
+
+  - id: financial-support-flow
+    ask: "Does money move between you in either direction — support you send, or support you receive?"
+    criticality: required
+    covers: [what, how]
+    why: "Regular remittances are among the clearest forms of the personal obligation this guideline is concerned with, and users rarely think to mention them."
+    followups:
+      - trigger: answered_yes
+        ask: "Roughly how much, and how often?"
+      - trigger: answered_yes
+        ask: "How is it sent?"
+      - trigger: quantitative_tension
+        ask: "The amount you've described is a large share of what you've told me you earn. I'd rather state that accurately than have it questioned later — have I understood the figures right?"
+        why: "See corpus/checks/plausibility.yaml. State the tension, never state a conclusion, and never tell the user what their finances mean."
+
+  # ----------------------------------------------------------------- travel
+  - id: travel-nexus
+    ask: "Has this relationship involved you travelling abroad?"
+    criticality: required
+    covers: [where, when]
+    event_refs: [aci.travel.unofficial]
+    why: "Unofficial foreign travel is its own reportable event with a pre-approval requirement, so a contact report that reveals unreported travel has to route there too."
+    followups:
+      - trigger: answered_yes
+        ask: "Which countries, and when?"
+      - trigger: answered_yes
+        ask: "Was that travel reported to your security office beforehand?"
+        why: "If it was not, that is a second matter for the same report. State it neutrally — the point is getting it in front of the FSO, not assigning fault."
+
+  # ---------------------------------------------------------------- context
   - id: prior-reporting
-    ask: "Have you previously reported this contact to your security office?"
-  - id: obligation-assessment
-    ask: "Would you feel any obligation or conflict if you were ever asked to choose between this relationship and your obligations to the United States?"
-    mitigation_ref: "B — deep and longstanding relationships and loyalties to the U.S."
-    sensitivity: high
+    ask: "Have you reported this contact to your security office before?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    why: "The ISL treats updates to previously reported associations as separately reportable, so a prior report does not close this. It changes the question to what has changed."
+    followups:
+      - trigger: answered_yes
+        ask: "When, and what has changed since?"
+      - trigger: answered_yes
+        ask: "Was it on a form, in an interview, or a report to your FSO?"
+        why: "A prior form entry can be checked against what is being said now. A verbal mention to an FSO usually cannot."
+
+  - id: us-ties
+    ask: "What keeps you here? Family, property, career — the things that tie you to the United States."
+    criticality: required
+    covers: [why]
+    mitigation_ref: "B — deep and longstanding relationships and loyalties in the U.S."
+    why: "This is a mitigating condition stated in the guideline itself. Leaving it out presents the foreign tie with nothing on the other side of the scale."
+    note: |
+      Ask this as an open question and record the answer. Do not prompt for
+      specific items, do not rank them, and do not characterise the result.
+
+  # ---------------------------------------------- future intent (event-specific)
+  - id: relationship-forward
+    ask: "Do you expect this relationship to continue, and in what form?"
+    criticality: required
+    covers: [future_intent]
+    why: "The universal future-intent question asks about conduct. For an ongoing condition the specific question is whether it continues — and the honest answer is usually yes."
+    note: |
+      Never suggest ending a relationship, never imply that continuing it is a
+      problem, and never coach the answer. Family is family. The report states
+      the facts and the user's intent; the adjudicator weighs them.
+    followups:
+      - trigger: always
+        ask: "Is there anything about how you handle it that a reviewer should know — what you don't discuss, what you've reported before?"

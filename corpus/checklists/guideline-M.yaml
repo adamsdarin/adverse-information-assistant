@@ -1,38 +1,217 @@
-# Guideline M — Use of Information Technology. REVIEW DRAFT.
-# Same content warning as Guideline K: describe conduct, never protected content.
+# Guideline M (Use of Information Technology) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 39–41.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# THE CONTENT RULE — SAME AS GUIDELINE K
+# ---------------------------------------------------------------------------
+# Describe the conduct, never the data. If the systems or data involved were
+# classified or controlled, do not characterise the material here. The
+# interviewer states this before the first question.
+#
+# ---------------------------------------------------------------------------
+# WHAT THIS CHECKLIST IS ACTUALLY TRYING TO PIN DOWN
+# ---------------------------------------------------------------------------
+# Almost every Guideline M matter reduces to three facts: what the user was
+# AUTHORIZED to do, what they actually DID, and whether any DATA MOVED. Users
+# describe the third one loosely — "I just saved a copy" — and that is precisely
+# the fact an enterprise logging system recorded exactly. So the ladders press
+# hardest on data movement, and they press for what the employer's logs will
+# show rather than what the user remembers.
+#
+# The tool never tells a user their account is contradicted by evidence it
+# cannot see. It says, plainly, that logs exist and that the account should be
+# something the logs will corroborate.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: M
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-M-info-technology.md]
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: medium
+sources:
+  - corpus/sead4/guideline-M-info-technology.md
 preamble: |
-  Describe what you did, not what any protected data contained. If the
-  systems or data involved were classified, do not characterize the material
-  here — talk to your security office.
+  Describe what you did, not what any data contained. If the system or the data
+  was classified or controlled, don't characterise the material here — take that
+  part to your security office.
+
+  One other thing worth knowing before we start: employer systems log a great
+  deal, and an inquiry will usually have those logs. That is a reason to be
+  precise rather than a reason to be nervous. Where you're not sure what
+  happened, say so and I'll write it as uncertain — that holds up far better
+  than a confident account the logs don't match.
+never_ask: |
+  The content of any file, message, or database involved. Credentials of any
+  kind. Do not accept a password or key if the user offers one — stop them.
 elements:
+
   - id: conduct-description
-    ask: "What was the conduct — unauthorized access, unauthorized software, misuse of a system, downloading or removing data, sharing credentials, circumventing a control?"
+    ask: "What was the conduct? Unauthorised access, unapproved software, misuse of a system, moving data, sharing credentials, or getting around a control."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: vague
+        ask: "In one sentence, what did you do that you weren't supposed to?"
+
   - id: systems-involved
-    ask: "What kind of system was it — employer network, government system, personal device connected to a work resource?"
+    ask: "What kind of system was involved?"
+    criticality: required
+    covers: [where]
+    entity_ref: organization
+    why: "Whose system it was decides who holds the logs, who runs the inquiry, and whether this is also a Guideline K matter."
+    followups:
+      - trigger: always
+        ask: "Whose system was it? Your employer's, a customer's, a government system, or your own device."
+      - trigger: always
+        ask: "Was it a classified system or an unclassified one?"
+        note: "Level only. If classified, add Guideline K and re-run the classifier."
+      - trigger: answered_yes
+        ask: "Was a personal device connected to a work network or account at any point?"
+
   - id: authorization-status
-    ask: "Were you authorized for that system or that action at the time?"
+    ask: "Were you authorised for that system, and for that action, at the time?"
+    criticality: required
+    covers: [what]
+    why: "This is the hinge of the whole guideline. Authorised access used for an unauthorised purpose is a different report from access the user never had."
+    followups:
+      - trigger: answered_yes
+        ask: "So you had access, but the use of it was outside what it was for?"
+      - trigger: answered_no
+        ask: "How did you get in? Someone else's credentials, a shared account, a control you got around, or access that was never removed."
+        escalation_if: "yes"
+      - trigger: answered_no
+        ask: "Did anyone else know you were doing it?"
+
   - id: dates
-    ask: "When did this occur, and over what period?"
+    ask: "When did this happen?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "Was it once, or over a period? If a period, from when to when."
+      - trigger: always
+        ask: "When was it discovered?"
+      - trigger: vague
+        ask: "The employer's logs will carry exact dates. Shall I mark yours approximate rather than have the two disagree?"
+        why: "This is the honest version of a plausibility check: not 'your date is wrong' but 'a precise record exists, so let's not guess'."
+
+  - id: how-it-happened
+    ask: "How did you do it, mechanically?"
+    criticality: required
+    covers: [how]
+    why: "Mechanism is what an inquiry reconstructs from logs. An account that matches the mechanism is corroborated; one that does not looks like an attempt to minimise."
+    followups:
+      - trigger: always
+        ask: "What tool or route did you use? Email, a USB drive, cloud storage, a personal account, or remote access."
+      - trigger: always
+        ask: "Did you take any step to avoid detection or logging?"
+        escalation_if: "yes"
+        note: "An affirmative is a concealment indicator and auto-attaches Guideline E. Ask it neutrally; it is a fact, not an accusation."
+
+  - id: data-movement
+    ask: "Did any data actually move? Copied, removed, uploaded, or sent."
+    criticality: required
+    covers: [what, how]
+    escalation_if: "yes"
+    why: "The single most consequential fact here, and the one most often understated. 'I looked at it' and 'I have a copy at home' are different matters."
+    followups:
+      - trigger: answered_yes
+        ask: "Where did it go, and is it still there?"
+      - trigger: answered_yes
+        ask: "Roughly how much — a file, a folder, a database?"
+      - trigger: answered_yes
+        ask: "Has it been deleted or returned, and did you tell anyone you had it?"
+        note: "Do not advise deleting anything. If material is still held, that is a fact for the security office and possibly for counsel of the user's own choosing — the tool states the fact and does not direct the user's next move."
+      - trigger: answered_no
+        ask: "So nothing left the system — only the access itself was the issue?"
+
+  - id: who-else
+    ask: "Was anyone else involved? Roles, not names."
+    criticality: required
+    covers: [who]
+    privacy_notice: |
+      Roles are enough. I won't ask for names and you shouldn't type them.
+    followups:
+      - trigger: answered_yes
+        ask: "Did they know what you were doing?"
+      - trigger: always
+        ask: "Did any data go to anyone outside your organisation?"
+        escalation_if: "yes"
+      - trigger: always
+        ask: "Was any foreign national or foreign-hosted service involved?"
+        escalation_if: "yes"
+        event_refs: [aci.foreign-contact.continuing]
+        why: "A foreign-hosted service in the path adds Guideline B and may be its own reportable event. Users never think of a cloud provider as a foreign contact."
+
   - id: intent
     ask: "What were you trying to accomplish?"
-    mitigation_ref: "M — conduct was unintentional or inadvertent, followed by prompt correction"
-  - id: data-movement
-    ask: "Was any data copied, removed, or transmitted? Where did it go?"
-    escalation_if: "yes"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "M — the conduct was unintentional or inadvertent, followed by a prompt, good-faith effort to correct"
+    why: "Purpose is what separates convenience from exfiltration, and it is entirely the user's to state."
+    note: |
+      Record it as given. The most common honest answer is that it was easier
+      that way, and that answer — unflattering, plausible, verifiable — reads far
+      better than a constructed justification. Do not improve it.
+    followups:
+      - trigger: always
+        ask: "Did you know at the time it was against policy?"
+      - trigger: answered_yes
+        ask: "What made you do it anyway? Deadline, a broken process, something you'd seen others do."
+
   - id: detection
-    ask: "How was it discovered — did you report it, or did the organization detect it?"
-    mitigation_ref: "M — prompt, good-faith self-report"
+    ask: "How was it discovered? Did you report it, or did the organisation find it?"
+    criticality: required
+    covers: [who, when]
+    mitigation_ref: "M — a prompt, good-faith report to appropriate officials"
+    followups:
+      - trigger: answered_yes
+        ask: "To whom, and how soon after?"
+      - trigger: answered_yes
+        ask: "Is there anything showing when — an email or a ticket number?"
+        document: "the self-report, or the employer's acknowledgement of it"
+      - trigger: answered_no
+        ask: "How did they find it, and when did they raise it with you?"
+
   - id: consequences
-    ask: "What action did the organization take — warning, suspension, termination, referral, access revocation?"
+    ask: "What did the organisation do? A warning, suspension, termination, a referral, or an access change."
+    criticality: required
+    covers: [what]
+    document: "employer letter, disciplinary record, or access determination"
+    followups:
+      - trigger: answered_yes
+        ask: "When, and do you have it in writing?"
+      - trigger: pending
+        ask: "Is anything still open — an investigation, or a decision not yet made?"
+        note: "A pending matter is reportable now. Waiting for the outcome is a reporting delay."
+      - trigger: answered_yes
+        ask: "Was it referred to anyone outside the company?"
+        escalation_if: "yes"
+
   - id: policy-awareness
-    ask: "Had you acknowledged an acceptable-use policy or received training covering this?"
-  - id: corrective-action
-    ask: "What has changed since — retraining, access changes, anything you've done differently?"
+    ask: "Had you acknowledged an acceptable-use policy, or had training covering this?"
+    criticality: required
+    covers: [why]
+    followups:
+      - trigger: answered_yes
+        ask: "Roughly when?"
+        why: "The employer holds a signed acknowledgement with a date on it. An answer that conflicts with it is worse than no answer."
+      - trigger: answered_no
+        ask: "Was the rule something you understood anyway?"
+
+  - id: it-forward
+    ask: "What's different now in how you handle this? Anything concrete."
+    criticality: required
+    covers: [future_intent]
+    mitigation_ref: "M — the individual has taken action to eliminate the vulnerability"
+    note: |
+      Concrete and real only. A changed workflow, an approved tool now in place,
+      access that has been properly requested. Never invent one and never upgrade
+      a vague answer into a specific one.

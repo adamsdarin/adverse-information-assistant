@@ -1,0 +1,194 @@
+# EVENT: contact with a known or suspected foreign intelligence entity, and
+#        attempted elicitation, exploitation, blackmail, or coercion.
+#
+# ===========================================================================
+# THIS IS THE ONE THAT DOES NOT WAIT
+# ===========================================================================
+# Every other event in this corpus can be assembled carefully over an hour and
+# handed in as a package. These two go to a counterintelligence channel, and the
+# value of the report decays with time.
+#
+# So this checklist inverts the tool's normal behaviour. The moment the trigger
+# is established, the conductor tells the user how to report it NOW — before the
+# interview is finished, before the narrative is drafted, before anything is
+# assembled. The package is a follow-on, not a prerequisite.
+#
+# Say it in plain words: "This one shouldn't wait for us to finish. Contact your
+# FSO — and your company's DCSA counterintelligence special agent — today. We
+# can keep working on the written account after you've done that."
+#
+# For a federal or military user: their security office and their supporting
+# counterintelligence element. Never name DCSA, DISS, or an FSO to them.
+#
+# ===========================================================================
+# WHAT NOT TO DO
+# ===========================================================================
+# Do not tell the user whether the person they dealt with was an intelligence
+# officer. The tool cannot know, the user cannot know, and "known or suspected"
+# is a determination for people with information neither of them has. Collect
+# the facts. Suspicion is enough to report; certainty is not required and must
+# not be manufactured.
+#
+# Do not coach a story. Do not suggest what the other party's motive was. Do not
+# tell the user to break off contact, to keep it going, or to do anything at all
+# other than report it — advising someone how to handle a live foreign
+# intelligence approach is not this tool's business and could be actively
+# harmful.
+#
+# Do not ask the user to describe protected information they may have disclosed
+# beyond the fact that a disclosure occurred. That conversation happens with
+# their security office, not here.
+event_checklist: event-fie-elicitation
+event_ids: [aci.foreign-contact.fie, aci.behavior.elicitation]
+guidelines: [B, E]
+channel_refs: [cisa-direct, fso]
+urgency: immediate
+report_before_package: true
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: high
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/reporting/tables/channels.yaml
+never_do: |
+  Never assess whether the contact was an intelligence officer. Never advise the
+  user on how to handle continuing contact. Never suggest breaking it off or
+  maintaining it. Never collect the substance of any protected information the
+  user may have disclosed.
+elements:
+
+  - id: what-happened
+    ask: "Tell me what happened, in your own words."
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "contact_description"}
+    note: |
+      Start open. This is the one element in the corpus where the parent question
+      is deliberately broad — a structured interrogation at this moment loses
+      detail that matters and that only surfaces when someone is allowed to talk.
+      The ladder tightens it afterwards.
+    followups:
+      - trigger: always
+        ask: "What exactly were you asked for, as close to the actual words as you can get?"
+        why: "The wording of a request is the most useful single thing in a report like this, and it fades fast."
+      - trigger: vague
+        ask: "Was it a request for information, an offer of something, a threat, or something you can't easily categorise?"
+
+  - id: who-approached
+    ask: "Who approached you? Describe them by role and nationality if you know it."
+    criticality: required
+    covers: [who]
+    maps_to: {incident_report: "parties"}
+    privacy_notice: |
+      Here, unlike elsewhere in this tool, whatever identifying detail you have
+      is worth recording — a name, an employer, a business card. This report goes
+      to people whose job is to look into it.
+    followups:
+      - trigger: always
+        ask: "Did they give a name, an organisation, or a way to reach them?"
+      - trigger: always
+        ask: "Which country are they connected to, as far as you know?"
+      - trigger: always
+        ask: "Was there more than one person, and did anyone else witness it?"
+
+  - id: when
+    ask: "When did this happen?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: always
+        ask: "Was it a single approach, or has there been more than one?"
+      - trigger: answered_yes
+        ask: "When was the most recent one, and is it still ongoing?"
+        escalation_if: "yes"
+      - trigger: vague
+        ask: "As close a date as you can manage. This one matters more than usual."
+
+  - id: where
+    ask: "Where did it happen?"
+    criticality: required
+    covers: [where]
+    followups:
+      - trigger: always
+        ask: "In person or remotely? If in person, which city and country."
+      - trigger: always
+        ask: "Was it at a work event, a conference, or somewhere connected to your job?"
+      - trigger: answered_yes
+        ask: "Were you abroad at the time?"
+        event_refs: [aci.travel.unofficial]
+
+  - id: how-contact-made
+    ask: "How did they reach you?"
+    criticality: required
+    covers: [how]
+    maps_to: {incident_report: "circumstances"}
+    why: "The channel is what a counterintelligence reviewer works with — an approach through a professional networking site, a recruiter, a conference introduction, or a social contact are all different patterns."
+    followups:
+      - trigger: always
+        ask: "Which platform or route, specifically?"
+      - trigger: always
+        ask: "Do you still have the messages, emails, or anything in writing?"
+        document: "the original messages — keep them; do not delete anything"
+        note: "Say plainly: keep whatever exists, do not delete it, and do not reply until they have talked to their security office. That is preservation guidance, not advice on how to handle the contact."
+      - trigger: always
+        ask: "Was there anything unusual about how they found you?"
+
+  - id: what-was-sought
+    ask: "What did they seem to be after?"
+    criticality: required
+    covers: [what, why]
+    followups:
+      - trigger: always
+        ask: "Did they ask about your clearance, your access, or your programme?"
+      - trigger: always
+        ask: "Was anything offered in return? Money, a job, travel, or a favour."
+      - trigger: always
+        ask: "Was there any threat, or anything that felt like pressure?"
+        escalation_if: "yes"
+
+  - id: your-response
+    ask: "What did you do?"
+    criticality: required
+    covers: [what]
+    why: "The response is as material as the approach. A user who refused and walked away should have that on the record, and a user who did not needs it recorded accurately rather than softened."
+    note: |
+      Whatever the answer, record it without judgment. If protected information
+      was disclosed, note that a disclosure occurred and stop — the substance
+      belongs with the security office, not in this tool.
+    followups:
+      - trigger: always
+        ask: "Did you give them anything at all, including anything that seemed harmless?"
+      - trigger: answered_yes
+        ask: "Have you had any contact with them since?"
+      - trigger: always
+        ask: "Did you tell anyone at the time?"
+
+  - id: prior-reporting
+    ask: "Have you already reported this to anyone?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    followups:
+      - trigger: answered_yes
+        ask: "To whom, and when?"
+      - trigger: answered_no
+        ask: "Nothing to fix — but this is the one that shouldn't wait for us to finish. Do you know how to reach your security office today?"
+        note: |
+          State the channel and stop. Do not build urgency past one clear
+          sentence, do not repeat it every turn, and do not imply the user is in
+          trouble for not having done it yet.
+
+  - id: exposure-forward
+    ask: "Do you expect any further contact from them?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Record the answer. Do not advise on what to do if they make contact again
+      beyond reporting it — that guidance comes from the counterintelligence
+      professionals this report is going to, not from a document assistant.
+    followups:
+      - trigger: answered_yes
+        ask: "Is there anything you're worried about, that a reviewer should know?"

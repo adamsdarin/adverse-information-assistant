@@ -5,6 +5,15 @@ sessions/
 *.draft.md
 *.session.json
 
+# Build output. docs/process-map.html IS committed — it's the canonical
+# artifact and a test fails when it goes stale against PROCESS.md. The PDF is
+# not: it's a ~3 MB raster with no staleness test behind it, and committing a
+# new copy every time a diagram moves would bloat the history for a file that
+# regenerates in one command. Share it directly, or attach it to a release.
+#   python scripts/render_pdf.py
+docs/process-map.pdf
+docs/.slides/
+
 # OS / editor noise
 .DS_Store
 Thumbs.db

@@ -1,27 +1,169 @@
-# Guideline A — Allegiance to the United States. REVIEW DRAFT.
+# Guideline A (Allegiance to the United States) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 9–11 and the factual questions
+# that recur in the small number of published DOHA decisions reaching this
+# guideline.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# THE HARD RULE FOR THIS GUIDELINE
+# ---------------------------------------------------------------------------
+# SEAD 4 is explicit that this guideline reaches ACTS, not beliefs, and not
+# lawful political activity. So this checklist asks about conduct, membership,
+# knowledge and dates. It does NOT ask what the user believes, who they voted
+# for, what they think about the government, or what their politics are — and
+# the interviewer must not drift there even if the user does.
+#
+# If a user starts volunteering political opinions, the tool records only what
+# bears on the reportable conduct and says so plainly: "I'm going to leave your
+# views out of this — the report is about what happened."
+#
+# This is also the guideline most likely to be reached in error. A protest
+# arrest is Guideline J. Membership in a foreign political party is usually B
+# or C. Getting here requires conduct directed at the overthrow of the
+# government or knowing association with a group so directed. When in doubt the
+# classifier should not force the fit.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: A
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-A-allegiance.md]
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: high
+sources:
+  - corpus/sead4/guideline-A-allegiance.md
+never_ask: |
+  Political beliefs, party preference, voting choices, religious views, opinions
+  about the government or its policies, or the content of anyone's speech. None
+  of it is a required data element and asking for it is outside what the
+  guideline reaches.
 elements:
+
   - id: activity-description
-    ask: "What was the activity or association, described factually?"
+    ask: "What was the activity, described as plainly as you can?"
+    criticality: required
+    covers: [what]
+    why: "Adjudication here turns on specific acts. A label — 'I was involved with a group' — is not something anyone can grade."
+    maps_to: {sf86: "Section 29 — Associations", pvq: "associations"}
+    followups:
+      - trigger: vague
+        ask: "What did you actually do? Attended, paid dues, donated, organised, spoke, or something else."
+        why: "The user's role is the whole question. Attendance and organisation sit at opposite ends of it."
+
   - id: organization-identity
-    ask: "What organization or group was involved, if any, and what is its stated purpose?"
+    ask: "What organisation or group was involved, if any?"
+    criticality: required
+    covers: [who]
+    entity_ref: organization
+    why: "The form asks for the organisation by name. An organisation is not a natural person, so this is collectible at every privacy tier."
+    followups:
+      - trigger: answered_yes
+        ask: "What is its stated purpose, in its own words?"
+        why: "The group's own description, rather than the user's characterisation of it, is what a reviewer will compare against."
+      - trigger: answered_yes
+        ask: "Where is it based, and does it operate in the United States, abroad, or both?"
+      - trigger: answered_no
+        ask: "So this was individual conduct rather than anything organised?"
+        why: "A negative here narrows the report considerably and should be stated, not left as an absence."
+
   - id: your-role
-    ask: "What was your role — member, attendee, donor, organizer, something else?"
+    ask: "What was your role?"
+    criticality: required
+    covers: [who, what]
+    followups:
+      - trigger: always
+        ask: "Did you hold any position, title, or responsibility?"
+      - trigger: always
+        ask: "Did you contribute money, and roughly how much in total?"
+        why: "Financial support is an act, and it is the one most often omitted because it does not feel like participation."
+
   - id: dates-duration
-    ask: "When did this begin and, if it ended, when did it end?"
+    ask: "When did this begin?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "And when did it end, or is it ongoing?"
+      - trigger: vague
+        ask: "Even a year and a season helps. What can you say with confidence?"
+
+  - id: location
+    ask: "Where did this take place?"
+    criticality: required
+    covers: [where]
+    entity_ref: offense-location
+    followups:
+      - trigger: always
+        ask: "City and state, or city and country if it was abroad?"
+      - trigger: answered_yes
+        ask: "Did any of it happen at work, on work systems, or with coworkers?"
+        why: "A workplace nexus adds Guideline E and possibly M, and it is the fact an employer will already have a record of."
+
+  - id: how-involved
+    ask: "How did you come to be involved?"
+    criticality: required
+    covers: [how, why]
+    why: "The route in is what distinguishes knowing participation from having been recruited, misled, or simply present."
+    followups:
+      - trigger: always
+        ask: "Did someone bring you in, or did you seek it out?"
+      - trigger: always
+        ask: "How did you communicate or participate? In person, online, or both."
+
   - id: knowledge-of-purpose
     ask: "At the time, what did you understand the group's aims to be?"
-    mitigation_ref: "A — involvement without knowledge of unlawful aims"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "A — involvement without knowledge of the unlawful aims"
+    why: "This is the central mitigating condition in the guideline. It has to be in the user's own words, at the time, not with hindsight."
+    note: |
+      Record the answer as given. Do not help the user construct a more
+      favourable version of what they knew, and do not press them toward
+      claiming ignorance they have not claimed.
+    followups:
+      - trigger: always
+        ask: "Did you know at the time about anything unlawful the group intended or did?"
+      - trigger: answered_yes
+        ask: "When did you learn that, and what did you do once you knew?"
+        why: "The interval between learning and acting is what a reviewer measures. It is better stated than reconstructed."
+
+  - id: violence-or-force
+    ask: "Was there any advocacy or use of force, violence, or unlawful means?"
+    criticality: required
+    covers: [what]
+    escalation_if: "yes"
+    why: "This is the line the guideline actually draws. It has to be asked directly and answered on the record either way."
+    followups:
+      - trigger: answered_yes
+        ask: "What happened, and were you present?"
+      - trigger: answered_yes
+        ask: "Was there any arrest, charge, or investigation arising from it?"
+        why: "An affirmative adds Guideline J and a separate reportable arrest with its own required data elements."
+        event_refs: [aci.criminal.arrest]
+
   - id: current-status
     ask: "What is your involvement today, if any?"
-    mitigation_ref: "A — involvement is no longer current"
-  - id: severance
-    ask: "If you ended the association, what did that look like and when?"
-    mitigation_ref: "A"
+    criticality: required
+    covers: [what, when]
+    mitigation_ref: "A — the involvement is no longer current"
+    followups:
+      - trigger: answered_no
+        ask: "When did it stop, and what did stopping look like in practice?"
+        why: "'I'm not involved any more' and 'I resigned in writing in March 2023' are the same claim with very different weight."
+      - trigger: pending
+        ask: "Is there anything still outstanding — dues, a membership that hasn't lapsed, a mailing list?"
+        why: "Residual ties surface later and look like a contradiction of the account given here."
+
+  - id: allegiance-forward
+    ask: "Going forward, what is your intent regarding this association?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Record what they say. Do not coach toward a declaration of loyalty, do not
+      invite one, and do not treat a matter-of-fact answer as inadequate. A
+      scripted profession of allegiance is worth nothing and reads as such.

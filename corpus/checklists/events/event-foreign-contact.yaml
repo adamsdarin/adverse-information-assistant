@@ -1,0 +1,188 @@
+# EVENT: continuing association with a foreign national, and official foreign
+#        contacts.
+#
+# ===========================================================================
+# TWO ENTRIES THAT POINT OPPOSITE WAYS
+# ===========================================================================
+#   aci.foreign-contact.continuing   reportable: yes
+#   aci.foreign-contact.official     reportable: no — unless deemed a security
+#                                    concern
+#
+# The second is the only "no" in the whole table, and it is a qualified one.
+# This tool never says "not reportable," so an official contact does not get a
+# clearance from this checklist. It gets the facts collected, the table's own
+# wording quoted, and a route to the FSO. The difference between a routine
+# official contact and one that is a security concern is not a call this tool is
+# equipped to make, and pretending otherwise would be the single most damaging
+# thing it could do.
+#
+# ===========================================================================
+# THE THRESHOLD USERS GET WRONG IN BOTH DIRECTIONS
+# ===========================================================================
+# The ISL's threshold is bonds of AFFECTION or personal OBLIGATION, or
+# qualifying exchanges of personal information. Not "I know a foreign person."
+# Cleared people work with foreign nationals every day and none of that is
+# reportable on its own.
+#
+# But the threshold catches things people do not expect: a close friendship, a
+# romantic relationship, a former in-law, someone they send money to, a person
+# they exchange family news with. And it explicitly reaches UPDATES to
+# previously reported associations — so a prior report does not close the
+# matter, it reframes the question as what has changed.
+#
+# Ask about the substance of the relationship, not the label the user puts on it.
+event_checklist: event-foreign-contact
+event_ids: [aci.foreign-contact.official, aci.foreign-contact.continuing]
+guidelines: [B]
+channel_refs: [diss-incident, fso]
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: medium
+sources:
+  - corpus/reporting/tables/all-covered-individuals.yaml
+official_contact_handling: |
+  Where the contact is official — arising from the user's job, through approved
+  channels, in the course of duties — quote the table's own wording: not
+  reportable unless deemed a security concern. Then route to the FSO for that
+  determination. Do NOT return "no". The polarity rule holds here as everywhere:
+  the answer is yes or consult_fso.
+never_do: |
+  Never advise ending a relationship. Never imply that having foreign friends or
+  family is a problem. Never ask about the other person's immigration status
+  beyond citizenship and residence, which are form fields.
+elements:
+
+  - id: contact-context
+    ask: "Is this someone you know through work, or through your personal life?"
+    criticality: required
+    covers: [what]
+    why: "This routes between the two table entries, and it is the first thing to establish. Both are collected; they are not the same obligation."
+    followups:
+      - trigger: always
+        ask: "If it's through work, is it through an approved channel or an official capacity?"
+      - trigger: always
+        ask: "Has it become personal as well, in any way?"
+        why: "The common shape is a professional contact that became a friendship. That crossing is the reportable moment and nobody notices it happening."
+
+  - id: who
+    ask: "Who is this, in terms of their relationship to you?"
+    criticality: required
+    covers: [who]
+    privacy_notice: |
+      A role or relationship is enough — "my sister-in-law," "a colleague at the
+      partner company." The form asks for names and addresses and the package
+      leaves blanks for those; you fill them in at submission.
+    followups:
+      - trigger: always
+        ask: "Is it one person, or several?"
+      - trigger: always
+        ask: "Do you know what they do for a living?"
+
+  - id: country
+    ask: "Which country are they a citizen of?"
+    criticality: required
+    covers: [where]
+    maps_to: {sf86: "Section 19 — Foreign Contacts", pvq: "foreign-contacts", incident_report: "national_identity_country"}
+    followups:
+      - trigger: always
+        ask: "And where do they live?"
+      - trigger: always
+        ask: "Do they hold any other citizenship, including US?"
+      - trigger: always
+        ask: "Are they connected to a foreign government, military, or a state-owned company?"
+        escalation_if: "yes"
+
+  - id: nature-of-association
+    ask: "How would you describe the relationship?"
+    criticality: required
+    covers: [what]
+    maps_to: {incident_report: "nature_of_association"}
+    why: "The required data element, and the thing the threshold turns on. Take the user's own description rather than fitting it to a category."
+    followups:
+      - trigger: always
+        ask: "Is there affection or obligation involved, in either direction?"
+        why: "The policy's own words. Asking them directly is better than inferring them from a label."
+      - trigger: always
+        ask: "Do you exchange personal information — family news, addresses, photographs, plans?"
+        why: "Qualifying exchanges of personal information are named in the entry, and nobody thinks of sending holiday photographs as an exchange of personal information."
+
+  - id: how-and-when-met
+    ask: "How did you first come into contact?"
+    criticality: required
+    covers: [how, why]
+    followups:
+      - trigger: always
+        ask: "When was that?"
+      - trigger: always
+        ask: "Did they approach you, or was it the other way round?"
+      - trigger: always
+        ask: "How do you keep in touch now, and on what platform?"
+
+  - id: dates-and-frequency
+    ask: "How long has this been going on, and how often are you in contact?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    mitigation_ref: "B — contact is so casual and infrequent that there is little likelihood of a conflict"
+    followups:
+      - trigger: vague
+        ask: "Roughly how many times in the last year? An estimate is fine."
+      - trigger: always
+        ask: "When was the last contact?"
+      - trigger: always
+        ask: "Have you met in person, and where?"
+        event_refs: [aci.travel.unofficial]
+
+  - id: obligations-and-flows
+    ask: "Is there anything moving between you? Money, gifts, favours, or support."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: answered_yes
+        ask: "In which direction, roughly how much, and how often?"
+      - trigger: answered_yes
+        ask: "How is it sent?"
+      - trigger: always
+        ask: "Is there any business or financial interest between you?"
+        event_refs: [tsq.foreign-business]
+
+  - id: work-nexus
+    ask: "Do they know what you do, and has your work ever come up?"
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: answered_yes
+        ask: "What do they know, and how did they come to know it?"
+      - trigger: always
+        ask: "Have they ever asked about your work, your access, or your colleagues?"
+        escalation_if: "yes"
+        event_refs: [aci.behavior.elicitation, aci.foreign-contact.fie]
+        note: "An affirmative is a separate reportable event on a faster channel. Stop and route — do not finish this checklist first."
+
+  - id: prior-reporting
+    ask: "Have you reported this association before?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    why: "The entry explicitly reaches updates to previously reported associations. A prior report does not close this — it changes the question."
+    followups:
+      - trigger: answered_yes
+        ask: "When, and what has changed since then?"
+      - trigger: answered_yes
+        ask: "Was it on a form, in an interview, or a report to your security office?"
+      - trigger: answered_no
+        ask: "Has anything changed recently that made you think of it now?"
+
+  - id: contact-forward
+    ask: "Do you expect the relationship to continue?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Never suggest ending it. Never imply that continuing is a problem. Family
+      is family and friends are friends. Record the intent and let the
+      adjudicator weigh it — that is their job and not this tool's.
+    followups:
+      - trigger: always
+        ask: "Anything about how you handle it a reviewer should know? What you don't discuss, or what you've reported before."

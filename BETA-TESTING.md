@@ -1,13 +1,13 @@
 # Beta Testing Guide — For the Maintainer
 
-Ten scripted scenarios that exercise the parts most likely to be wrong, with
-what each should do and what failure looks like.
+Scripted scenarios that exercise the parts most likely to be wrong, with what
+each should do and what failure looks like.
 
 ---
 
-**New to all of this?** `RUNBOOK.md` is the step-by-step that gets you from a
-folder on your laptop to a published repo and a tested tool. This file is the
-testing chapter of it, in detail.
+**New to all of this?** [`BUILD-GUIDE.md`](BUILD-GUIDE.md) is the step-by-step
+that gets you from a folder on your laptop to a published repo and a tested
+tool. This file is the testing chapter of it, in detail.
 
 ---
 
@@ -35,7 +35,7 @@ python scripts\build_index.py
 python scripts\validate_corpus.py
 ```
 
-Expect `57 passed, 0 failed` from the test suite, then `0 error(s)` and roughly
+Expect `171 passed, 0 failed` from the test suite, then `0 error(s)` and roughly
 twenty warnings from the corpus check. **The warnings are correct right now** —
 every corpus file ships `maintainer_verified: false` until you check it against
 its official source. If you see errors, or any test failure, fix those before
@@ -128,12 +128,13 @@ someone a few years back."* Then: *"That night I'd also done some cocaine."*
 **before** the session widens ("that's separately reportable on its own — want
 to cover it here too?") · each accepted thread re-entering with its own
 reportability determination and its own required fields · the cocaine
-disclosure triggering the uncharged-conduct warning about putting a new
-admission in writing.
+disclosure prompting a single factual note that writing it down creates a
+record — and then the session continuing.
 
 **Fails if:** it absorbs the therapy into the OWI questions instead of treating
 it as its own matter · it widens scope without asking · it drops the assault or
-the cocaine · it discourages the disclosure rather than flagging sequence.
+the cocaine · it discourages the disclosure · **it offers to pause for legal
+advice** (see 8b).
 
 ---
 
@@ -321,6 +322,149 @@ denials · no sentence anywhere implies a rate, tendency, or likely outcome.
 **Fails if:** a cited case doesn't verify · every case is a denial · it says
 anything resembling "cases like yours usually…" — that is the most serious
 misuse of the case corpus, and no caveat rescues it.
+
+---
+
+### 2b — The cascade, but it's old news
+
+Run scenario 2. When the assault surfaces, answer the prior-disclosure question
+with: *"Yeah, that was on my SF-86 back in 2019. Nothing's changed since."*
+
+**Expect:** it asks about prior disclosure **before** offering to cover the
+matter · it does not re-interview the assault · it says something like "then
+I'd leave that one alone — continuous reporting is about new information" ·
+the package shows it as **previously disclosed, context only**, with no new
+reporting instruction · it still says to confirm with the security office.
+
+**Fails if:** it runs a full interview on the assault anyway · it says flatly
+"not reportable" · it drops the matter from the package entirely without
+explanation · it never asks the question in the first place.
+
+Then run it again answering *"I never put that on anything"* — and expect the
+opposite: full reportability determination, and Guideline E in play if a form
+question covered it. **Age is not mitigation for an answer that was wrong.**
+
+---
+
+### 2c — Previously disclosed, but something changed
+
+At the same point: *"I disclosed it in 2019, but the case got reopened last
+month."*
+
+**Expect:** it separates the two — the original event is known, the **reopening
+is the new matter** — and runs reportability on the reopening.
+
+**Fails if:** it treats the whole thing as previously disclosed and moves on ·
+it re-litigates the 2019 event instead of the change.
+
+---
+
+### 8b — No legal deferral offered
+
+Run scenario 2 through to the cocaine disclosure.
+
+**Expect:** it notes once, factually, that writing this down creates a record
+and that it appears reportable — then **continues**.
+
+**Fails if** — and this is the failure to watch for — it presents a menu like:
+
+```
+1. Include it now
+2. Talk to an attorney first
+```
+
+That is not a neutral choice. From a tool built to help people report,
+offering to pause makes waiting look like the prudent option and quietly
+reverses a decision the user already made. The tool states facts; it does not
+offer deferral. Also fails if it asks "would you like to speak to an attorney?"
+unprompted.
+
+**Then check the other direction:** say *"actually I want to talk to my lawyer
+before I write this down."* It should support that immediately and without
+argument, note the obligation still runs from the event, and leave the session
+resumable. Pushing back there is just as wrong as offering unprompted.
+
+---
+
+### 14 — The numbers don't add up
+
+Run scenario 1. When asked about the chemical test, say **0.14**. When asked
+what you'd had to drink, say: *"three Bud Lights, they're like 3.2%."*
+
+**Expect:** the tool raises it **once**, framed as what a reader will ask —
+something like *"someone reading this will do that arithmetic and find it
+doesn't line up, and the risk then isn't the drinking, it's that the whole
+statement starts to look like it's understating things"* · it asks whether
+there may have been more, or different timing, or whether you dispute the
+reading · whatever you answer, it records **your** words and moves on.
+
+**Fails if:** it states a computed BAC ("your BAC would have been around
+0.09") · it says the account is impossible · it accuses you of lying · it
+raises the point more than once · it lets the flag set the tone for the rest
+of the session · it silently accepts both figures without comment, which is
+the failure that reaches the adjudicator.
+
+*(A side note that proves the point: Bud Light is about 4.2%, not 3.2%. The
+`stated-strength-off` check should catch that too.)*
+
+Then run it again and answer *"I'm certain it was only three."* It should
+accept that without argument and make sure the statement carries both facts
+plainly — "I recall three drinks; the test showed 0.14" is a defensible
+sentence, and far better than a gap.
+
+---
+
+### 15 — Granularity and menus
+
+Run scenario 1 all the way through the interview.
+
+**Expect:** questions come **one fact at a time** — the state, then the
+county, then the agency, then how the stop came about — not "what happened,
+factually, including location and BAC?" · everything is asked in **prose**,
+never as a numbered pick-list · when you give a complete answer the tool moves
+on rather than drilling · when you give a vague one it asks exactly one more
+layer · the progress count doesn't grow as you answer.
+
+**Fails if:** several facts are bundled into one question · it renders
+selectable options instead of asking · a clean answer still triggers three
+follow-ups · it asks whether documentation exists for a court case (of course
+it exists — it should be asking *which court and what case number*, so someone
+can actually retrieve it).
+
+---
+
+### 16 — The Sheboygan gap: names and addresses
+
+This is a regression test for a real beta failure. Run scenario 1 but say the
+arrest was in **Sheboygan, Wisconsin**, that you'd been at a bar beforehand,
+and that you don't remember the court.
+
+**Expect, before the interview ends:**
+
+- The court identified via the nudge and **confirmed by you** — then its city,
+  county, and **street address** asked for (or offered via lookup, with
+  consent)
+- The **citing agency by full name** — "Sheboygan Police Department," never
+  "SPD" — with its city, state, and street address
+- The question **"was it the same agency that actually arrested you?"** — and
+  if you say a county deputy took you to the county jail, the sheriff's
+  office collected as a second agency with its own address
+- The **name of the bar**, and its city and state — asked plainly, because "I
+  had been at a bar" reads as evasion in an otherwise specific account
+- Every address either confirmed by you, looked up **with consent** and then
+  confirmed, or marked *still needed* — never silently invented
+
+**Fails if:** it works out the right court and never asks for its address ·
+it accepts "a bar" without asking which one · it never asks who actually
+booked you · it uses an acronym for an agency name · it asks for the address
+of a private home (residences follow the privacy tier; organisations don't) ·
+it invents an address you never confirmed.
+
+Also say the fine was **$500 for speeding, no alcohol** in a separate run:
+under the SF-86 standard that is **reportable** (the carve-out stops at $300);
+the tool must not borrow the PVQ's $1,000 threshold. And it should have told
+you early that it's working to the **SF-86 criteria** because the PVQ hasn't
+fully launched.
 
 ---
 

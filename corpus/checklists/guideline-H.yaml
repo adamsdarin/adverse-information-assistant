@@ -1,41 +1,126 @@
-# Guideline H — Drug Involvement and Substance Misuse. REVIEW DRAFT.
-# Ask without moralizing. No language implying judgment about the user's use.
+# Guideline H (Drug Involvement and Substance Misuse) — required elements.
+# Maintainer-authored from SEAD 4 ¶¶ 24–26, ISL 2021-02 data elements, and
+# recurring factual questions in published DOHA decisions.
+# KNOWN LIMITATION: not validated against agency RFI data (ARCHITECTURE.md §5.2).
+#
+# Granular by design, with conditional ladders — see guideline-G.yaml.
+# Ask these one at a time and without commentary. The questions are blunt
+# because the record needs to be; the manner should not be.
 guideline: H
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-H-drugs.md, corpus/reporting/tables/all-covered-individuals.yaml]
-# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
-# not from data. It controls interview depth on OPTIONAL material only and
-# can never downgrade a required form field. Review before relying on it.
+coverage: _COVERAGE.yaml
+how_relevant: true
 severity_default: high
+sources:
+  - corpus/sead4/guideline-H-drugs.md
+  - corpus/reporting/tables/all-covered-individuals.yaml
 elements:
+
   - id: substances
-    ask: "What substance or substances are involved?"
-  - id: use-period
-    ask: "Over what period did the use occur — first use and most recent use?"
-    mitigation_ref: "H — so long ago, so infrequent, or under such circumstances that recurrence is unlikely"
+    covers: [what]
+    ask: "What substance is involved?"
+    criticality: required
+    sensitivity: high
+    followups:
+      - trigger: answered_yes
+        ask: "Is there more than one? I will take each separately rather than treating them as one thing."
+
+  - id: first-use
+    covers: [when]
+    ask: "Roughly when did use of it begin?"
+    criticality: required
+    sensitivity: high
+
+  - id: most-recent-use
+    covers: [when]
+    ask: "When was the most recent use?"
+    criticality: required
+    sensitivity: high
+    why: "Recency is the single fact that most affects how this reads, and vagueness here reads worse than any date would."
+    followups:
+      - trigger: vague
+        ask: "An approximate month is fine, marked as approximate. A blank is what invites the follow-up."
+
   - id: frequency-amount
-    ask: "How often, and roughly how much?"
+    covers: [what]
+    ask: "How often, and roughly how much each time?"
+    criticality: required
     sensitivity: high
+
   - id: while-cleared
-    ask: "Did any use occur while you held a clearance or were in a sensitive position?"
-    answer_type: boolean_with_detail
-    escalation_if: true
-    note: "Use while cleared is treated far more seriously than pre-clearance use. Do not soften this; do not editorialize either."
-  - id: prescription-misuse
-    ask: "Does this involve prescription medication — yours or someone else's — used other than as prescribed?"
-  - id: legality-context
-    ask: "Was the substance legal under state law where it occurred? Note that federal law governs for clearance purposes regardless."
-  - id: criminal-nexus
-    ask: "Any arrests, charges, or investigations connected to this?"
-    escalation_if: "pending"
-  - id: treatment
-    ask: "Any evaluation, counseling, treatment, or program — ordered or voluntary? Status and dates."
-    mitigation_ref: "H — completion of a treatment program with a favorable prognosis"
-    document: "completion certificate or provider letter"
+    covers: [what, when]
+    ask: "Did any of that use happen while you held a clearance, or while you were in process for one?"
+    criticality: required
     sensitivity: high
-  - id: abstinence-intent
-    ask: "What's your intent going forward, and what have you changed to support that — associations, environment, anything else?"
-    mitigation_ref: "H — demonstrated intent not to misuse drugs in the future"
+    why: "This is the fact that most changes the analysis, and it is asked directly on the form."
+    followups:
+      - trigger: answered_yes
+        ask: "Over what period, and had you already signed a form or briefing that addressed drug use?"
+
+  - id: acquisition
+    covers: [how, who, where]
+    ask: "How did you obtain it?"
+    criticality: required
+    sensitivity: high
+    why: "Purchase, sharing, and supplying to others are treated very differently. Leaving it unstated invites the assumption."
+    followups:
+      - trigger: always
+        ask: "Did you ever purchase, sell, supply, or grow it, as opposed to using what someone else provided?"
+
+  - id: prescription-misuse
+    covers: [what, how]
+    ask: "Does any of this involve prescription medication — yours, or someone else's?"
+    criticality: required
+    sensitivity: high
+    followups:
+      - trigger: answered_yes
+        ask: "Was it prescribed to you, and was it used other than as directed?"
+
+  - id: legality-context
+    covers: [where, what]
+    ask: "Where did this take place, and was the substance legal under that state law at the time?"
+    criticality: required
+    why: "State legality does not resolve it for a clearance holder — federal law governs. State the facts; do not argue the point either way."
+
+  - id: criminal-nexus
+    covers: [what]
+    ask: "Were there any arrests, charges, or investigations connected to this?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "That is a separate matter with its own required detail — shall we cover it as one?"
+
   - id: workplace-nexus
-    ask: "Did any use occur at work, on work premises, or involving coworkers? Any failed workplace drug test?"
+    covers: [where, what]
+    ask: "Did any use occur at work, on work premises, on work travel, or involving coworkers?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "Was there a failed or refused workplace drug test, and what came of it?"
+
+  - id: treatment
+    covers: [who, what]
+    ask: "Has there been any evaluation, counselling, or treatment — ordered or voluntary?"
+    criticality: required
+    sensitivity: high
+    mitigation_ref: "H-26"
+    record: "completion certificate or provider letter"
+    followups:
+      - trigger: answered_yes
+        ask: "What kind, over what dates, and is it complete?"
+      - trigger: answered_yes
+        ask: "Was it voluntary or required?"
+
+  - id: abstinence-intent
+    covers: [future_intent, why]
+    ask: "What is your intent going forward?"
+    criticality: required
+    mitigation_ref: "H-26"
+    why: "An unambiguous statement of intent is one of the few things a person can offer directly, and its absence is conspicuous."
+    followups:
+      - trigger: always
+        ask: "What have you changed to support that — associations, environment, anything else?"
+      - trigger: always
+        ask: "Would you be willing to state that intent in writing, including that you understand any future use would be disqualifying?"
+        why: "A signed statement of intent is explicitly recognised as a mitigating consideration. Offer it; never insist."

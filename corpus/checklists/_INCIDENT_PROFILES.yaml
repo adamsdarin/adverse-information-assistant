@@ -1,0 +1,83 @@
+# Focus modules selected by facts. Multiple profiles may apply to one incident.
+# These supplement, and never replace, event/guideline/form questions.
+schema_version: "1.0"
+maintainer_verified: false
+source: "Maintainer-authored incident-development profiles"
+
+profiles:
+  - id: general-incident
+    activate_when: "No narrower profile fully organizes the incident, or a general profile is needed alongside specialized modules."
+    focus:
+      - "The complete time-ordered account using every universal chronology phase"
+      - "People, organizations, locations, records, and consequences not owned by a narrower module"
+      - "Current status and known future developments"
+
+  - id: impaired-driving
+    activate_when: "Driving or operating a vehicle after alcohol or drug use is part of the incident."
+    focus:
+      - "Activity and setting before substance use"
+      - "Consumption or use timeline"
+      - "Decision to drive and alternatives actually considered"
+      - "Origin, destination, passengers, stop, collision, testing, and arrest"
+      - "Criminal and separate licensing consequences"
+
+  - id: violent-conduct
+    activate_when: "Threatened or actual force, injury, or violent criminal conduct is present."
+    focus:
+      - "Conflict or circumstances immediately before the force"
+      - "Each person's actions in sequence, without coached justification"
+      - "Threats, weapons, injuries, medical attention, witnesses, and property damage"
+      - "Police response, arrest, charges, court status, and later restrictions"
+
+  - id: domestic-or-intimate-partner-violence
+    activate_when: "The violent-conduct incident involves a spouse, partner, former partner, household member, or intimate relationship."
+    focus:
+      - "Relationship and shared-residence context relevant to the event"
+      - "Protective, restraining, or no-contact orders and their current terms"
+      - "Custody, residence, workplace, or communication effects of an order"
+      - "Any later evaluation, education, counseling, or treatment, asked without assumption"
+
+  - id: arrest-or-criminal-process
+    activate_when: "An arrest, citation, charge, booking, confinement, or criminal case is present."
+    focus:
+      - "Exact conduct, offense wording, level, statute if known, and every related charge"
+      - "Arresting and booking agencies, custody, court, case number, plea, and dates"
+      - "Current status and all separate court, release, probation, or administrative tracks"
+      - "Records are implied by arrest/booking/court facts; ask for retrieval identifiers, not whether records exist"
+
+  - id: foreign-contact-or-influence
+    activate_when: "A foreign national, government, entity, benefit, travel, or continuing foreign relationship is present."
+    focus:
+      - "How contact began and how it developed"
+      - "Citizenship, residence, occupation, frequency, closeness, obligation, and information exchanged"
+      - "Money, gifts, travel, business, government connections, requests, pressure, and elicitation"
+      - "Whether and how the relationship is expected to continue"
+
+  - id: financial-event
+    activate_when: "Debt, delinquency, bankruptcy, tax, gambling, unexplained funds, garnishment, or other financial anomaly is present."
+    focus:
+      - "Circumstances before the financial problem or inflow"
+      - "Source, amounts, dates, accounts, creditors, and movement of funds"
+      - "Collections, court or tax actions, repayment, counseling, and controls"
+      - "Current balances and known future payments or proceedings"
+
+  - id: substance-use-or-treatment
+    activate_when: "Alcohol, drugs, prescription misuse, evaluation, counseling, or treatment is part of the incident."
+    focus:
+      - "Use pattern and the event-specific consumption or use timeline"
+      - "Relationship between use and conduct, work, safety, finances, or arrest"
+      - "Evaluations, recommendations, education, counseling, treatment, testing, and status"
+      - "Ask neutrally; never imply that treatment has or has not already arisen"
+
+  - id: information-or-technology
+    activate_when: "IT misuse, unauthorized access, protected information, transmission, storage, or security handling is present."
+    focus:
+      - "Authorization, system, data type, device, account, method, and purpose"
+      - "Step-by-step access, transfer, disclosure, loss, or installation sequence"
+      - "Discovery, recipients, exposure, containment, reporting, and preserved records"
+      - "Investigation, discipline, access changes, retraining, and current status"
+
+selection_rule: |
+  Select every profile supported by facts. Do not ask the user to select a
+  profile, do not force a profile from a reporting category alone, and do not
+  create separate incidents merely because several profiles apply.

@@ -25,7 +25,15 @@ session.json shape:
       "guidelines": ["G", "J"],
       "narrative": "<model-authored first-person statement>",
       "reporting": {"reportable": "yes", "channel": "...", "timeline": "...", "basis": ["aci.criminal.arrest"]},
-      "crosswalk": [{"form_section": "22", "title": "Police Record"}],
+      "crosswalk": [{
+        "form": "sf86", "form_section": "22", "title": "Police Record",
+        "unverified": false,
+        "fields": [
+          {"id": "offense_date", "label": "Date of offense", "block": null,
+           "question": "Provide the date of the offense.", "answer": "March 2026"}
+        ],
+        "additional_comments_field": true
+      }],
       "documents": [{"name": "Certified court disposition", "source": "...", "timing": "can_follow"}],
       "persons": [{"label": "Person 1", "role": "my supervisor"}],
       "declined_elements": ["current-relationship"]
@@ -56,6 +64,40 @@ information. Nothing in this document is legal advice.
 
 The undersigned is responsible for the accuracy of every statement here.
 """
+
+PROCEEDING_BOUNDARY = """\
+> **Separate-proceeding limitation.** This workflow cannot determine how a
+> security report may interact with a separate criminal proceeding. It does
+> not predict confidentiality, disclosure, discoverability, or evidentiary
+> use, and it does not provide legal advice.
+"""
+
+
+def submission_route(session: dict) -> str:
+    role = session.get("role")
+    if role == "holder":
+        text = (
+            "Provide each incident below to your FSO, security manager, SMO, "
+            "or servicing security office for entry in DISS. The incident-type "
+            "labels are listed with each independent incident; this package "
+            "does not imply that you personally enter information in DISS."
+        )
+    elif role == "in_process":
+        text = (
+            "Notify the SMO or security office sponsoring your pending "
+            "investigation so it can ensure DCSA receives this information. "
+            "Depending on when the event occurred, it may be addressed during "
+            "the initial investigation; that possibility is not a reason to "
+            "delay or omit the report. The form crosswalks below are context, "
+            "not an instruction to resubmit the form."
+        )
+    else:
+        text = (
+            "Use each incident and its form crosswalk below when completing "
+            "your initial SF-86 or PVQ. Keep factually independent incidents "
+            "separate while preserving one complete narrative for each."
+        )
+    return "## Final Reporting Analysis\n\n" + text + "\n"
 
 
 def substitution_block(all_persons: list[dict], tier: str = "high") -> str:
@@ -220,8 +262,8 @@ def persons_template(all_persons: list[dict]) -> str:
     return "\n".join(out)
 
 
-def render_event(ev: dict, n: int, total: int) -> str:
-    head = f"## Matter {n} of {total}: {ev.get('title', 'Reported matter')}" if total > 1 else "## Statement"
+def render_event(ev: dict, n: int, total: int, role: str) -> str:
+    head = f"## Incident {n} of {total}: {ev.get('title', 'Reported incident')}"
     parts = [head, "", ev.get("narrative", "").strip(), ""]
 
     rep = ev.get("reporting") or {}
@@ -235,33 +277,108 @@ def render_event(ev: dict, n: int, total: int) -> str:
             "identified as compelling it.",
             "",
         ]
-    if rep.get("reportable") == "yes":
-        layers = rep.get("layers_applied") or []
+    pd = ev.get("prior_disclosure") or {}
+    if pd.get("status") == "disclosed_unchanged":
+        # Rendered as CONTEXT, not as a new report. The user says the
+        # government already has this; the package should not read as though
+        # they are disclosing it again, but it stays visible because the
+        # narrative around it often depends on it.
         parts += [
-            "### Reporting channel and timeline",
-            f"- Channel: {rep.get('channel', 'see your security office')}",
-            f"- Timeline: {rep.get('timeline', 'see your security office')}",
-            f"- Basis: {', '.join(rep.get('basis', [])) or 'see your security office'}",
+            "> **Previously disclosed.** The undersigned states this matter was "
+            "disclosed in a prior background investigation and is unchanged "
+            "since. It appears here as context only — it is not offered as a "
+            "new disclosure, and no new reporting obligation was identified. "
+            "This rests on the undersigned's own account and was not "
+            "independently verified.",
+            "",
         ]
-        if layers:
-            parts.append(f"- Authority: {', '.join(layers)}")
-        parts.append("")
-    elif rep:
+    elif pd.get("status") == "disclosed_but_changed":
         parts += [
-            "### Reporting channel and timeline",
-            "- This tool could not confirm the requirement from its corpus. "
-            "**Confirm with your security office.** This means the tool could "
-            "not verify the answer, not that the matter is unreportable.",
+            "> **Previously disclosed, with a change since.** The underlying "
+            f"matter was disclosed in a prior investigation. What is reported "
+            f"here is the change: {pd.get('what_changed', 'see below')}",
+            "",
+        ]
+    if pd.get("scope_concern"):
+        parts += [
+            "> **Worth raising with your security office.** What the "
+            "undersigned described in this session may be broader than what "
+            "was disclosed previously. This is flagged rather than resolved.",
             "",
         ]
 
-    cw = ev.get("crosswalk") or []
+    if role == "holder":
+        parts += ["### Applicable DISS incident type(s)", ""]
+        for incident_type in ev.get("incident_types", []):
+            parts.append(f"- {incident_type}")
+        parts.append("")
+
+    if rep:
+        parts += ["### Reporting requirement", ""]
+        if rep.get("reportable") == "yes":
+            parts.append("- This incident is included in the final reporting package.")
+        elif rep.get("no_new_obligation_identified"):
+            parts.append("- **No new reporting obligation identified.** Previously disclosed and unchanged on the user's account; confirm any later change with the security office.")
+        else:
+            parts.append("- The corpus could not independently confirm the requirement; provide the incident to the appropriate security office for confirmation.")
+        if rep.get("timeline"):
+            parts.append(f"- Timing: {rep['timeline']}")
+        if rep.get("basis"):
+            parts.append(f"- Basis: {', '.join(rep['basis'])}")
+        parts.append("")
+
+    cw = ev.get("crosswalk") or [] if role in {"applicant", "in_process"} else []
     if cw:
-        parts += ["### Form crosswalk", ""]
+        parts += ["### Form crosswalk — where this goes on the form", ""]
         for c in cw:
             unverified = " *(section unverified — confirm with your FSO)*" if c.get("unverified") else ""
-            parts.append(f"- Section {c.get('form_section')}: {c.get('title','')}{unverified}")
-        parts.append("")
+            form_name = {"sf86": "SF-86", "pvq": "PVQ",
+                         "incident_report": "Incident Report"}.get(c.get("form"), c.get("form", ""))
+            item_text = f", item {c['form_item']}" if c.get("form_item") else ""
+            head = f"**{form_name} Section {c.get('form_section')}{item_text} — {c.get('title','')}**{unverified}".strip()
+            parts.append(head)
+            parts.append("")
+            fields = c.get("fields") or []
+            for f in fields:
+                if isinstance(f, str):
+                    parts.append(f"- {f}")
+                    continue
+                label = f.get("label") or f.get("id", "")
+                block = f.get("block")
+                loc = f"block {block}" if block else None
+                if loc:
+                    line = f"- **{label}** *({loc})*"
+                elif c.get("form_item"):
+                    line = f"- **{label}**"
+                else:
+                    line = f"- **{label}** *(item location not verified in this corpus — check eApp)*"
+                if f.get("question"):
+                    line += f"\n  Form asks: “{f['question']}”"
+                if f.get("answer"):
+                    line += f"\n  Enter: {f['answer']}"
+                elif f.get("status"):
+                    status_text = {
+                        "pending": "Pending — no date exists yet.",
+                        "not_applicable": "Not applicable — do not invent a date.",
+                        "unknown": "Unknown — obtain or confirm the date before submission.",
+                    }.get(f["status"], str(f["status"]).replace("_", " ").title())
+                    line += f"\n  Status: {status_text}"
+                parts.append(line)
+            if fields:
+                parts.append("")
+            comments_field = c.get("additional_comments_field", True)
+            if comments_field:
+                note = comments_field if isinstance(comments_field, str) else (
+                    "Most SF-86/PVQ sections provide an additional-comments or "
+                    "continuation field tied to this kind of entry. "
+                    "**Put the narrative statement above in that field** — "
+                    "enter the itemized facts above in their own blocks, and "
+                    "use the comments field for the explanation in your own "
+                    "words. If this section has no comments field, ask your "
+                    "FSO where the narrative belongs instead."
+                )
+                parts.append(f"> {note}")
+                parts.append("")
 
     docs = ev.get("documents") or []
     if docs:
@@ -274,6 +391,19 @@ def render_event(ev: dict, n: int, total: int) -> str:
         for d in docs:
             timing = "before submission" if d.get("timing") == "before" else "may follow"
             parts.append(f"- {d.get('name')} — {d.get('source','')} ({timing})")
+        parts.append("")
+
+    updates = ev.get("future_update_topics") or []
+    if updates:
+        parts += ["### Continue updating your security office", ""]
+        parts.append(
+            "If any of the following later occurs or changes because of this "
+            "incident, keep your FSO, security manager, SMO, or sponsoring "
+            "security office informed with the pertinent details:"
+        )
+        parts.append("")
+        for update in updates:
+            parts.append(f"- {update}")
         parts.append("")
 
     declined = ev.get("declined_elements") or []
@@ -315,6 +445,22 @@ def main() -> int:
 
     session = json.loads(Path(args.session).read_text(encoding="utf-8"))
     events = session.get("events", [])
+    if events and session.get("final_analysis_complete") is not True:
+        print(
+            "ERROR: final_analysis_complete is not true. Finish every queued "
+            "incident and run the final combined reporting analysis before assembly.",
+            file=sys.stderr,
+        )
+        return 1
+    for i, ev in enumerate(events, 1):
+        development = ev.get("incident_development")
+        if not isinstance(development, dict) or development.get("complete") is not True:
+            print(
+                f"ERROR: incident {i} has not cleared incident development. "
+                "Capture what happened before, during, and after the incident "
+                "before narrative assembly."
+            )
+            return 1
 
     all_persons: list[dict] = []
     seen = set()
@@ -325,17 +471,25 @@ def main() -> int:
                 all_persons.append(p)
 
     tier = session.get("privacy_tier", "high")
+    package_title = {
+        "holder": "Adverse Information Incident Report",
+        "in_process": "In-Process Applicant Security Update",
+        "applicant": "Security Questionnaire Disclosure Package",
+    }.get(session.get("role"), "Security Reporting Package")
     doc = [
-        "# Adverse Information Report — John Doe",
+        f"# {package_title} — John Doe",
         "",
         privacy_header(tier),
         "",
         substitution_block(all_persons, tier),
+        PROCEEDING_BOUNDARY,
+        "",
+        submission_route(session),
         "---",
         "",
     ]
     for i, ev in enumerate(events, 1):
-        doc.append(render_event(ev, i, len(events)))
+        doc.append(render_event(ev, i, len(events), session.get("role", "applicant")))
         doc.append("---")
         doc.append("")
 

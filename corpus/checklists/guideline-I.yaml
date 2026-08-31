@@ -1,42 +1,205 @@
-# Guideline I — Psychological Conditions. REVIEW DRAFT.
-# The interviewer MUST surface, before the first question here, that SEAD 4
-# states seeking mental health care is not by itself disqualifying.
-# Ask one question at a time. Every question is skippable.
+# Guideline I (Psychological Conditions) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 27–29, the ISL 2021-02
+# adverse-information entries for psychological matters, and SF-86 Section 21.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# THE THING THIS CHECKLIST HAS TO GET RIGHT
+# ---------------------------------------------------------------------------
+# Most people who reach this guideline believe that reporting will cost them
+# their clearance, and that belief is the reason people do not seek care. SEAD 4
+# says the opposite: seeking mental health care is not by itself a reason to
+# question judgment or reliability. The interviewer states that before the first
+# question, once, plainly, and then gets on with it. Repeating reassurance
+# reads as bracing someone for bad news.
+#
+# The second thing: only the ISL's ENUMERATED circumstances are reportable. A
+# course of voluntary counselling, absent a court order, a hospitalisation, or
+# one of the listed diagnoses, generally is not. This checklist must not sweep
+# in ordinary therapy — but the tool also never says "not reportable," so an
+# unclear case returns consult_fso and stops there.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: I
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-I-psychological.md, corpus/reporting/tables/adverse-information.yaml]
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: medium
 all_elements_sensitivity: high
+sources:
+  - corpus/sead4/guideline-I-psychological.md
+  - corpus/reporting/tables/adverse-information.yaml
 preamble: |
   Before anything else: SEAD 4 states that seeking mental health care is not,
-  by itself, a reason to question someone's judgment or reliability. Many
-  people hold clearances while in treatment. What follows is about specific
-  reportable circumstances, not about whether you've sought help.
+  by itself, a reason to question someone's judgment or reliability. A great
+  many people hold clearances while in treatment. What follows is about a short
+  list of specific circumstances the policy makes reportable — not about
+  whether you've sought help.
+
+  Every question here is skippable, and you can tell me you'd rather your FSO
+  ask it.
+never_ask: |
+  The content of any therapy session. Anything a provider said in confidence
+  beyond a diagnosis, a treatment status, or a prognosis. Details of a
+  condition beyond what a form field or a listed data element requires.
 elements:
+
   - id: reportable-trigger
-    ask: "Which of these applies — a court declaration of incompetency, an order to consult a mental health professional, a hospitalization, or a diagnosis on the reportable list?"
-    note: "Only the ISL's enumerated circumstances are reportable. Voluntary counseling outside those circumstances generally is not — if unsure, the answer is to ask the FSO."
+    ask: "Which of these is what brings you here? A court declaring incompetency, an order to consult a professional, a hospitalisation, or a diagnosis you've been told is on the reportable list."
+    criticality: required
+    covers: [what]
+    event_refs: [adv.psych.legal-events, adv.psych.diagnoses, adv.psych.treatment-deviation]
+    why: "The ISL enumerates specific circumstances rather than mental health generally. Which one applies determines everything that follows."
+    followups:
+      - trigger: vague
+        ask: "If none of those quite fit, tell me what happened in your own words and I'll flag it for your FSO rather than guess."
+        why: "This is the honest branch. The tool does not decide that an unclear case falls outside the list — it returns consult_fso."
+      - trigger: always
+        ask: "Has any of this been reported to your security office before?"
+        prior_disclosure_probe: true
+
   - id: diagnosis
-    ask: "What is the diagnosis, if one was made, and when?"
-    maps_to: {sf86: "Section 21", incident_report: "psych_detail"}
-  - id: treatment-current
-    ask: "Are you currently in treatment? With what kind of provider, and since when?"
-    mitigation_ref: "I — ongoing treatment with a favorable prognosis"
-  - id: treatment-compliance
-    ask: "Are you following the treatment plan as prescribed?"
-    note: "Failing to consult the treating professional before altering or stopping prescribed treatment is separately reportable per the ISL."
-  - id: prognosis
-    ask: "Has a provider given an opinion on your prognosis or your ability to function reliably? A letter from them is the strongest form of this."
-    mitigation_ref: "I — opinion of a duly qualified mental health professional"
-    document: "provider statement or letter"
-  - id: functional-impact
-    ask: "Has the condition affected your judgment, reliability, or ability to protect classified information in any concrete way?"
-  - id: hospitalization-detail
-    ask: "If there was a hospitalization — when, how long, and was it voluntary?"
+    ask: "Was a diagnosis made, and if so what was it?"
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 21 — Psychological and Emotional Health", pvq: "psychological", incident_report: "diagnosis"}
+    followups:
+      - trigger: answered_yes
+        ask: "When was it made?"
+      - trigger: answered_yes
+        ask: "Has it since been revised or ruled out?"
+        why: "A superseded diagnosis is a materially different fact, and users often report the first thing they were told rather than where it landed."
+      - trigger: answered_no
+        ask: "So there's a circumstance to report but no diagnosis attached to it?"
+        why: "A hospitalisation or a court order with no diagnosis is a common and entirely reportable shape. Stating the absence explicitly keeps a reader from assuming one was withheld."
+
+  - id: who-and-where-treated
+    ask: "What kind of provider or facility was involved?"
+    criticality: required
+    covers: [who, where]
+    entity_ref: treatment-provider
+    why: "The forms ask for the provider or facility by name and address. An organisation is not a natural person, so the name and address are collectible at every privacy tier."
+    privacy_notice: |
+      I'll take the name of the practice, clinic, or hospital. I'm not going to
+      ask for the individual clinician's name — the package leaves a blank for
+      that, and you fill it in by hand at submission if the form needs it.
+    followups:
+      - trigger: always
+        ask: "What city and state is it in?"
+      - trigger: always
+        ask: "And its street address, if you can find it? Your FSO may need it, and the newer form asks for it."
+      - trigger: answered_yes
+        ask: "Was any of it inpatient?"
+
+  - id: when-and-duration
+    ask: "When did this begin?"
+    criticality: required
+    covers: [when]
+    maps_to: {incident_report: "dates"}
+    followups:
+      - trigger: always
+        ask: "And is it ongoing, or when did it end?"
+      - trigger: vague
+        ask: "A month and year is enough. What can you say with confidence?"
+      - trigger: answered_yes
+        ask: "If there was a hospitalisation, how long was it?"
+
+  - id: voluntary-or-ordered
+    ask: "Was any of this voluntary, or was it ordered or required?"
+    criticality: required
+    covers: [how, why]
+    why: "This is the mechanism, and it is the single most consequential fact in the whole checklist. A voluntary admission and a court-ordered evaluation are treated very differently."
+    followups:
+      - trigger: answered_no
+        ask: "Who ordered it — a court, an employer, or a licensing body?"
+        escalation_if: "yes"
+      - trigger: answered_no
+        ask: "Is there paperwork? The order itself, or a discharge summary."
+        document: "court order or administrative directive"
+      - trigger: answered_yes
+        ask: "What led you to seek it out?"
+        note: "Record the answer as given. This is the user's own account and it is often the most credible part of the report. Do not shape it."
+
   - id: court-involvement
-    ask: "Was there any court order or legal proceeding involved?"
+    ask: "Was there any court or administrative proceeding involved?"
+    criticality: required
+    covers: [where, what]
+    entity_ref: court
     escalation_if: "yes"
+    event_refs: [adv.psych.legal-events]
+    followups:
+      - trigger: answered_yes
+        ask: "Which court, and in which county and state?"
+      - trigger: answered_yes
+        ask: "Do you know its address? Your FSO will need it to request the record, and small-county courts are hard to find without it."
+      - trigger: answered_yes
+        ask: "What was the outcome or the order?"
+      - trigger: pending
+        ask: "Is anything still open, or is there a review date?"
+
+  - id: treatment-current
+    ask: "Are you in treatment now?"
+    criticality: required
+    covers: [what, when]
+    mitigation_ref: "I — ongoing and consistent treatment with a favorable prognosis"
+    followups:
+      - trigger: answered_yes
+        ask: "Since when, and how often?"
+      - trigger: answered_no
+        ask: "Did it end because it was completed, or for another reason?"
+        why: "Completion and discontinuation are different facts, and the second one connects directly to the next question."
+
+  - id: treatment-compliance
+    ask: "Have you changed or stopped any prescribed treatment?"
+    criticality: required
+    covers: [what]
+    event_refs: [adv.psych.treatment-deviation]
+    why: "Altering or discontinuing prescribed treatment without consulting the treating professional is its own enumerated reportable event. Most people have no idea, which is exactly why the question is asked directly and without implication."
+    followups:
+      - trigger: answered_yes
+        ask: "Did you talk to the provider before making the change?"
+      - trigger: answered_yes
+        ask: "When was that, and what changed?"
+      - trigger: answered_no
+        ask: "So you're following it as prescribed?"
+
+  - id: prognosis
+    ask: "Has a provider given an opinion on your prognosis?"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "I — the opinion of a duly qualified mental health professional that the condition is under control or in remission"
+    document: "provider statement or letter"
+    why: "The guideline names a qualified professional's opinion as a mitigating condition. A letter is the strongest single document in this whole area, and it exists in a great many of these cases already."
+    followups:
+      - trigger: answered_yes
+        ask: "Do you have it in writing, or could you ask for it?"
+      - trigger: answered_no
+        ask: "Would your provider be willing to write one? You don't have to decide now — I'll note it as something that exists to be asked for."
+        note: "Never ask whether documentation exists as a yes/no gate. Name the document and note who holds it. See documents-advisor."
+
+  - id: functional-impact
+    ask: "Has any of this affected your judgment or your ability to handle protected information in a concrete way?"
+    criticality: required
+    covers: [what]
+    why: "This is the actual adjudicative question, and it is answerable. Most of the time the honest answer is no, and having that on the record in the user's own words is worth a great deal."
+    followups:
+      - trigger: answered_yes
+        ask: "What happened, and was your security office aware?"
+      - trigger: answered_yes
+        ask: "Was there any effect on your access or your work status?"
+
+  - id: condition-forward
+    ask: "What does the plan look like from here, in your words?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Record what they say. Never coach toward optimism, never suggest that
+      continuing treatment is the answer a reviewer wants, and never soften a
+      candid account of an unresolved condition. An honest "it's managed but
+      it's not gone" is more credible than a claim of recovery.

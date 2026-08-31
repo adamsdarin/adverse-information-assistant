@@ -1,0 +1,553 @@
+# What DOHA judges actually treat as persuasive documentation — mined from
+# published decisions, not assigned by the maintainer.
+#
+# ===========================================================================
+# WHAT THIS FILE IS AND IS NOT
+# ===========================================================================
+# documents-advisor.md tells the user which records to go obtain before
+# filing. This file is where its answers come from: for each guideline, the
+# document TYPES that recurred across contested cases, what each one
+# corroborates, who holds it, and how much weight judges' Analysis sections
+# actually gave it — strong, moderate, or weak, with case citations for every
+# entry so an unusual account still has something concrete to check against.
+#
+# It is NOT a severity ladder (see _SEVERITY_LADDERS.yaml for that) and it
+# NEVER predicts an outcome. Every entry is framed as "cases that discuss
+# this document as corroboration" — a document type existing here means
+# judges have discussed its evidentiary weight, never that obtaining it
+# improves anyone's odds. `bare_claim_pattern` entries exist for the same
+# reason severity case_refs do: something concrete to point to when a
+# claim has nothing behind it, quoting the judge's own words for why that
+# mattered, never a rate or a tendency.
+#
+# ===========================================================================
+# PROVENANCE
+# ===========================================================================
+maintainer_verified: false
+method: >
+  Six research passes plus two gap-filling passes, each pulling a sample via
+  scripts/doha_retrieval.py against the local COMPLETE-tier DCSA Library and
+  reading Findings of Fact + Analysis in full — roughly 250 additional
+  decisions read beyond the severity-ladder research, this time reading
+  specifically for documentary corroboration rather than fact-pattern tiers.
+  Selection-biased contested-case sample, same caveat as everywhere else in
+  this corpus: informs which document to go obtain, never a rate or a
+  tendency.
+source_corpus: "10,658 published DOHA decisions, DCSA Library COMPLETE tier"
+weight_values: [strong, moderate, weak]
+
+guidelines:
+
+  # =========================================================== A ==========
+  A:
+    sample: "3 genuine merits cases (of 6 tagged — 2 mistagged, 1 withdrawn)"
+    note: >
+      Too thin to generalize with confidence. Self-report and character
+      testimony are likely the dominant evidentiary reality for most
+      A-adjacent matters — documentary corroboration of "disassociation" was
+      rare in this sample, and its absence, not the underlying conduct, is
+      what repeatedly undermined credibility.
+    documents:
+      - type: "Internal CI/insider-threat investigation findings clearing the applicant"
+        corroborates: "the applicant was independently investigated and not found to be a threat"
+        custodian: "the military/agency's own CI or insider-threat division"
+        weight: strong
+        case_refs: ["22-00849"]
+      - type: "The organization's own published materials (newsletters, website)"
+        corroborates: "what the group actually advocates, for or against the applicant's account"
+        custodian: "the organization itself"
+        weight: strong
+        case_refs: ["16-03256"]
+      - type: "State corporate filings showing officer/agent status and later removal"
+        corroborates: "formal disassociation timing"
+        custodian: "state corporate registry"
+        weight: moderate
+        case_refs: ["16-03256"]
+    bare_claim_pattern:
+      - claim: "Claimed a resignation letter was sent to formally disassociate"
+        finding: "\"Applicant testified that he submitted a letter of resignation... That letter is not in evidence.\""
+        case_ref: "16-03256"
+      - claim: "General account of the matter, offered without any supporting document"
+        finding: "\"Applicant submitted no documentary evidence to corroborate any of his testimony. No character witnesses testified on his behalf.\""
+        case_ref: "16-03256"
+      - claim: "Testimony offered with no documents behind it"
+        finding: "\"he did not submit any documentary evidence\""
+        case_ref: "22-01876"
+
+  # =========================================================== B ==========
+  B:
+    sample: "5 cases read in depth"
+    note: >
+      Much of what's reported here (relationship facts, contact frequency)
+      has no realistic documentary form at all. The distinctive pattern:
+      judges treat UNCERTAINTY about a relative's foreign-government
+      affiliation as a risk cutting against the applicant, not as a gap
+      requiring dismissal of the allegation — not knowing is not the same
+      as being cleared.
+    documents:
+      - type: "Wire-transfer or bank records for money sent to/from relatives abroad"
+        corroborates: "the actual size of a financial-support relationship"
+        custodian: "the applicant's own bank"
+        weight: strong
+        case_refs: ["16-03047", "16-03863"]
+      - type: "Sale-proceeds / closing records for a foreign property that was liquidated"
+        corroborates: "a foreign asset was actually abandoned and proceeds moved to the U.S."
+        custodian: "the foreign sale's closing agent / applicant's bank"
+        weight: strong
+        note: "Directly won a sub-allegation finding for the applicant in 16-03863 (AE D/E)."
+      - type: "U.S. property, retirement, and tax records"
+        corroborates: "the depth of the applicant's own U.S. ties, offered to outweigh foreign ties"
+        custodian: "applicant's own financial/tax records"
+        weight: moderate
+        note: "Credited as fact but was still outweighed by unmitigated family ties in 16-03625."
+      - type: "Character/reference letters"
+        corroborates: "whole-person trustworthiness"
+        custodian: "coworkers, supervisors, fellow service members"
+        weight: moderate
+        note: "Consistently given real weight in Findings but never overcame unmitigated foreign-tie facts on their own — judges kept the two analyses separate."
+      - type: "Government's country-conditions administrative notice"
+        corroborates: "the geopolitical risk backdrop, not the applicant's personal facts"
+        custodian: "official U.S. government publications, entered by Department Counsel"
+        weight: strong
+        note: "The single most consistently relied-upon document category in the whole B sample — but it corroborates risk, not the relationship."
+    bare_claim_pattern:
+      - claim: "No response at all submitted to a written-record (FORM) case"
+        finding: "Applicant bore the burden of persuasion and submitted nothing — case decided against him for that reason alone."
+        case_ref: "17-00257 (Appeal Board)"
+
+  # =========================================================== C ==========
+  C:
+    sample: "14 cases read, 9 with a live Guideline C analysis"
+    documents:
+      - type: "FSO passport surrender or destruction confirmation"
+        corroborates: "relinquishment of intent to use/retain a foreign passport"
+        custodian: "the applicant's own FSO — not a foreign consulate"
+        weight: strong
+        case_refs: ["16-03664", "16-03269", "16-03899"]
+        note: "Weight drops sharply if the passport is later returned to the applicant and retained — surrender only counts if it sticks (18-01955, 18-02542)."
+      - type: "Completed foreign-citizenship renunciation certificate"
+        corroborates: "citizenship actually given up, not just a stated willingness"
+        custodian: "the foreign government's own consular/interior authority"
+        weight: strong
+        note: "Notable gap: NO case in this sample showed an applicant actually producing one. A stated 'willingness to renounce' with no evidence of even researching the procedure was explicitly rejected (18-01955)."
+      - type: "Timeline evidence — did the foreign-rights exercise predate U.S. naturalization"
+        corroborates: "AG 11(d), a fully mitigating condition when true"
+        custodian: "USCIS naturalization date, cross-referenced against the conduct's date"
+        weight: strong
+        case_refs: ["18-02542", "18-01955", "16-03899"]
+        note: "Decisive, not merely corroborating, in every case where the sequence was disputed."
+      - type: "Formal U.S. government authorization for foreign employment (State Dept approval)"
+        corroborates: "foreign work doesn't reflect a conflicting preference because the USG itself approved it"
+        custodian: "State Department (contract approval)"
+        weight: strong
+        case_refs: ["16-03899"]
+        note: "Its absence was costly in 17-02526 — and the judge flagged that whether SEAD-4 Appendix C's exception process even applies to contractor cases is UNSETTLED, with no implementation guidance issued. Don't imply this is a reliable safety net."
+      - type: "Documentation of a foreign benefit card's actual scope (e.g., India's OCI)"
+        corroborates: "the privilege exercised is narrower than full citizenship — no oath, no voting rights"
+        custodian: "the foreign program's own materials (e.g., Ministry of Home Affairs)"
+        weight: moderate
+        case_refs: ["17-00855"]
+      - type: "Foreign-government-adjacent employer's written confirmation of the job's actual terms"
+        corroborates: "no oath of allegiance, no foreign clearance, no citizenship pathway, no classified access"
+        custodian: "the foreign employer/embassy"
+        weight: strong
+        case_refs: ["17-01145"]
+        note: "This is effectively the checklist judges apply to any foreign-government-adjacent job — worth getting in writing where possible."
+    bare_claim_pattern:
+      - claim: "Claimed to have signed a renunciation form during a prior CI screening"
+        finding: "Judge checked the CI-screening case file directly and found no such form or any other document showing renunciation action taken."
+        case_ref: "18-02542"
+      - claim: "Claimed a foreign citizenship was 'probably' necessary to legally work there, and expressed willingness to renounce"
+        finding: "\"She provided no collaborating [sic] evidence to support her vague claim... she offered no evidence that she had even looked into the procedures for renunciation.\""
+        case_ref: "18-01955"
+      - claim: "Asserted U.S. investments outweighed a $300,000 foreign investment, in a no-hearing FORM case"
+        finding: "\"he did not provide any information about his personal holdings in the United States to support that claim\" — no rebuttal evidence submitted at all."
+        case_ref: "17-01395"
+
+  # =========================================================== D ==========
+  D:
+    sample: "9 cases read"
+    documents:
+      - type: "Psychological/psychiatric evaluation reviewing the FULL adverse record"
+        corroborates: "prognosis, absence of concerning interest, current judgment/reliability"
+        custodian: "DOD CAF-appointed evaluator, or a privately retained licensed psychologist/psychiatrist"
+        weight: strong
+        case_refs: ["20-00556", "17-04312"]
+        note: "Persuasive force depends heavily on whether the evaluator reviewed the FULL record — an evaluation that never saw the applicant's own prior admissions was explicitly discounted (21-00717)."
+      - type: "Ongoing therapy records and letters from multiple independent treating clinicians"
+        corroborates: "acknowledgment, active treatment, low likelihood of recurrence"
+        custodian: "the applicant's own treating therapist(s) — LCSW, LPC, social worker"
+        weight: strong
+        case_refs: ["20-00556", "17-04312"]
+        note: "Strongest when several independent providers corroborate each other. Weak-to-absent when treatment never happened (17-04058, 18-00050)."
+      - type: "Written statement from spouse or cohabitant disclosing knowledge of the conduct"
+        corroborates: "the conduct is no longer concealed, reducing coercion/exploitation exposure"
+        custodian: "the applicant's own spouse, in their own words"
+        weight: strong
+        case_refs: ["17-04312"]
+      - type: "Employer/supervisor declarations independent of knowledge of the specific conduct"
+        corroborates: "general workplace reliability"
+        custodian: "current supervisor, program manager"
+        weight: moderate
+      - type: "Self-drafted written 'statement of intent' to cease the conduct"
+        corroborates: "forward-looking commitment"
+        custodian: "self-executed, sometimes notarized"
+        weight: weak
+        note: "Minor supporting factor only — never a substitute for disclosure and treatment evidence."
+    bare_claim_pattern:
+      - claim: "Claimed a court found no grounds to pursue a case"
+        finding: "\"Applicant failed to provide any court documentation to support his contention... his continued claim of innocence without supporting documentation is worrisome.\""
+        case_ref: "18-00050"
+      - claim: "Claimed to have been given permission to retain sensitive materials"
+        finding: "\"he was unable to provide a name or documentation reflecting permission was given\""
+        case_ref: "17-01680"
+      - claim: "Argued a government report had misunderstood his disclosures"
+        finding: "\"Applicant did not present any evidence that the report contained any errors\" — a rebuttable presumption of government regularity applied against the bare denial."
+        case_ref: "21-00717"
+
+  # =========================================================== E ==========
+  E:
+    sample: "10 cases read"
+    note: >
+      The strongest pattern isn't any document TYPE — it's whether a
+      document directly corroborates or contradicts the applicant's SPECIFIC
+      contested claim. Ask what exact fact is in dispute, then what document
+      speaks to that fact, rather than defaulting to a fixed list.
+    documents:
+      - type: "A later form/interview where the fact was volunteered before confrontation"
+        corroborates: "AG 17(a) good-faith correction, distinct from concealment"
+        custodian: "the applicant's own subsequent security-clearance submissions"
+        weight: strong
+        case_refs: ["16-03037", "17-00269"]
+        note: "Only works if it genuinely precedes confrontation — a 'correction' made only after being shown a competing record was treated as continued falsification, not correction (16-03618)."
+      - type: "Letter from a security manager, supervisor, or HR rep addressing the SPECIFIC disputed fact"
+        corroborates: "whether the applicant actually concealed something from that specific official"
+        custodian: "the current or former FSO/security manager, HR department"
+        weight: strong
+        case_refs: ["17-00269"]
+      - type: "Settlement agreements or civil litigation records"
+        corroborates: "underlying facts even absent an adjudicated finding of liability"
+        custodian: "opposing counsel/court filings, the applicant's own signed settlement"
+        weight: strong
+        case_refs: ["16-04051"]
+        note: "A signed settlement's own language outweighed an after-the-fact counsel letter offered without documentary backing."
+      - type: "A prior, competing government record (a different agency's file, an earlier SCA)"
+        corroborates: "inconsistency in the applicant's own disclosures"
+        custodian: "DOD CAF or another government agency's case file"
+        weight: strong
+        case_refs: ["16-03618", "17-00228"]
+      - type: "Character/reference letters"
+        corroborates: "whole-person context, not the disputed facts"
+        custodian: "friends, coworkers, family"
+        weight: weak
+        note: "Present in nearly every case, rarely decisive against a documented falsification (16-03183)."
+    bare_claim_pattern:
+      - claim: "Claimed an offer to resolve a matter was accepted, and accounts were resolved"
+        finding: "\"the documentation Applicant provided does not support this statement... he did not provide any documentation confirming resolution\""
+        case_ref: "16-03478"
+      - claim: "Counsel argued underlying misconduct was 'never proven'"
+        finding: "Offered without any supporting document; not credited against the signed settlement agreement itself."
+        case_ref: "16-04051"
+
+  # =========================================================== F ==========
+  F:
+    sample: "10 cases read"
+    documents:
+      - type: "Direct proof of payment — bank/checking statements, canceled checks, creditor letter"
+        corroborates: "a SPECIFIC debt was actually paid"
+        custodian: "applicant's bank; the creditor"
+        weight: strong
+        note: "Its absence is named explicitly and specifically by type when denying (16-02941 lists exactly what was missing: checking statements, canceled checks, or a creditor letter)."
+      - type: "Credit report, pulled at multiple points in time"
+        corroborates: "existence/status of debts over time"
+        custodian: "the credit bureaus, via OPM investigation or the applicant's own pull"
+        weight: moderate
+        note: "A debt simply dropping off a later report is explicitly NOT proof of resolution — Appeal Board precedent quoted directly: that some debts have dropped off a credit report 'is not meaningful evidence of debt resolution.'"
+      - type: "Settlement or repayment-plan letter from the creditor"
+        corroborates: "AG 20(d) good-faith repayment effort"
+        custodian: "the creditor / collection agency / loan servicer"
+        weight: strong
+        case_refs: ["16-02981", "16-03120"]
+      - type: "IRS tax transcript / payment summary / installment-agreement paperwork"
+        corroborates: "timely filing, actual payments, compliance with an IRS plan"
+        custodian: "the IRS (transcript request)"
+        weight: strong
+        note: "The clearest 'named absence' pattern in the whole F sample: 'Without IRS transcripts to work with, exact filing dates cannot be determined... precludes her from fully availing herself of the benefits of MC 20(b).' A tax-preparer's letter alone, without the transcript behind it, was treated as weak."
+      - type: "Bankruptcy filings, divorce decree, foreclosure/short-sale documents, Form 1099-C"
+        corroborates: "extenuating circumstances and final debt resolution"
+        custodian: "bankruptcy/divorce court; mortgage servicer"
+        weight: strong
+        case_refs: ["16-03113", "16-02986"]
+      - type: "Court or attorney letter confirming an instruction not to pay a disputed debt"
+        corroborates: "a legitimate basis for disputing the debt"
+        custodian: "family/divorce court or the applicant's attorney"
+        weight: strong
+        note: "Its absence directly sank a specific sub-allegation: the judge gave the applicant six months to obtain this exact letter; 'no such statement, or any other information, was received' — ruled against him on that debt for exactly that reason (16-02986)."
+    bare_claim_pattern:
+      - claim: "Promised future repayment without a documented track record"
+        finding: "Appeal Board rule, quoted directly: \"promises to pay off delinquent debts in the future are not a substitute for a track record of paying debts in a timely manner.\""
+        case_ref: "16-02941"
+      - claim: "Bare admission of debts with no follow-up"
+        finding: "\"Applicant offers nothing further\" on two debts despite a FORM opportunity to submit evidence."
+        case_ref: "16-02991"
+
+  # =========================================================== G ==========
+  G:
+    sample: "9 genuine cases read (1 mistagged case excluded — see note)"
+    note: >
+      Unlike F, no single document is dispositive here. What judges credit is
+      CONVERGENT third-party corroboration of a behavior over time —
+      probation-verified screens, a recent clinical evaluation, and
+      consistent lay testimony working together, not one certificate.
+    documents:
+      - type: "Probation officer's letter plus court records of clean/random screens"
+        corroborates: "objective, third-party-verified abstinence during a supervised period"
+        custodian: "probation department / court"
+        weight: strong
+        case_refs: ["17-00301"]
+        note: "The single strongest document type in the G sample specifically because it isn't self-reported."
+      - type: "LADC/clinical evaluation with a stated prognosis"
+        corroborates: "whether a diagnosis is in remission, likelihood of relapse"
+        custodian: "licensed alcohol/drug counselor, EAP-referred counselor, clinical psychologist"
+        weight: strong
+        case_refs: ["17-01577", "17-00301"]
+      - type: "Treatment-program completion certificate"
+        corroborates: "AG 23(d)"
+        custodian: "the treatment facility/clinic"
+        weight: moderate
+        note: "Necessary but not sufficient alone — three separate completed programs still relapsed after each in one case (16-03272); completion only carries weight paired with sustained abstinence after."
+      - type: "AA sponsor letter / documented sponsor relationship"
+        corroborates: "AG 23(b) ongoing engagement in recovery"
+        custodian: "the AA sponsor personally (AA itself keeps no official record)"
+        weight: moderate
+        note: "Absence repeatedly named by judges even when other facts favor the applicant."
+      - type: "Formal medical AUD diagnosis from a physician/psychologist/psychiatrist"
+        corroborates: "a genuine clinical diagnosis exists, vs. a self-description"
+        custodian: "the diagnosing clinician"
+        weight: strong
+        note: "A recalled or secondhand diagnosis is explicitly insufficient: 'there are no clinical records in evidence... Applicant expresses uncertainty about whether he was diagnosed' (16-03430, denied)."
+    bare_claim_pattern:
+      - claim: "General claim of reform/sobriety with no counter-evidence"
+        finding: "Zero treatment engagement despite two professional recommendations; 'he does not think he has an alcohol problem anymore.'"
+        case_ref: "16-03049"
+      - claim: "(Doctrine, not a single case) Uncorroborated claims of reform"
+        finding: "Appeal Board precedent quoted directly: crediting uncorroborated reform/rehabilitation claims without independent evidence is legal error."
+        case_ref: "17-00301 fn.14, citing App. Bd. 12-04813"
+
+  # =========================================================== H ==========
+  H:
+    sample: "10 cases read"
+    documents:
+      - type: "Signed statement of intent to abstain (SEAD 4 26(b)(3))"
+        corroborates: "the literal text of a named mitigating sub-condition"
+        custodian: "self-executed, sometimes given to employer"
+        weight: moderate
+        note: "Necessary but not sufficient by itself — its absence was named by the Appeal Board despite verbal promises elsewhere (16-03451, appeal); a signed one didn't save a case with a documented pattern of broken prior promises (17-00330)."
+      - type: "Negative drug test result, voluntary or employer-administered"
+        corroborates: "current abstinence"
+        custodian: "employer's testing program, or an independently obtained test"
+        weight: strong
+        case_refs: ["17-00994"]
+      - type: "Substance-abuse evaluation by a licensed counselor (LCSW/LISAC)"
+        corroborates: "absence of a current disorder, good prognosis for abstinence"
+        custodian: "community counseling agency or private licensed counselor"
+        weight: strong
+        case_refs: ["17-00994"]
+      - type: "Completion of a formal treatment program, with diagnosis and discharge notes"
+        corroborates: "AG 26(d), satisfactory completion with favorable prognosis"
+        custodian: "state-licensed treatment facility/clinic"
+        weight: strong
+        case_refs: ["16-03592"]
+        note: "Absence cited directly against an applicant with no treatment program at all (17-00258)."
+    bare_claim_pattern:
+      - claim: "Verbal/testimonial promise to abstain with no signed statement in the record"
+        finding: "\"The record contains no signed statement that satisfies all of the requirements of this mitigating condition\" — weighed against a contradicting prior SCA statement."
+        case_ref: "16-03451 (Appeal Board)"
+      - claim: "No mitigation documents submitted at all, decided on the papers"
+        finding: "\"Applicant provided no evidence concerning the quality of his professional performance... no character references... no evidence submitted by Applicant to mitigate.\""
+        case_ref: "17-00258"
+
+  # =========================================================== I ==========
+  I:
+    sample: "10 cases read"
+    note: >
+      Only SEAD 4's mitigating condition 29(c) requires a government-
+      employed-or-approved evaluator — 29(a)/(b)/(d)/(e) accept any duly
+      qualified professional. Recency and full-record review matter more
+      than the evaluator's government affiliation.
+    documents:
+      - type: "DOD CAF-referred psychological evaluation"
+        corroborates: "the disqualifying condition itself, or its absence — cuts either way"
+        custodian: "DOD CAF-contracted licensed clinical psychologist"
+        weight: strong
+        note: "Quality is scrutinized hard — an evaluation lacking standardized testing or source-document citations was discredited despite an unfavorable diagnosis on paper (17-04325)."
+      - type: "Updated, current favorable opinion from ANY treating clinician"
+        corroborates: "AG 29(a)/(b)/(d)/(e) — no government-approval requirement for these"
+        custodian: "treating psychiatrist, psychologist, VA clinician, LCSW"
+        weight: strong
+        case_refs: ["18-01029", "18-01484", "18-02540", "18-02085"]
+        note: "The most recurring document type that actually moved a case. Recency mattered independent of source — a fresh, current evaluation addressing the SOR directly outweighed a stale one from the government's own evaluator (18-02540)."
+      - type: "Standardized psychological testing actually administered (PAI, MMPI-2, MCMI-III, SASSI-3)"
+        corroborates: "the rigor of an evaluation, distinct from a bare clinical interview"
+        custodian: "whichever clinician conducted the evaluation"
+        weight: moderate
+        note: "Judges name-check presence or absence of testing as a marker of how much weight an opinion deserves."
+      - type: "Medical/clinical treatment records, including attendance gaps"
+        corroborates: "cuts either way — continuity supports mitigation, documented gaps undermine it"
+        custodian: "the treating facility"
+        weight: moderate
+    bare_claim_pattern:
+      - claim: "Claimed treatment and improvement with no records"
+        finding: "\"Applicant did not provide any independent evidence to corroborate his statements, to include a copy of the memory evaluation, his doctor's medical evaluation, a more recent diagnosis, or an updated prognosis.\""
+        case_ref: "17-04052"
+      - claim: "Asserted ongoing treatment"
+        finding: "\"he failed to provide documentary evidence to corroborate this claim... There is no evidence that his ongoing medical disorders are being properly treated.\""
+        case_ref: "18-00233"
+    always_state: >
+      SEAD 4 states plainly that seeking mental health care is not itself
+      disqualifying — this framing must accompany any document guidance for
+      this guideline, not just the checklist elements.
+
+  # =========================================================== J ==========
+  J:
+    sample: "10 cases read"
+    documents:
+      - type: "Court docket / disposition record"
+        corroborates: "charge outcome, dismissal, conviction, completion of a diversion program"
+        custodian: "the clerk of the court that heard the case"
+        weight: strong
+        note: "Called \"the final document of most significance\" in one case (23-02207)."
+      - type: "Certificates of completion — anger management, DV/batterers' program, therapy, parenting class"
+        corroborates: "AG 32(d) successful rehabilitation"
+        custodian: "the program provider, court-ordered or private"
+        weight: strong
+        note: "Strongest when several build a documented month-by-month timeline (23-02207)."
+      - type: "Restitution documentation / payment proof"
+        corroborates: "AG 32(d) rehabilitation"
+        custodian: "court or civil litigation records"
+        weight: moderate
+        note: "Rarely stands alone — paired with 10+ years elapsed and ended probation in one approval (20-01450), but insufficient by itself absent other mitigation (18-01351)."
+      - type: "Third-party recantation letter from an accuser"
+        corroborates: "undercuts an underlying allegation"
+        custodian: "the alleged victim/accuser"
+        weight: strong
+        note: "Can be decisive if credible and timely (18-02174) — but a PROMISED, never-produced version undermines credibility instead of helping (19-02005)."
+      - type: "Character/employer reference letters"
+        corroborates: "whole-person factors"
+        custodian: "coworkers, friends, clergy"
+        weight: moderate
+        note: "Often discounted unless the letter-writer specifically knows the facts at issue (19-02005)."
+    bare_claim_pattern:
+      - claim: "No rehabilitation evidence offered at all"
+        finding: "\"Applicant provided no evidence of counseling, acceptance of responsibility, or rehabilitation... no evidence of community involvement or character references.\""
+        case_ref: "18-01351"
+
+  # =========================================================== K ==========
+  K:
+    sample: "10 cases read"
+    structural_finding: >
+      In all 10 K cases read, the ENTIRE evidentiary record originates from
+      the employer's own security apparatus — zero court filings, zero
+      police reports, zero judicial dockets appear in any case. The paper
+      trail runs through the FSO, the ISSM for computer/network incidents,
+      the company security department's Administrative Inquiry, and
+      JPAS/DISS and DCSA as the government's records of it. This is the
+      single most important structural correction to the tool's prior
+      court-record default.
+    documents:
+      - type: "FSO / company Administrative Inquiry (AI) report"
+        corroborates: "what happened, who was found culpable, whether compromise was assumed"
+        custodian: "Facility Security Officer / company security department"
+        weight: strong
+        note: "Foundational — nearly every exhibit in every K case traces back to this."
+      - type: "Written reprimand, warning letter, or documented verbal counseling"
+        corroborates: "double-edged: proves the violation AND, later, whether counseling changed behavior"
+        custodian: "FSO, supervisor, HR/security office"
+        weight: strong
+        case_refs: ["18-01812", "18-00766"]
+      - type: "Record of when and how the applicant reported the issue to the FSO"
+        corroborates: "AG 35(d) — prompt self-report"
+        custodian: "the FSO's own log"
+        weight: strong
+        note: "Frequently decisive on its own — an 18-month reporting delay was the stated reason for denial even though the underlying incident was called excusable (18-02968); a 2-year delay on one item was NOT mitigated even in an otherwise-approved case (18-01812)."
+      - type: "Supervisor/colleague testimony with direct, specific knowledge of the incident"
+        corroborates: "genuine reform, or exculpation from an incident not actually the applicant's fault"
+        custodian: "direct supervisors, security managers, on-site investigators"
+        weight: strong
+        case_refs: ["18-01500", "18-01812"]
+      - type: "Annual security refresher / cybersecurity training records"
+        corroborates: "whether the applicant knew the rules — can cut AGAINST the applicant"
+        custodian: "employer security office"
+        weight: moderate
+        note: "'He had been trained for years, so it should not have taken this to realize' — training records used as an aggravator, not a defense (17-00796)."
+    bare_claim_pattern:
+      - claim: "Claimed a changed, more responsible attitude toward security obligations"
+        finding: "\"There is no corroboration from his employer attesting that he has exhibited a more responsible attitude toward his security obligations\" — despite no new violations in two years."
+        case_ref: "17-00796"
+      - claim: "Character letters offered as general support"
+        finding: "Explicitly discounted because the letter-writers \"were not fully aware of the Government's security concerns\" — a letter that doesn't address the actual disqualifying conduct carries little weight."
+        case_ref: "17-00796"
+
+  # =========================================================== L ==========
+  L:
+    sample: "6 cases read (~18 unique matters in the corpus)"
+    structural_finding: >
+      The clearest, most repeated single finding across this entire
+      research project. A written security/counterintelligence office
+      evaluation letter clearing the outside activity (SEAD 4 38(a)) was
+      the single most consequential document type — its ABSENCE was named,
+      twice, as the explicit and sole reason mitigation failed, even where
+      the underlying facts were otherwise sympathetic (a NATO-ally employer;
+      an unresponsive applicant in a FORM case).
+    documents:
+      - type: "Security/CI office evaluation letter clearing the activity"
+        corroborates: "SEAD 4 38(a) directly, by name"
+        custodian: "the employer's or sponsor's FSO / CI office"
+        weight: strong
+        case_refs: ["20-01667", "21-02921"]
+        note: "\"It is very possible that an appropriate office would evaluate Applicant's employment... However, that has not been done in this case. AG 38(a) is not applicable\" (20-01667) — get this BEFORE the activity becomes an issue, not after."
+      - type: "Termination/severance documentation for the outside relationship"
+        corroborates: "SEAD 4 38(b) — the activity was actually and formally ended"
+        custodian: "the former foreign employer/entity's HR or legal department"
+        weight: strong
+        case_refs: ["18-00266"]
+        note: "Can substitute for a CI evaluation letter if actual termination is well documented (18-00266, 15-08422, 04-10840)."
+      - type: "Contemporaneous letters disclosing the activity to one's own employer/supervisor"
+        corroborates: "the activity was not concealed — rebuts a failure-to-report allegation"
+        custodian: "applicant's own retained copies"
+        weight: strong
+        case_refs: ["07-12674"]
+    bare_claim_pattern:
+      - claim: "No CI/security-office evaluation ever sought"
+        finding: "\"there is no evidence in the record he requested an evaluation... Applicant has not met his burden\" — case decided against him on a FORM with no response filed."
+        case_ref: "21-02921"
+
+  # =========================================================== M ==========
+  M:
+    sample: "7 cases read"
+    documents:
+      - type: "Employer's IT-security investigation report or affidavit (logs, timestamps)"
+        corroborates: "the underlying facts of the incident itself"
+        custodian: "employer's IT security or HR/investigations office"
+        weight: strong
+        case_refs: ["22-02433", "18-00554"]
+      - type: "The actual written IT-use/AUP/VPN policy TEXT — not just an allegation it was violated"
+        corroborates: "whether the alleged conduct was actually prohibited"
+        custodian: "employer's IT/security office"
+        weight: strong
+        note: "Can be decisive both ways — the exact wording of a policy clause ('recommendation' vs. 'mandate') directly decided a sub-allegation (17-03361)."
+      - type: "Certified SCA narrative describing the incident, signed by the applicant"
+        corroborates: "used as documentary proof of the government's case, not just testimony"
+        custodian: "the applicant's own certified interview record"
+        weight: strong
+        case_refs: ["17-01987"]
+    bare_claim_pattern:
+      - claim: "An allegation resting solely on a polygraph-report statement"
+        finding: "\"There was no evidence beyond the content of the polygraph report... Nor was there any corroborating evidence\" — no forensic or seized-device evidence, allegation failed for lack of corroboration."
+        case_ref: "18-01631"
+      - claim: "Signed affidavit from a former employer alleging misconduct"
+        finding: "\"No documents were produced verifying the CEO's assertion... insufficient evidence\" — found in Applicant's favor because even a signed affidavit is treated as a bare claim without the underlying record behind it."
+        case_ref: "21-00239"
+      - claim: "A violation of a 'written commitment' (AG 16(f))"
+        finding: "\"the record contains no evidence of a 'written or recorded commitment'\" — no signed AUP acknowledgment existed, defeating that disqualifying condition."
+        case_ref: "16-03988"

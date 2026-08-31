@@ -1,41 +1,149 @@
-# Guideline F — Financial Considerations. REVIEW DRAFT.
+# Guideline F (Financial Considerations) — required narrative elements.
+# Maintainer-authored from SEAD 4 ¶¶ 18–20, ISL 2021-02 data elements, and
+# recurring factual questions in published DOHA decisions.
+# KNOWN LIMITATION: not validated against agency RFI data (ARCHITECTURE.md §5.2).
+#
+# Granular by design, with conditional ladders — see guideline-G.yaml.
+# Financial matters are the most commonly under-detailed: "some debt I am
+# working on" is unanswerable, and every missing figure becomes a request.
 guideline: F
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-F-financial.md, corpus/reporting/tables/all-covered-individuals.yaml, corpus/reporting/tables/top-secret-q.yaml]
-# SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
-# not from data. It controls interview depth on OPTIONAL material only and
-# can never downgrade a required form field. Review before relying on it.
+coverage: _COVERAGE.yaml
+how_relevant: true
 severity_default: medium
+sources:
+  - corpus/sead4/guideline-F-financial.md
+  - corpus/reporting/tables/all-covered-individuals.yaml
+  - corpus/reporting/tables/top-secret-q.yaml
 elements:
-  - id: debt-inventory
-    ask: "What accounts are delinquent or in collection? For each: creditor, approximate balance, and how far behind."
-    format: [creditor, balance, days_delinquent, account_status]
-    maps_to: {sf86: "Section 26", incident_report: "financial_detail"}
+
   - id: event-type
-    ask: "Is this a bankruptcy, garnishment, tax issue, judgment, or delinquency? Which chapter or type, if applicable."
-  - id: dates
-    ask: "When did the trouble begin, and when was any filing or judgment entered?"
+    covers: [what]
+    ask: "What kind of financial matter is this — a bankruptcy, a garnishment, a tax issue, a judgment, or delinquent accounts?"
+    criticality: required
+    followups:
+      - trigger: answered_yes
+        ask: "Is there more than one? I would rather take them one at a time than lump them together."
+
+  - id: account-inventory
+    covers: [what, who]
+    ask: "Let us go account by account. What is the first one — who is the creditor?"
+    criticality: required
+    entity_ref: creditor
+    why: "Per-account detail is what the form asks for. A single combined figure cannot be matched to a credit report."
+    followups:
+      - trigger: always
+        ask: "Is that a bank, lender, or collection agency — or a private person?"
+        why: "The form's financial-record section is written for institutional
+          creditors, and it is easy to skip straight to asking for an address
+          and phone the way an organization gets asked. A debt owed to a
+          person follows the privacy tier like anyone else in the account —
+          see corpus/forms/entity-capture.yaml's `creditor` entry."
+        note: "Institutional creditor → collect name and location in full at
+          every tier, same as any organization. Personal creditor → the debt
+          and circumstances still go in the narrative in full, but their
+          address and phone are never asked for directly (unless privacy_tier
+          is low); set third_party_data_required: true and emit the
+          requirement to data_you_must_supply instead of dropping it."
+      - trigger: always
+        ask: "What is the approximate balance on that one now?"
+      - trigger: always
+        ask: "What was the original amount, if it differs?"
+      - trigger: always
+        ask: "Roughly when did it first become delinquent?"
+      - trigger: always
+        ask: "Where does it stand today — paid, settled, on a payment plan, in dispute, or still delinquent?"
+      - trigger: always
+        ask: "Any other accounts? Same questions for each."
+
+  - id: bankruptcy-specifics
+    covers: [what, when, where]
+    ask: "If this is a bankruptcy — which chapter, and which court?"
+    criticality: required
+    record: "bankruptcy petition and discharge order"
+    followups:
+      - trigger: answered_yes
+        ask: "What was the case number and the filing date?"
+      - trigger: answered_yes
+        ask: "Has it been discharged or dismissed, and on what date?"
+      - trigger: answered_yes
+        ask: "Who was the trustee? The form asks for that."
+
+  - id: tax-specifics
+    covers: [what, when]
+    ask: "If tax is involved — which years, and federal, state, or both?"
+    criticality: required
+    record: "IRS account transcript, obtainable online"
+    followups:
+      - trigger: answered_yes
+        ask: "Are all returns for those years now filed?"
+      - trigger: answered_yes
+        ask: "What is the amount owed, and is there a payment arrangement in place?"
+      - trigger: answered_yes
+        ask: "Was a lien or levy filed?"
+
+  - id: judgment-specifics
+    covers: [what, where]
+    ask: "If there is a judgment or garnishment — which court entered it, and when?"
+    criticality: required
+    record: "certified copy of the judgment and any satisfaction of judgment"
+    tool: "scripts/court_lookup.py if they do not know which court"
+    followups:
+      - trigger: answered_yes
+        ask: "What was the amount, and has it been satisfied?"
+
   - id: cause
-    ask: "What caused it — job loss, medical, divorce, business failure, overspending, identity theft, something else?"
-    mitigation_ref: "F — conditions largely beyond the person's control"
-    sensitivity: high
-  - id: current-status
-    ask: "Where does each account stand today — paid, on a plan, in dispute, still delinquent?"
-    mitigation_ref: "F — good-faith effort to repay or resolve"
+    covers: [why, how]
+    ask: "What caused it?"
+    criticality: required
+    why: "A cause outside the person - medical, job loss, divorce, identity theft - is a recognised mitigating condition. It has to be stated to count."
+    mitigation_ref: "F-20"
+    followups:
+      - trigger: vague
+        ask: "Roughly when did that start, and has it resolved?"
+
   - id: resolution-efforts
-    ask: "What have you done about it? Payment arrangements, consolidation, disputes, settlements — with dates."
-    mitigation_ref: "F"
-    document: "payment plan agreements, settlement letters, payoff statements"
+    covers: [what, how]
+    ask: "What have you done about it so far?"
+    criticality: required
+    mitigation_ref: "F-20"
+    followups:
+      - trigger: always
+        ask: "When did you start doing that?"
+        why: "Effort that began before anyone asked reads differently from effort that began after. The date is what shows which it was."
+      - trigger: answered_yes
+        ask: "Do you have anything documenting it — a payment plan letter, receipts, a settlement agreement?"
+
   - id: financial-counseling
-    ask: "Have you received financial counseling, and is the situation under control now?"
-    mitigation_ref: "F — received counseling and there are clear indications the problem is resolving"
-    document: "counseling completion documentation"
-  - id: income-stability
-    ask: "Is your current income sufficient to meet your obligations going forward?"
+    covers: [who, what]
+    ask: "Have you had financial counselling?"
+    criticality: required
+    mitigation_ref: "F-20"
+    record: "counselling completion certificate"
+    followups:
+      - trigger: answered_yes
+        ask: "Through whom, and over what dates?"
+
+  - id: current-trajectory
+    covers: [future_intent, what]
+    ask: "Is your current income enough to meet your obligations going forward?"
+    criticality: required
+    followups:
+      - trigger: answered_no
+        ask: "What is the plan for closing that gap?"
+
   - id: unexplained-affluence
-    ask: "Have you received any unusual infusion of assets — inheritance, winnings, gift, or similar — of roughly $10,000 or more?"
-    note: "Separately reportable for Top Secret/Q holders — re-run requirements advisor."
-    format: [amount, source, date]
-  - id: tax-filing
-    ask: "Are all federal and state tax returns filed and current?"
+    covers: [how, what]
+    ask: "Have you received any unusual inflow of money — inheritance, a gift, winnings, a settlement, or income from outside your employment?"
+    criticality: required
+    why: "This runs the other direction from debt and is easy to forget, but it is separately asked about."
+    followups:
+      - trigger: answered_yes
+        ask: "What was the source and roughly the amount, and was any of it from a foreign source?"
+
+  - id: changes-made
+    covers: [future_intent]
+    ask: "What has changed so this does not recur?"
+    criticality: mitigation
+    mitigation_ref: "F-20"

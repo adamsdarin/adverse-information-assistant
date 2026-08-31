@@ -1,0 +1,110 @@
+# EVENT CHECKLISTS — the reporting axis.
+#
+# ===========================================================================
+# WHY THIS DIRECTORY EXISTS
+# ===========================================================================
+# The corpus has two kinds of checklist because the policy has two axes, and
+# they do not line up.
+#
+#   corpus/checklists/guideline-<X>.yaml   the ADJUDICATIVE axis (SEAD 4 A–M)
+#                                          — what a matter will be graded against
+#
+#   corpus/checklists/events/*.yaml         the REPORTING axis (SEAD 3 / ISL)
+#                                          — what the policy requires be reported,
+#                                            and the facts that specific event needs
+#
+# An earlier version of this corpus had only the first axis, and it leaked in
+# both directions:
+#
+#   * Unofficial foreign travel is one of the most clearly reportable events
+#     there is, and it maps to no SEAD 4 guideline at all. Nobody is adjudicated
+#     under "Guideline Travel." With only a guideline axis, the event with a
+#     PRE-APPROVAL requirement — the only prospective obligation in the whole
+#     scheme — had no checklist.
+#
+#   * Foreign-hosted cryptocurrency spans Guideline F and Guideline B and sits
+#     awkwardly in both. Asked through F it becomes a debt question; asked
+#     through B it becomes a relationship question. It is neither.
+#
+#   * Media contact where classified information is sought maps to K, or E, or
+#     nothing, depending on how it went.
+#
+#   * Conversely, marriage and cohabitation are reportable events at the Top
+#     Secret level with no adverse content whatsoever. A person reporting a
+#     marriage is not reporting adverse information, and running them through a
+#     guideline checklist frames an ordinary life event as a problem.
+#
+# So: the classifier picks guidelines, the requirements advisor picks events,
+# and the gap analyst loads BOTH sets plus _UNIVERSAL.yaml. Overlap between the
+# two is expected and harmless — the same fact asked twice is deduplicated by
+# element id, and a fact asked zero times is the failure this split prevents.
+#
+# ===========================================================================
+# THE GATE
+# ===========================================================================
+# validate_corpus.py enforces, as errors:
+#
+#   1. Every entry id in every file under corpus/reporting/tables/ is claimed
+#      by exactly one event checklist. Not zero — an unclaimed event is a
+#      reportable matter with no questions behind it. Not two — duplicate
+#      claims mean two files diverge and one of them silently loses.
+#   2. Every event_ids value in an event checklist exists in a table.
+#   3. Every guideline named in an event checklist exists as a guideline file.
+#   4. Every event checklist satisfies the coverage spine in _COVERAGE.yaml.
+#
+# Add a table entry without an event checklist and the build fails. That is the
+# intent: the tables are the authority, and nothing in them gets to be
+# unanswered.
+schema_version: "1.0"
+maintainer_verified: false
+
+# ===========================================================================
+# THE MAP — kept as documentation. The gate reads the checklists, not this list.
+# ===========================================================================
+map:
+  event-arrest:              {events: [aci.criminal.arrest], guidelines: [J, G, E]}
+  event-treatment:           {events: [aci.treatment.alcohol-drug], guidelines: [G, H]}
+  event-psychological:       {events: [adv.psych.legal-events, adv.psych.diagnoses, adv.psych.treatment-deviation], guidelines: [I]}
+  event-crypto:              {events: [adv.crypto.foreign], guidelines: [F, B]}
+  event-foreign-travel:      {events: [aci.travel.unofficial], guidelines: [B, C]}
+  event-foreign-contact:     {events: [aci.foreign-contact.official, aci.foreign-contact.continuing], guidelines: [B]}
+  event-fie-elicitation:     {events: [aci.foreign-contact.fie, aci.behavior.elicitation], guidelines: [B, E]}
+  event-foreign-affiliation: {events: [aci.foreign-affiliation.citizenship, aci.foreign-affiliation.passport, tsq.foreign-vote], guidelines: [C, B]}
+  event-media-contact:       {events: [aci.media], guidelines: [K, E]}
+  event-financial:           {events: [aci.finance.bankruptcy-delinquency, tsq.finance.anomalies], guidelines: [F]}
+  event-foreign-financial:   {events: [tsq.foreign-business, tsq.foreign-bank, tsq.foreign-property], guidelines: [B, F, L]}
+  event-personal-status:     {events: [tsq.cohabitant, tsq.marriage, tsq.adoption-foreign, tsq.foreign-roommate], guidelines: [B]}
+  event-security-incident:   {events: [], guidelines: [K, M]}
+
+# ===========================================================================
+# THE ONE FILE WITH NO TABLE ENTRY
+# ===========================================================================
+no_table_entry:
+  event-security-incident: |
+    A security violation or infraction, and the loss or suspected compromise of
+    protected information, are reported under the NISPOM reporting requirements
+    rather than under an ISL 2021-02 table entry. This corpus does not contain
+    verified NISPOM text, so the requirements advisor returns consult_fso for
+    this file rather than asserting an obligation — the questions are still
+    worth asking, and the FSO decides the obligation.
+
+    This is the honest handling. The alternative was inventing a table entry
+    that does not exist, which would have been indistinguishable from the real
+    ones to anyone reading the corpus.
+
+# ===========================================================================
+# POPULATION SCOPE — do not lose this
+# ===========================================================================
+population_note: |
+  The ISL tables are DCSA's INDUSTRY implementation. A federal or military user
+  is bound by SEAD 3 itself, and the specific enumerations, channels and
+  timelines in these files may differ under their agency's implementing
+  guidance. Every event checklist states the requirement, and the requirements
+  advisor routes a federal or military holder through the servicing security
+  office for DISS entry. Never imply the individual personally enters DISS.
+
+  Two of these files are industry-flavoured in a way worth naming: the
+  psychological entries and the cryptocurrency entry come from the ISL's
+  adverse-information table, which is an industry construct. State the
+  requirement, name the population it comes from, and hand a non-industry user
+  to their security office.

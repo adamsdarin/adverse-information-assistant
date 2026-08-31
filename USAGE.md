@@ -1,5 +1,22 @@
 # Using This Tool
 
+## Local runner commands
+
+`scripts/adverse.py` provides the Phase 1–2 product boundary:
+
+- `start` creates a new validated checkpoint and refuses to overwrite an
+  existing session unless the exact target is explicitly forced.
+- `resume` and `status` show compact progress without printing narrative text.
+- `answer` records one intake fact and validates immediately.
+- `validate`, `assemble`, and `verify` invoke the existing deterministic gates.
+- `web` starts the local one-question interface on `127.0.0.1` only.
+- `mcp` starts an optional narrow stdio MCP server; no arbitrary file tool is
+  exposed.
+
+Run `python tests/run_product_tests.py` to exercise the product shell. The
+existing `python tests/run_tests.py` remains the full deterministic safety
+suite.
+
 Works with any AI coding assistant that can read files in a folder and run
 scripts. No account, no server, no signup — you clone the folder and point
 your assistant at it.

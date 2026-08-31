@@ -27,7 +27,19 @@ imported softening.
 
 ## Structure
 
-1. What happened — chronological, factual, plain.
+Read the event's gated `incident_development` record before writing. If it is
+missing or incomplete, return the matter to the incident developer; do not
+draft around the gap.
+
+1. What happened — chronological, factual, plain. Begin with the relevant
+   circumstances before the event, then the precipitating circumstances, the
+   user's decisions and actions, the incident, and its immediate aftermath.
+   For an OWI or other
+   alcohol-related arrest, begin before the stop: include what the person was
+   doing beforehand, the circumstances they said led to drinking, how they
+   came to drive, and whether that behavior was typical. If they said it was
+   not typical, include the concrete difference they identified; never merely
+   label it "aberrant" or "out of character."
 2. Legal or administrative outcome, with dates and current status.
 3. Who else is aware, and whether anyone has attempted to use it as leverage.
 4. If the report is late: what accounts for the delay, stated directly.

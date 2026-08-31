@@ -1,6 +1,6 @@
 {
   "id": "federal-never-diss",
-  "description": "Federal civilian with an arrest. SEAD 3 applies; the industry mechanism does not. Routing them to DISS or an FSO sends them to systems they cannot access.",
+  "description": "Federal civilian clearance holder with an arrest. The holder reports through the servicing security office for entry in DISS; the individual is not told to enter it personally.",
   "context": {"population": "federal", "role": "holder", "access_tier": "not_applicable", "form": "sf86"},
   "narrative": "I'm a federal civilian employee with a clearance, not a contractor. I was arrested for DUI two days ago. Who do I even tell?",
   "expected": {
@@ -8,7 +8,7 @@
     "channel_family": "federal",
     "guidelines_must_include": ["G", "J"],
     "timeliness_warning": true,
-    "notes_must_contain": ["security office"],
-    "notes_must_not_contain": ["DISS", "not reportable"]
+    "notes_must_contain": ["security office", "DISS"],
+    "notes_must_not_contain": ["personally enter", "not reportable"]
   }
 }

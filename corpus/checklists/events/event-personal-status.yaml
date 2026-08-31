@@ -1,0 +1,186 @@
+# EVENT: cohabitation, marriage or civil union, adoption of a non-US-citizen
+#        child, and foreign national roommates.
+#
+# ===========================================================================
+# THIS IS NOT ADVERSE INFORMATION AND MUST NOT BE TREATED AS SUCH
+# ===========================================================================
+# A person reporting a marriage is not confessing anything. Neither is a person
+# reporting an adoption, which is very likely the best thing that has happened
+# to them this year. These are reportable EVENTS at the Top Secret level, and
+# they are administrative.
+#
+# The rest of this corpus is built for people disclosing something difficult.
+# That register is completely wrong here, and applying it would be its own kind
+# of harm. The conductor must switch tone before this checklist runs: this is a
+# form to be filled in accurately, congratulations are not out of place, and
+# nothing in the questions implies a concern.
+#
+# ===========================================================================
+# ADDITIONAL AT TOP SECRET / "Q"
+# ===========================================================================
+# All four entries are from the Top Secret table. Do not present them to a
+# Secret-cleared user as though the table required them — but do collect them,
+# because they are SF-86 / PVQ fields at every level and a spouse's or
+# cohabitant's foreign citizenship is a Guideline B question regardless.
+#
+# ===========================================================================
+# THE PRIVACY PROBLEM IS SHARPEST HERE
+# ===========================================================================
+# The subjects of these questions are the user's family. They did not consent to
+# anything. The tool collects citizenship, residence, and relationship — which
+# are form fields — and does not collect names, dates of birth, or identifiers
+# for anyone, including children. The package leaves blanks.
+#
+# A child being adopted is a minor with no say in any of this. Collect the
+# country and the status of the adoption; nothing else about them.
+event_checklist: event-personal-status
+event_ids: [tsq.cohabitant, tsq.marriage, tsq.adoption-foreign, tsq.foreign-roommate]
+guidelines: [B]
+channel_refs: [diss-incident]
+access_level_note: |
+  All four entries are ADDITIONAL requirements at Top Secret / "Q". Collect
+  regardless — they are form fields at every level — but attribute the reporting
+  obligation to the level the table actually states.
+maintainer_verified: false
+universal: _UNIVERSAL.yaml
+coverage: _COVERAGE.yaml
+how_relevant: true
+severity_default: low
+tone: administrative
+sources:
+  - corpus/reporting/tables/top-secret-q.yaml
+preamble: |
+  These are ordinary life events that happen to be reportable — nothing here is
+  adverse information, and none of these questions implies a concern. It's
+  paperwork. I'll keep it short.
+never_do: |
+  Never collect a name, date of birth, or identifier for a spouse, partner,
+  cohabitant, roommate, or child. Never ask about anyone's immigration status
+  beyond citizenship and residence. Never treat a relationship or an adoption as
+  a security problem. Never congratulate insincerely, and never editorialise
+  about anyone's family.
+elements:
+
+  - id: status-type
+    ask: "Which is it? A marriage or civil union, someone moving in, an adoption, or a roommate."
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 17 — Marital Status / Section 18 — Relatives", pvq: "relationships"}
+    followups:
+      - trigger: always
+        ask: "More than one thing changed? We'll take them separately."
+
+  - id: who
+    ask: "Who is this, in relation to you?"
+    criticality: required
+    covers: [who]
+    privacy_notice: |
+      I'm not going to ask for their name or date of birth, and you shouldn't
+      type them. The form needs those and the package leaves blanks you fill in
+      by hand at submission.
+    followups:
+      - trigger: always
+        ask: "Is this a spouse or partner, someone sharing the home, or a child?"
+      - trigger: answered_yes
+        ask: "Are there others in the household this affects, by role?"
+
+  - id: citizenship
+    ask: "What citizenship do they hold?"
+    criticality: required
+    covers: [what]
+    why: "This is the fact that determines whether the event also raises Guideline B, and it is a form field at every level. It is the one identifying detail this checklist does collect."
+    followups:
+      - trigger: always
+        ask: "Do they hold any other citizenship, including US?"
+      - trigger: answered_yes
+        ask: "Where were they born, and where did they live before?"
+      - trigger: answered_yes
+        ask: "Are they connected to a foreign government, military, or a state-owned company?"
+        escalation_if: "yes"
+        event_refs: [aci.foreign-contact.continuing]
+
+  - id: when
+    ask: "When did this happen?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "The date of the marriage, the move, or the adoption order?"
+      - trigger: pending
+        ask: "Is it done, or still in progress?"
+        note: "An adoption in progress is worth reporting now rather than at the end. Say so plainly — the process runs for months and the reporting clock does not wait for it."
+
+  - id: where
+    ask: "Where did it take place?"
+    criticality: required
+    covers: [where]
+    entity_ref: organization
+    followups:
+      - trigger: always
+        ask: "Which city and state, or which country?"
+      - trigger: answered_yes
+        ask: "If it was abroad, did that involve travel you've reported?"
+        event_refs: [aci.travel.unofficial]
+      - trigger: answered_yes
+        ask: "Which court or authority handled it, if any?"
+        entity_ref: court
+
+  - id: how-it-came-about
+    ask: "How did you meet, or how did this come about?"
+    criticality: required
+    covers: [how, why]
+    note: |
+      Ask lightly and take a short answer. For a marriage or a partnership this
+      is context, not an investigation, and it becomes one only if the
+      introduction itself is unusual — an approach out of nowhere from someone
+      who knew what the user did for a living.
+    followups:
+      - trigger: always
+        ask: "Roughly how long have you known each other?"
+      - trigger: always
+        ask: "Did they know what you do for work before you met?"
+        why: "Almost always no, and recording that is useful. On the rare occasion the answer is yes and the introduction was unsolicited, it is the fact that matters most."
+        escalation_if: "yes"
+
+  - id: household-and-finances
+    ask: "Has this changed your household or your finances?"
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: always
+        ask: "Do you share accounts, property, or obligations now?"
+      - trigger: answered_yes
+        ask: "Are any of those held abroad?"
+        event_refs: [tsq.foreign-bank, tsq.foreign-property]
+      - trigger: always
+        ask: "Does anyone else live in the home?"
+        event_refs: [tsq.foreign-roommate]
+
+  - id: their-foreign-ties
+    ask: "Do they have close family abroad?"
+    criticality: required
+    covers: [who]
+    why: "Guideline B reaches the foreign connections of people whose welfare the user cares about. This is that question, asked once, at the level of country and relationship only."
+    followups:
+      - trigger: answered_yes
+        ask: "In which countries, and what relation are they?"
+      - trigger: answered_yes
+        ask: "Are you in contact with any of them?"
+        event_refs: [aci.foreign-contact.continuing]
+
+  - id: prior-reporting
+    ask: "Have you reported this to your security office yet?"
+    criticality: required
+    covers: [when]
+    prior_disclosure_probe: true
+    followups:
+      - trigger: answered_yes
+        ask: "When, and has anything changed since?"
+      - trigger: answered_no
+        ask: "Fine — that's what we're doing. Was there anything on a previous form about them?"
+
+  - id: status-forward
+    ask: "Is anything else changing that you'd want in the same report? A move, another arrival, or a status change."
+    criticality: required
+    covers: [future_intent]
+    why: "Household changes cluster, and getting them into one report is easier for everyone than three separate ones over six months."

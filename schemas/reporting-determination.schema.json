@@ -14,7 +14,7 @@
       "default": false,
       "description": "True when the user chose to disclose a matter the tables did not require. Treated identically downstream, and noted in the package because prompt good-faith disclosure is a recognized mitigating consideration."
     },
-    "basis": {"type": "array", "items": {"type": "string"}, "description": "Matched table entry IDs from corpus/reporting/tables/"},
+    "basis": {"type": "array", "items": {"type": "string"}, "description": "Matched table entry IDs from corpus/reporting/tables/, e.g. 'aci.travel.unofficial'. Load-bearing twice: the citation for the obligation, AND the selector for the event checklist that supplies the questions (corpus/checklists/events/ — one file per entry, enforced by validate_corpus.py). A determination with an empty basis leaves the gap analyst with a reportability answer and nothing to ask about."},
     "layers_applied": {
       "type": "array",
       "items": {"enum": ["sead-3", "isl-2021-02", "form-questions"]},

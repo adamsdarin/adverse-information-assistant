@@ -1,0 +1,143 @@
+# THE COVERAGE SPINE — who, what, when, where, why, how, and future intent.
+#
+# ---------------------------------------------------------------------------
+# WHY THIS FILE EXISTS
+# ---------------------------------------------------------------------------
+# Every incident report, in any discipline, answers the same short list of
+# questions. A report that answers six of the seven does not read as
+# ninety-percent complete; it reads as evasive on the one it skipped, because
+# the reader cannot tell the difference between "nothing to say" and "not
+# saying it."
+#
+# The granular question ladders in each checklist exist to collect facts. This
+# file exists to prove the facts add up to an account. It is the difference
+# between a pile of answers and a report.
+#
+# The gate is deterministic: validate_corpus.py fails the build when a
+# checklist cannot show an element covering each required facet. A maintainer
+# who adds a new checklist cannot forget the "why" — the tests will not pass.
+#
+# ---------------------------------------------------------------------------
+# THIS IS NOT A QUESTION TEMPLATE
+# ---------------------------------------------------------------------------
+# Nobody is ever asked "what is the who of this incident." The facets are a
+# structural audit of the checklist, applied by the maintainer and the
+# validator. The user experiences ordinary prose questions, one fact at a time.
+schema_version: "1.0"
+maintainer_verified: false
+sources:
+  - "Maintainer (FSO) judgment — the standard shape of an incident report"
+  - "SEAD 4 whole-person considerations (the 'why' and 'future intent' facets)"
+  - "ISL 2021-02 required_data_elements (the 'what' and 'when' facets)"
+
+facets:
+
+  - id: who
+    label: "Who"
+    definition: |
+      Every party to the event, in whatever form the privacy tier permits.
+      Organisations by name and address always. Natural persons by role and
+      placeholder, or by name only where a form field demands it and the tier
+      allows it.
+    common_failure: |
+      "I was at a bar with some friends" — no bar name, no count of people
+      present, no indication whether anyone involved was a foreign national,
+      a coworker, or a subordinate.
+    note: |
+      The universal knowledgeable-parties element covers who *knows*. It does
+      not cover who was *involved*. Those are different questions and a
+      checklist needs its own.
+
+  - id: what
+    label: "What"
+    definition: |
+      The conduct or circumstance itself, stated plainly, with the specific
+      values the forms and the ISL demand — charges, amounts, diagnoses,
+      countries, document types, dollar figures.
+    common_failure: |
+      "There was a financial issue." An adjudicator cannot grade a category.
+
+  - id: when
+    label: "When"
+    definition: |
+      Dates and duration. The date of the event, the dates of anything
+      continuing, and the date the user learned of it where that differs.
+      A stated approximation is acceptable; a silent guess is not.
+    common_failure: |
+      A single year with no month, for an event whose reporting deadline runs
+      from a specific day.
+
+  - id: where
+    label: "Where"
+    definition: |
+      Geography and jurisdiction, with the addresses of every organisation
+      involved. Where matters twice — it locates the event, and it tells
+      whoever has to retrieve the record which office holds it.
+    common_failure: |
+      The beta session that correctly identified the right county court and
+      never asked for its address. Nobody could act on the result.
+
+  - id: why
+    label: "Why"
+    definition: |
+      The circumstances and the user's own account of how it came about.
+      Recorded in the user's words, never supplied, never improved.
+    common_failure: |
+      Omitting it in the belief that a bare recitation of facts is safer. It
+      is not. A missing explanation gets filled in by the reader.
+    hard_rule: |
+      Never coach the answer, never suggest a more sympathetic version, and
+      never treat a candid or unflattering explanation as a problem to be
+      managed. Record what they say.
+
+  - id: how
+    label: "How"
+    definition: |
+      Mechanism — how the conduct happened, how contact was made, how funds
+      moved, how information left where it belonged. Relevant to most events
+      and central to some.
+    relevance: conditional
+    note: |
+      A checklist may declare `how_relevant: false`, but it must then supply
+      `how_not_relevant_because` in prose. Silence is not permitted, because
+      the mechanism is exactly what a counterintelligence reviewer reads for.
+
+  - id: future_intent
+    label: "Future intent"
+    definition: |
+      What the user intends to do going forward, and what is in place now that
+      was not in place before. Every guideline's mitigating conditions circle
+      the same question — is this going to happen again — and this is where
+      the answer lives.
+    satisfied_by_universal: true
+    note: |
+      _UNIVERSAL.yaml carries `future-intent`, `current-controls` and
+      `changes-made`, so a checklist inherits this facet. A checklist SHOULD
+      still add its own where the intent question is event-specific: whether a
+      foreign association will continue, whether the user intends further
+      travel, whether a wallet will be moved off a foreign exchange.
+    hard_rule: |
+      Record the stated intent verbatim in substance. Never supply it, never
+      coach toward abstinence or termination of a relationship, and never
+      harden a qualified answer into an unqualified one. A hedged honest
+      answer is worth more than a confident one the user cannot sustain.
+
+# ---------------------------------------------------------------------------
+# THE GATE
+# ---------------------------------------------------------------------------
+required_facets: [who, what, when, where, why, how, future_intent]
+inheritable_from_universal: [future_intent]
+enforcement: |
+  Each checklist element carries `covers: [facet, ...]`. validate_corpus.py
+  errors when a checklist's own elements do not cover every facet in
+  required_facets, except those listed in inheritable_from_universal, and
+  except `how` where the file justifies its absence in prose.
+
+  Coverage counts only elements the interview will actually reach: a facet
+  covered solely by an element whose criticality is `optional` produces a
+  warning, because an optional element can be declined and the facet then
+  silently disappears.
+unknown_facet_rule: |
+  A `covers` value that is not in this file is an ERROR, not a warning. A
+  misspelled facet satisfies nothing and hides the gap it was meant to close —
+  the same failure mode as an unknown followup trigger.

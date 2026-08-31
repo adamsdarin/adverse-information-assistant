@@ -1,51 +1,123 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Session state file",
-  "description": "The single source of truth for a running session. Written incrementally by the conductor after every stage, validated by scripts/validate_session.py (the executable form of this schema — keep the two in agreement). The narrative is stamped with its SHA-256 immediately after capture by deterministic code, never by the model, and reporting.reportable deliberately has no 'no' value: this tool never determines that a matter is unreportable.",
+  "description": "The single source of truth for a running session. Written incrementally by the conductor after every stage, validated by scripts/validate_session.py (the executable form of this schema \u2014 keep the two in agreement). The narrative is stamped with its SHA-256 immediately after capture by deterministic code, never by the model, and reporting.reportable deliberately has no 'no' value: this tool never determines that a matter is unreportable.",
   "type": "object",
-  "required": ["privacy_tier"],
+  "required": [
+    "privacy_tier"
+  ],
   "properties": {
-    "privacy_tier": { "enum": ["high", "medium", "low"] },
-    "privacy_tier_chosen_by_user": { "type": "boolean" },
-    "mapping_notice_delivered": { "type": "boolean" },
+    "privacy_tier": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "privacy_tier_chosen_by_user": {
+      "type": "boolean"
+    },
+    "mapping_notice_delivered": {
+      "type": "boolean"
+    },
     "user_confirmations": {
       "type": "object",
       "description": "Verbatim user utterances backing consequential flags (e.g. mapping_notice). Weak evidence, honestly labeled: it makes silent flag-setting detectable, not lying impossible.",
       "properties": {
-        "mapping_notice": { "type": "string" },
-        "tier_downgrade": { "type": "string" }
+        "mapping_notice": {
+          "type": "string"
+        },
+        "tier_downgrade": {
+          "type": "string"
+        }
       }
     },
-    "population": { "enum": ["industry", "federal"] },
-    "role": { "enum": ["applicant", "holder"] },
-    "form": { "enum": ["sf86", "pvq", "incident_report"] },
-    "access_tier": { "enum": ["baseline", "ts_q", "not_applicable"] },
-    "position_type": { "enum": ["national_security", "public_trust", "low_risk"] },
+    "population": {
+      "enum": [
+        "industry",
+        "federal"
+      ]
+    },
+    "role": {
+      "enum": [
+        "applicant",
+        "in_process",
+        "holder"
+      ]
+    },
+    "final_analysis_complete": {
+      "type": "boolean",
+      "description": "True only after every queued independent incident is complete and the final combined reporting analysis has run. Assembly refuses an incident package until this is true."
+    },
+    "form": {
+      "enum": [
+        "sf86",
+        "pvq",
+        "incident_report"
+      ]
+    },
+    "access_tier": {
+      "enum": [
+        "baseline",
+        "ts_q",
+        "not_applicable"
+      ]
+    },
+    "position_type": {
+      "const": "national_security",
+      "description": "Always national_security, DERIVED from scope rather than asked. Everyone this tool serves holds or is in process for eligibility for access to classified information. Public trust and low-risk positions do not carry clearances and are out of scope."
+    },
+    "out_of_scope_acknowledged": {
+      "type": "boolean",
+      "description": "Set when the user indicated they are not a clearance holder or applicant, was told this tool's rules may not be theirs, and chose to continue. Reportability is not determined for these sessions."
+    },
     "narrative": {
       "type": "string",
-      "description": "The user's verbatim intake account. Never rewritten — it is the candor baseline."
+      "description": "The user's verbatim intake account. Never rewritten \u2014 it is the candor baseline."
     },
     "narrative_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
       "description": "Set only by 'validate_session.py --stamp-narrative'. Validation fails if it no longer matches 'narrative'."
     },
-    "deployment_mode_disclosed": { "type": "boolean" },
+    "deployment_mode_disclosed": {
+      "type": "boolean"
+    },
     "stage_log": {
       "type": "array",
       "description": "Append-only. Stages may repeat (threads re-enter the pipeline); entries are never removed or rewritten.",
       "items": {
         "type": "object",
-        "required": ["stage"],
+        "required": [
+          "stage"
+        ],
         "properties": {
           "stage": {
-            "enum": ["corpus_located", "intake", "requirements", "classification",
-                     "question_sourcing", "gap_loop", "thread_detection",
-                     "consistency", "documents", "narrative", "candor",
-                     "triage_checkpoint", "assembly", "verification", "handoff"]
+            "enum": [
+              "corpus_located",
+              "intake",
+              "requirements",
+              "classification",
+              "question_sourcing",
+              "gap_loop",
+              "thread_detection",
+              "consistency",
+              "documents",
+              "narrative",
+              "candor",
+              "triage_checkpoint",
+              "final_analysis",
+              "assembly",
+              "verification",
+              "handoff"
+            ]
           },
-          "matter": { "type": "string" },
-          "note": { "type": "string" }
+          "matter": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
         }
       }
     },
@@ -58,35 +130,216 @@
       "items": {
         "type": "object",
         "properties": {
-          "title": { "type": "string" },
-          "guidelines": { "type": "array", "items": { "enum": ["A","B","C","D","E","F","G","H","I","J","K","L","M"] } },
-          "narrative": { "type": "string" },
+          "title": {
+            "type": "string"
+          },
+          "guidelines": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G",
+                "H",
+                "I",
+                "J",
+                "K",
+                "L",
+                "M"
+              ]
+            }
+          },
+          "incident_types": {
+            "type": "array",
+            "description": "Applicable DISS Select Incident Type(s) values. Holder output only; multiple values may attach to one independent incident and one narrative.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "future_update_topics": {
+            "type": "array",
+            "description": "Tailored conditional developments that should prompt continued updates to the security office; never statements that the development already occurred.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "incident_development": {
+            "type": "object",
+            "description": "Gated before/during/after development record for this independent incident.",
+            "required": ["profiles", "phases", "complete"],
+            "properties": {
+              "profiles": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "complete": {"type": "boolean"},
+              "phases": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": ["status", "evidence"],
+                  "properties": {
+                    "status": {"enum": ["answered", "unknown", "not_applicable", "declined"]},
+                    "evidence": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "narrative": {
+            "type": "string"
+          },
           "reporting": {
             "type": "object",
             "properties": {
-              "reportable": { "enum": ["yes", "consult_fso"] },
-              "channel": { "type": "string" },
-              "timeline": { "type": "string" },
-              "basis": { "type": "array", "items": { "type": "string" } },
-              "layers_applied": { "type": "array", "items": { "type": "string" } },
-              "voluntary": { "type": "boolean" }
+              "reportable": {
+                "enum": [
+                  "yes",
+                  "consult_fso"
+                ]
+              },
+              "channel": {
+                "type": "string"
+              },
+              "timeline": {
+                "type": "string"
+              },
+              "basis": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Matched table entry ids from corpus/reporting/tables/, e.g. 'aci.travel.unofficial'. These are load-bearing twice: they are the citation for the obligation AND they select the event checklist that supplies the questions (corpus/checklists/events/). A determination with no basis leaves the gap analyst with a reportability answer and nothing to ask about."
+              },
+              "layers_applied": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "voluntary": {
+                "type": "boolean"
+              },
+              "no_new_obligation_identified": {
+                "type": "boolean",
+                "description": "Set with reportable='consult_fso' when the user states this was disclosed in a prior investigation and is unchanged. Means: no NEW obligation identified on the user's account. Never a finding that the matter is unreportable \u2014 the tool cannot verify a prior disclosure."
+              }
             }
           },
-          "crosswalk": { "type": "array", "items": { "type": "object" } },
-          "documents": { "type": "array", "items": { "type": "object" } },
+          "crosswalk": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
           "persons": {
             "type": "array",
-            "items": { "type": "object", "required": ["label"], "properties": { "label": { "type": "string" }, "role": { "type": "string" } } }
+            "items": {
+              "type": "object",
+              "required": [
+                "label"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                }
+              }
+            }
           },
-          "declined_elements": { "type": "array", "items": { "type": "string" } }
+          "declined_elements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prior_disclosure": {
+            "type": "object",
+            "description": "Whether a past matter was already disclosed in a previous background investigation. Continuous reporting exists to surface NEW information; a matter already in the government's file does not need re-litigating. Rests entirely on the user's account, which the tool cannot verify.",
+            "properties": {
+              "status": {
+                "enum": [
+                  "not_asked",
+                  "disclosed_unchanged",
+                  "disclosed_but_changed",
+                  "not_disclosed",
+                  "uncertain"
+                ]
+              },
+              "user_statement": {
+                "type": "string",
+                "description": "Their own words, verbatim."
+              },
+              "form_referenced": {
+                "enum": [
+                  "sf86",
+                  "pvq",
+                  "investigation_interview",
+                  "unknown"
+                ]
+              },
+              "what_changed": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Required when status is disclosed_but_changed \u2014 the change IS the reportable matter."
+              },
+              "scope_concern": {
+                "type": "boolean",
+                "description": "Set when what they describe disclosing sounds narrower than what they have now described. Surfaced to the user, never resolved by the tool."
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
         }
       }
     },
-    "entities": { "type": "array", "items": { "type": "object" } },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
     "outstanding_required": {
       "type": "array",
-      "items": { "type": "object", "required": ["element"], "properties": { "element": { "type": "string" }, "source_ref": { "type": "string" }, "how_to_get": { "type": "string" } } }
+      "items": {
+        "type": "object",
+        "required": [
+          "element"
+        ],
+        "properties": {
+          "element": {
+            "type": "string"
+          },
+          "source_ref": {
+            "type": "string"
+          },
+          "how_to_get": {
+            "type": "string"
+          }
+        }
+      }
     },
-    "data_you_must_supply": { "type": "array", "items": { "type": "object" } }
+    "data_you_must_supply": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
   }
 }

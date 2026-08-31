@@ -1,5 +1,7 @@
 {
-  "_comment": "Pre-approves this project's own read-only and gate scripts so a session isn't interrupted by permission prompts at every step. Nothing here grants network access or file deletion. Personal overrides belong in .claude/settings.local.json, which is gitignored.",
+  "_comment": "Pre-approves this project's own read-only and gate scripts so a session isn't interrupted by permission prompts at every step. Personal overrides belong in .claude/settings.local.json, which is gitignored.",
+  "_network_comment": "WebSearch is ALLOWED for exactly one purpose: optional/entity-resolver looking up a business address that a form requires, with per-lookup consent and user confirmation before the result is used. WebFetch, curl and wget stay DENIED. A search query is a bounded disclosure the user agrees to by name ('that sends Casey's Bar, Waterloo Iowa to a search engine'); fetching a page is unbounded content pulled into a session about someone's adverse information. Reference material -- SEAD text, ISLs, DOHA decisions -- is never retrieved by either route: see 'Never fetch reference material' in AGENTS.md and never_auto_fetch in library-sources.yaml.",
+  "_why_this_matters": "Because the tool is model-agnostic, this deny list is the only ENFORCED network control that exists. Every other restriction in this repo is a request written in a prompt, which a model may ignore. Widening this list is a real reduction in what the tool guarantees, not a configuration tweak. Do not add to it to make a session more convenient.",
   "permissions": {
     "allow": [
       "Bash(python scripts/check_corpus.py:*)",
@@ -17,7 +19,6 @@
     ],
     "deny": [
       "WebFetch",
-      "WebSearch",
       "Bash(curl:*)",
       "Bash(wget:*)"
     ]

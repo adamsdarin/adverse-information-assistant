@@ -1,29 +1,181 @@
-# Guideline L — Outside Activities. REVIEW DRAFT.
+# Guideline L (Outside Activities) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 36–38 and the ISL 2021-02
+# foreign-business entries.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# WHY THIS ONE IS EASY TO UNDER-REPORT
+# ---------------------------------------------------------------------------
+# Guideline L is the guideline people do not think applies to them. A side
+# consulting arrangement, a board seat at a nonprofit, a small LLC, teaching a
+# course, writing for a trade publication — none of it feels like a security
+# matter, and most of it is entirely benign. The concern is narrow: an outside
+# activity that could create a conflict, or the appearance of one, with the
+# obligation to protect protected information.
+#
+# So the ladders here are short on the activity and long on two things: the
+# FOREIGN NEXUS, which is where a benign side job becomes Guideline B and a
+# separate reportable event, and the APPROVAL STATUS, which is the listed
+# mitigating condition and is usually a one-line answer the user already knows.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: L
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-L-outside-activities.md, corpus/reporting/tables/top-secret-q.yaml]
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: low
+sources:
+  - corpus/sead4/guideline-L-outside-activities.md
+  - corpus/reporting/tables/top-secret-q.yaml
 elements:
+
   - id: activity-description
-    ask: "What is the outside activity — employment, consulting, service, volunteer role, board seat, ownership interest?"
+    ask: "What is the activity? Employment, consulting, a service or volunteer role, a board seat, or an ownership interest."
+    criticality: required
+    covers: [what]
+    maps_to: {sf86: "Section 13A — Employment Activities", pvq: "employment-activities"}
+    followups:
+      - trigger: vague
+        ask: "What do you actually do in it, in a sentence?"
+
   - id: entity-identity
-    ask: "What organization or entity, and what does it do?"
-  - id: foreign-nexus
-    ask: "Is the entity foreign, foreign-owned, foreign-funded, or does it have foreign government ties?"
-    escalation_if: "yes"
-    note: "A foreign nexus likely also implicates Guideline B and may be separately reportable — re-run classifier and requirements advisor."
+    ask: "What organisation is it?"
+    criticality: required
+    covers: [who]
+    entity_ref: organization
+    why: "The form asks for the employer or entity by name and address. An organisation is not a natural person, so this is collectible at every privacy tier."
+    followups:
+      - trigger: always
+        ask: "What does it do?"
+      - trigger: always
+        ask: "Where is it based? City and state, or city and country."
+      - trigger: always
+        ask: "And its street address, if you have it? The newer form asks for it."
+      - trigger: answered_yes
+        ask: "Is it your own entity — something you own or control?"
+        why: "Self-owned entities carry the ownership questions and often the foreign banking ones too. Users describe them as 'a side thing' rather than a business."
+
+  - id: your-role
+    ask: "What is your role or title there?"
+    criticality: required
+    covers: [who]
+    followups:
+      - trigger: always
+        ask: "Do you have any decision-making authority, or is it advisory?"
+      - trigger: always
+        ask: "Do you hold an ownership stake, and roughly what share?"
+
   - id: dates
-    ask: "When did the activity start, and is it ongoing?"
+    ask: "When did it start?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "And is it ongoing, or when did it end?"
+      - trigger: always
+        ask: "Roughly how much time does it take? Hours a week is fine."
+        why: "Scale is what distinguishes a quarterly board call from a second full-time job, and the two read completely differently."
+
+  - id: foreign-nexus
+    ask: "Is the entity foreign, foreign-owned, foreign-funded, or connected to a foreign government?"
+    criticality: required
+    covers: [who, where]
+    escalation_if: "yes"
+    event_refs: [tsq.foreign-business, aci.foreign-contact.continuing]
+    why: "This is the question that changes what the report is. A foreign nexus adds Guideline B, and direct involvement in a foreign business is separately reportable at the Top Secret level."
+    note: "An affirmative re-runs both the classifier and the requirements advisor. Say so to the user plainly — a new obligation may have just appeared that they did not come here for."
+    followups:
+      - trigger: answered_yes
+        ask: "Which country, and what is the connection?"
+      - trigger: answered_yes
+        ask: "Who are you dealing with there, by role?"
+      - trigger: answered_yes
+        ask: "Is there a bank account or any money held abroad in connection with it?"
+        event_refs: [tsq.foreign-bank]
+      - trigger: answered_no
+        ask: "Any foreign clients, funding, or partners, even if the entity itself is domestic?"
+        why: "The user's 'no' usually means the company is American. It does not mean the money is."
+
   - id: compensation
-    ask: "Are you compensated, and roughly how much?"
+    ask: "Are you paid for it?"
+    criticality: required
+    covers: [what, how]
+    followups:
+      - trigger: answered_yes
+        ask: "Roughly how much a year?"
+      - trigger: answered_yes
+        ask: "How is it paid? Salary, invoice, equity, or in kind."
+      - trigger: answered_yes
+        ask: "Is it reported on your taxes?"
+        why: "Unreported income is a Guideline F matter of its own, and it is better surfaced here than found later."
+      - trigger: quantitative_tension
+        ask: "The hours you've described and the amount don't quite line up for me. I'd rather state it accurately — have I got the figures right?"
+        why: "See corpus/checks/plausibility.yaml. State the tension, never state a conclusion."
+
+  - id: how-it-arose
+    ask: "How did the arrangement come about?"
+    criticality: required
+    covers: [how, why]
+    why: "The route in is what distinguishes an ordinary side job from having been sought out because of the user's access."
+    followups:
+      - trigger: always
+        ask: "Did they approach you, or did you go looking?"
+      - trigger: answered_yes
+        ask: "Did your cleared work have anything to do with why they wanted you?"
+        escalation_if: "yes"
+
   - id: subject-matter-overlap
-    ask: "Does the activity touch on the same subject matter as your cleared work?"
+    ask: "Does the activity touch the same subject matter as your cleared work?"
+    criticality: required
+    covers: [what]
+    why: "Overlap is the whole concern. Everything else in this checklist is context for this one answer."
+    followups:
+      - trigger: answered_yes
+        ask: "How close is the overlap? Same field, same customer, same programme."
+      - trigger: answered_yes
+        ask: "Has anyone there asked you anything you couldn't answer?"
+        escalation_if: "yes"
+        event_refs: [aci.behavior.elicitation]
+
   - id: approval-status
-    ask: "Did you seek or receive approval from your employer or security office?"
-    mitigation_ref: "L — activity was approved by the appropriate agency official"
+    ask: "Did you seek or get approval from your employer or security office?"
+    criticality: required
+    covers: [what, when]
+    mitigation_ref: "L — the activity was approved by the appropriate agency official"
+    why: "A listed mitigating condition and usually a one-line fact the user already knows. Its absence is not fatal, but not asking it wastes a mitigating condition."
+    followups:
+      - trigger: answered_yes
+        ask: "When, and from whom? Do you have it in writing?"
+        document: "the approval itself — an email is sufficient"
+      - trigger: answered_no
+        ask: "Was there a policy requiring you to?"
+      - trigger: answered_no
+        ask: "Do you know whether your employer is aware of it now?"
+        why: "A report that reveals an unapproved activity is fine. A report that implies the employer knew when they did not is a candour problem on top of it."
+      - trigger: pending
+        ask: "Is a request still outstanding?"
+
   - id: conflict-assessment
-    ask: "Could this activity create a conflict with your security responsibilities, or an appearance of one?"
+    ask: "Can you see how this might look like a conflict from the outside, whether or not it is one?"
+    criticality: required
+    covers: [why]
+    why: "The guideline reaches the appearance of a conflict, not just an actual one. A user who addresses the appearance directly is doing the reviewer's work for them."
+    note: |
+      Ask this as an invitation, not a challenge, and record the answer as
+      given. Do not tell them whether it is a conflict — that is not this
+      tool's determination to make.
+
+  - id: activity-forward
+    ask: "Do you intend to continue it, and would you change anything about it?"
+    criticality: required
+    covers: [future_intent]
+    note: |
+      Never advise ending an outside activity and never imply that continuing
+      it is a problem. Record the intent. If they ask whether they should stop,
+      that is a question for their FSO and the tool says so.

@@ -44,10 +44,16 @@ parts:
     title: "Part D - Public Trust-Specific (Select Positions)"
     applies_to: public_trust_select
 
+# THIS TOOL ONLY EVER USES national_security. Everyone in scope holds, or is in
+# process for, eligibility for access to classified information — which is a
+# national security position by definition. The other two rows are retained so
+# the mapping stays a faithful record of the form, and for a possible future
+# suitability mode; nothing in the current flow selects them, and intake does
+# not ask. A session carrying anything else is a scope error, not a variation.
 position_type_to_parts:
-  national_security: [A, B, C]      # cleared industry / clearance holders
-  public_trust: [A, B, D]
-  low_risk: [A]
+  national_security: [A, B, C]      # the only path this tool uses
+  public_trust: [A, B, D]           # out of scope — not clearance-holding
+  low_risk: [A]                     # out of scope — not clearance-holding
 
 # ---------------------------------------------------------------------------
 # SCOPING — the PVQ's lookback windows. These differ from the SF-86 and are

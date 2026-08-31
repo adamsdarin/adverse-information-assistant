@@ -1,0 +1,207 @@
+# ENTITY AND LOCATION CAPTURE — the fields the forms actually demand.
+#
+# ---------------------------------------------------------------------------
+# THE GAP THIS CLOSES
+# ---------------------------------------------------------------------------
+# A beta session correctly worked out that a Sheboygan, Wisconsin OWI would
+# have been heard in the Sheboygan court — and then never asked for that
+# court's address, the arresting agency's address, or the name of the bar.
+# All three are things the form asks for or an investigator needs, and a
+# narrative without them is one an FSO cannot act on.
+#
+# Both questionnaires demand the NAME and the LOCATION of every organisation
+# involved. This file is the checklist of those, so they cannot be skipped.
+#
+# PRIVACY: organisations are exempt at every tier. A court, a police
+# department, a sheriff's office, a bar, a clinic — these are entities, not
+# natural persons. Collect them fully regardless of the privacy tier the user
+# chose. Only PEOPLE are protected by the tier.
+schema_version: "1.0"
+maintainer_verified: false
+derived_from:
+  - "SF-86 (Nov 2016 rev) Section 22 — Police Record"
+  - "PVQ (Final, Sept 2023) Part B Section 11 — Police Record"
+
+# ---------------------------------------------------------------------------
+# WHAT EACH FORM ASKS FOR
+# ---------------------------------------------------------------------------
+address_depth_by_form:
+  sf86: [city, county, state, zip]          # or city + country if outside the US
+  pvq:  [street, city, state, zip]          # or city + country if outside the US
+collect: [name, street, city, county, state, zip]
+collect_note: |
+  The union of both. County is SF-86-only, street is PVQ-only; collecting both
+  means neither form sends the user back for a second pass.
+
+entities:
+
+  - id: offense-location
+    label: "Where the offence occurred"
+    required_by: [sf86, pvq]
+    form_wording_sf86: "Provide the location where the offense occurred. (City, County, State, Zip Code)"
+    ask: "Where exactly did this happen — the city and county, and the road or area if you remember it?"
+    note: |
+      For an OWI this is where you were STOPPED, not where you had been
+      drinking. They are frequently different and people give the wrong one.
+
+  - id: citing-agency
+    label: "Law enforcement agency that cited or summoned you"
+    required_by: [sf86, pvq]
+    form_wording_sf86: "Provide the name of the law enforcement agency that arrested/cited/summoned you."
+    form_wording_pvq: "What is the name of the law enforcement agency involved? (Do not use acronyms.)"
+    ask: "Which agency issued the citation — the city police department, the county sheriff, or the state patrol?"
+    no_acronyms: true
+    no_acronyms_note: "The PVQ says so explicitly. 'SCSO' is not a name; 'Sheboygan County Sheriff's Office' is."
+    followup_ask:
+      - "What city and state is that department in?"
+      - "And the street address, if you can find it — the PVQ asks for it and your FSO will need it to request the report."
+
+  - id: arresting-agency-if-different
+    label: "Arresting agency, where it differs from the citing agency"
+    required_by: [pvq]
+    also_useful_for: [sf86]
+    form_wording_pvq: "Did the same law enforcement agency you listed above arrest you? ... What is the name of the law enforcement agency that arrested you?"
+    ask: "Was it the same agency that actually arrested you, or did someone else take you in?"
+    note: |
+      THIS IS A REAL AND COMMON SPLIT. In smaller jurisdictions a municipal
+      officer makes the stop and issues the citation, and the county sheriff
+      does the booking and holds you at the county jail. Two agencies, two
+      separate records.
+
+      It matters for retrieval as much as for the form: a records request has
+      to go to the agency that CREATED the record. The arrest or incident
+      report sits with the agency that made the stop; the booking record,
+      custody log, and any photographs sit with whoever ran the jail.
+    followup_ask:
+      - "Which agency booked you, and where were you held?"
+      - "What city and state, and the street address if you can find it?"
+
+  - id: court
+    label: "Court"
+    required_by: [sf86, pvq]
+    form_wording_sf86: "Provide the name of the court. / Provide the location of the court. (City, County, State, Zip Code)"
+    form_wording_pvq: "What is the name of the court you appeared in or are to appear in? (Do not use acronyms.) ... What is this court's address?"
+    ask: "Which court did the case go through?"
+    no_acronyms: true
+    tool: "scripts/court_lookup.py — only if the user does not know; their answer is what gets recorded"
+    followup_ask:
+      - "What city and county is that court in?"
+      - "And its street address — the PVQ asks for it, and it is what a records request goes to."
+
+  - id: venue
+    label: "Where the drinking or conduct took place, if a business"
+    required_by: []
+    useful_for: [narrative]
+    ask: "Where had you been — was it a bar, a restaurant, a private home, a work event?"
+    followup_ask:
+      - "What is the name of the place?"
+      - "What city and state?"
+    note: |
+      Not a form field, but it belongs in the narrative. "I had been at a bar"
+      is the kind of vagueness that reads as evasion when the rest of the
+      account is specific; naming the place costs nothing and reads as candour.
+      It is also frequently the fact that establishes whether this was a work
+      event — which is material, and worse to have emerge later.
+
+      An organisation, so it is collectible at every privacy tier. A private
+      residence is NOT — that follows the tier and gets no address.
+
+  - id: treatment-provider
+    label: "Treatment or counselling provider"
+    required_by: [sf86, pvq]
+    ask: "What is the name of the programme or provider?"
+    note: |
+      The forms ask for the provider name, address and phone. This tool does
+      NOT collect the individual clinician's details — see the "Information You
+      Will Need" section of the package. The organisation is collectible; the
+      named health care professional is a natural person and follows the tier.
+
+  - id: creditor
+    label: "Creditor on a delinquent or disputed debt"
+    required_by: [sf86, pvq]
+    ask: "Is that a bank, lender, or collection agency — or a private person?"
+    note: |
+      A CREDITOR IS NOT ALWAYS AN ORGANISATION. The form's financial-record
+      section is written with institutional creditors in mind, and it is easy
+      to fall into asking for "the creditor's address and phone" the same way
+      the `organization` entity below is handled — but a debt owed to a friend,
+      relative, or acquaintance names a natural person as the creditor, and
+      that person's contact details follow the privacy tier exactly like any
+      other person in the account. Never assume from the name alone; ask, the
+      same way a business name gets confirmed rather than guessed at
+      elsewhere in this tool.
+
+      **If institutional** (a bank, a card issuer, a collection agency, a
+      lender): treat it exactly like `organization` below — name and location
+      are collectible at every privacy tier, because it is not a person.
+
+      **If a private individual**: the debt, the amount, and the
+      circumstances still belong in the narrative in full — none of that is
+      about the creditor's identity. But their address and phone number are
+      never asked for directly (unless the session's privacy tier is `low`).
+      Set `third_party_data_required: true` and emit the requirement to
+      `data_you_must_supply` so the package tells the user the form wants a
+      creditor address and phone, and that they need to supply it themselves
+      — the same treatment as `treatment-provider` above. Silently dropping
+      the field is the one option that is never acceptable: the form still
+      asks for it whether or not this tool collected it.
+    followup_ask:
+      - "What city and state, or country, are they in — as much as you know?"
+
+  - id: organization
+    label: "Any other organisation named in the account"
+    required_by: [sf86, pvq]
+    ask: "What is it called, exactly?"
+    note: |
+      The generic entity. An employer, a bank, a creditor, a hotel, a media
+      outlet, a clinic, a facility, a school, an airline — anything that is an
+      organisation rather than a person. The reportable events beyond arrests
+      name organisations constantly, and the same failure applies to all of
+      them: the tool works out WHICH organisation and never asks WHERE it is,
+      leaving the FSO with a name they cannot send a request to.
+
+      Organisations are exempt from the privacy tiers at every level. Collect
+      the name and the location regardless of the tier the user chose. Only
+      natural persons are protected by the tier.
+    followup_ask:
+      - "What city and state, or city and country?"
+      - "And a street address if you can find it — the newer form asks for one."
+
+  - id: foreign-entity
+    label: "Foreign organisation, institution, or issuing authority"
+    required_by: [sf86, pvq]
+    ask: "What is it called, and in which country?"
+    note: |
+      A foreign bank, exchange, employer, university, embassy, consulate, or
+      ministry. Kept separate from `organization` because two extra facts are
+      always wanted and are never volunteered:
+
+        1. the COUNTRY, which several reporting entries turn on directly; and
+        2. whether the entity is STATE-OWNED or state-affiliated, which is what
+           moves an administrative disclosure into a Guideline B question.
+
+      Do not assert where a foreign entity is incorporated, domiciled, or
+      regulated. Corporate structures change, this tool has no network access by
+      design, and a confident wrong jurisdiction in a security report is worse
+      than a recorded "the user did not know." Collect what the user can
+      establish from their own account or paperwork and route the rest to the
+      FSO.
+    followup_ask:
+      - "Which country is it based in, as far as you know?"
+      - "Which city?"
+      - "Is it state-owned or connected to a government, that you know of?"
+
+# ---------------------------------------------------------------------------
+# HOW TO ASK
+# ---------------------------------------------------------------------------
+asking_rule: |
+  Ask for the NAME first and always. Ask for the address second, and say why —
+  "your FSO will need it to request the report" lands better than an
+  unexplained demand for a street address.
+
+  If the user does not know an address, that is fine and normal. Offer the
+  entity-resolver lookup (which asks consent, once, and confirms the result
+  before use), or mark it to-follow. Never insert an address the user has not
+  confirmed.
+
+  Do not ask for a street address for a private residence at any tier.

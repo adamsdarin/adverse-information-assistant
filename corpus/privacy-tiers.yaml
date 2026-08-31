@@ -106,9 +106,62 @@ entity_types:
     caution: |
       The FACILITY or PRACTICE name is an entity and is exempt. The individual
       counselor's name, phone, and email — which PVQ Section 19 also requires —
-      is a NATURAL PERSON and follows the tier. A sole practitioner is both;
-      when the name of the practice is the person's name, treat it as a natural
-      person and say so to the user.
+      is a NATURAL PERSON and follows the tier, at every tier, with no exception.
+
+# ---------------------------------------------------------------------------
+# IS IT A BUSINESS? ASK. DO NOT READ THE NAME.
+# ---------------------------------------------------------------------------
+# An earlier version of this file said: when the name of the practice is the
+# person's name, treat it as a natural person. That rule was wrong and it broke
+# on this corpus's own worked example — "Casey's Bar" is a person's name, and so
+# are McDonald's, Wendy's, and Harvey Dent Law. It would have suppressed the
+# venue the entity-capture examples are built around.
+#
+# The name carries no information about whether something is a business. What
+# the thing IS carries all of it, and the user knows. So the tool asks, in one
+# line, when it cannot tell — and does not ask when the user has already said
+# ("a bar called Buzzy's" has answered the question).
+business_determination:
+  method: ask_the_user
+  never: infer_from_name
+  ask_when_unclear: "Is that a business — a bar, a shop, a practice, that sort of thing?"
+  do_not_ask_when: |
+    The user's own words already answered it. "I was at a bar called Buzzy's"
+    settles it. Re-asking reads as not listening.
+  note: |
+    A firm named after its founder is a firm. "Harvey Dent Law" is a law
+    practice, belongs in the narrative by name, and is a legitimate subject for
+    an address lookup — subject to the home_based question below.
+
+# ---------------------------------------------------------------------------
+# THE SECOND QUESTION — it governs the ADDRESS, not the name
+# ---------------------------------------------------------------------------
+# Establishing that something is a business does not establish that its address
+# is safe to put in a security file. A sole proprietor's business address is
+# very often their home: a solo attorney, a therapist in private practice, an
+# independent contractor working out of a spare room. Looking that up returns a
+# residential address for a natural person who never consented to any of this.
+home_based_business:
+  ask_when: |
+    The entity could plausibly be run by one person — a solo practice, a
+    consultancy, a trade, a private counsellor. NOT for a court, a police
+    department, a hospital, a chain, or a bar.
+  ask: "Is that an office you'd go to, or does she work out of her home?"
+  on_home_based:
+    use_name: true
+    collect_address: false
+    perform_lookup: false
+    record_fields: {address: null, needs_user_supply: true, home_based: true}
+    say_once: |
+      "I'll leave that address for you to fill in — it sounds like a home
+      address, and I don't put those in."
+  rationale: |
+    This is the one place a business is treated like a person, and it is narrow
+    on purpose: it restricts the ADDRESS and never the name. Neither the tool nor
+    the user's security officer can reliably tell a residential address from a
+    commercial one by looking at it, so a confident wrong call here puts
+    somebody's home into a government submission. Unsure means ask; still unsure
+    means the user supplies it.
 
 entity_data_allowed: [name, address, phone, city, state, county]
 

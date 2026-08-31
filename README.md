@@ -1,5 +1,35 @@
 # Adverse Information Assistant
 
+## Local product runner (Phase 1–2 preview)
+
+The repository includes a small local product shell over the existing workflow
+and deterministic gates. It does not replace `agents/conductor.md` or the
+specialist agents.
+
+```powershell
+python scripts/adverse.py --session output/session.json start
+python scripts/adverse.py --session output/session.json resume
+python scripts/adverse.py --session output/session.json answer "industry"
+python scripts/adverse.py --session output/session.json status
+python scripts/adverse.py --session output/session.json validate
+```
+
+Start the loopback-only browser interface with:
+
+```powershell
+python scripts/adverse.py --session output/session.json web
+```
+
+The browser handles safe local intake and checkpointing. A host model continues
+the specialist workflow against the same validated state. The optional `mcp`
+command exposes a narrow allowlist of status, intake, validation, assembly, and
+verification tools when the MCP Python SDK is installed; it never exposes
+unrestricted filesystem access.
+
+The working session is plaintext and unencrypted. Never enter classified
+information, a Social Security number, or a date of birth, and delete the
+working file after submission.
+
 A multi-agent assistant that helps security clearance holders and applicants
 prepare **complete, candid adverse-information self-reports** for their
 security office — with the goal of first-time-right submissions that minimize
@@ -20,7 +50,9 @@ it and point your assistant at it — see [`USAGE.md`](USAGE.md).
    is **John Doe**") — it never asks for your real name.
 2. Asks whether you're completing the **SF-86 (eApp)** or the **PVQ**, or
    self-reporting as a current clearance holder, and (for cleared industry)
-   your coarse access tier — baseline vs. Top Secret/"Q".
+   whether your access is Secret, Top Secret, Q, or not applicable. Internally,
+   Secret maps to the baseline reporting table and Top Secret/Q share the
+   additional-access table.
 3. Listens to what you feel you have to report, in your own words.
 4. Determines **what policy requires you to report** — the threshold question.
    **SEAD 3** binds every covered individual; for cleared industry, **DCSA ISL
@@ -73,8 +105,12 @@ promise.
 - Predict or improve your odds. Adjudication is the Government's alone.
 - Help you conceal, minimize, or time a disclosure. Candor is a Guideline E
   issue; a tool that coached evasion would hurt you.
-- Give legal advice. Pending charges, an SOR/LOI, or an appeal → talk to your
-  FSO and consider a security clearance attorney.
+- Give legal advice — or nudge you toward a lawyer instead of reporting. If
+  you've decided to disclose, this tool helps you do that; it won't offer to
+  pause while you get legal advice, because that quietly makes waiting look
+  like the safe choice. If *you* want counsel, that's your call and it says so
+  without argument. An issued SOR/LOI or an appeal is the exception — that's a
+  formal adversarial process, not self-reporting, and this isn't built for it.
 - Accept classified information. It is not an authorized system.
 
 ## Two pieces, and only one is in this repo

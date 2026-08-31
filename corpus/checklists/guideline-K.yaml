@@ -1,43 +1,235 @@
-# Guideline K — Handling Protected Information. REVIEW DRAFT.
-# CRITICAL: the interviewer must warn, before the first question, that the
-# user is NOT to describe the classified content itself. Collect the
-# circumstances of the mishandling only.
+# Guideline K (Handling Protected Information) — required narrative elements.
+#
+# Maintainer-authored, derived from SEAD 4 ¶¶ 33–35 and the procedural facts
+# a security violation inquiry produces.
+# KNOWN LIMITATION: not validated against agency RFI data (see ARCHITECTURE.md §5.2).
+#
+# ---------------------------------------------------------------------------
+# THE CONTENT RULE — READ BEFORE THE FIRST QUESTION
+# ---------------------------------------------------------------------------
+# This tool is not an authorized system for classified or controlled
+# information. Every question here is about PROCEDURE: what happened, when, who
+# was told, what followed. None of them is about the material. The interviewer
+# states this before asking anything, and if the user starts describing content
+# the interviewer interrupts and says so.
+#
+# This is the one place where a well-meaning user can make their situation
+# materially worse inside the tool itself, by typing into an unapproved system
+# the very thing they mishandled. The warning is not boilerplate.
+#
+# ---------------------------------------------------------------------------
+# WHY THIS CHECKLIST IS SHAPED AROUND SELF-REPORTING
+# ---------------------------------------------------------------------------
+# The guideline's mitigating conditions turn heavily on whether the person
+# reported it themselves and how fast. That fact is usually knowable to the
+# minute and is almost always omitted, because it feels like self-justification.
+# It is not — it is a listed mitigating condition, and a report that leaves it
+# out has thrown away the strongest thing in it.
+#
+# followups[].trigger is one of: always, vague, answered_yes, answered_no,
+# pending, quantitative_tension. `covers` values are defined in _COVERAGE.yaml.
 guideline: K
 maintainer_verified: false
 universal: _UNIVERSAL.yaml
-sources: [corpus/sead4/guideline-K-protected-info.md, corpus/reporting/tables/all-covered-individuals.yaml]
+coverage: _COVERAGE.yaml
+how_relevant: true
 # SEVERITY IS UNVALIDATED: assigned by the author from general judgment,
 # not from data. It controls interview depth on OPTIONAL material only and
 # can never downgrade a required form field. Review before relying on it.
 severity_default: high
+sources:
+  - corpus/sead4/guideline-K-protected-info.md
+  - corpus/reporting/tables/all-covered-individuals.yaml
 preamble: |
-  Do not describe the classified or protected content itself — not the
-  subject, not the substance, nothing. This tool is not an authorized system
-  for that material. Describe only what happened procedurally. If you're
-  unsure whether something is safe to type here, stop and talk to your
-  security office instead.
+  One thing first, and it matters: do not describe the protected material
+  itself — not the subject, not the substance, not a paraphrase. This tool is
+  not an approved system for it, and typing it here would make a procedural
+  problem into a much larger one.
+
+  Everything I ask is about what happened around the material. If you are not
+  sure whether something is safe to type here, stop and take it to your security
+  office instead. That is always the right call and I will not push back on it.
+never_ask: |
+  The subject, substance, classification markings beyond the level, program
+  names, code words, or any characterisation of the material. If the user
+  volunteers any of it, stop them, do not repeat it back, and do not carry it
+  into the narrative.
 elements:
+
   - id: incident-type
-    ask: "What kind of mishandling was it — improper storage, unauthorized removal, transmission over an unapproved channel, discussion in an uncleared setting, unattended material, or something else?"
+    ask: "What kind of mishandling was it? Improper storage, taking material somewhere it shouldn't go, sending it over an unapproved channel, discussing it in an uncleared setting, or leaving it unattended."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: vague
+        ask: "Which part of the procedure wasn't followed? That's all I need — not what the material was."
+
   - id: incident-date
-    ask: "When did it happen, and when was it discovered?"
-  - id: circumstances
-    ask: "What were the circumstances, described procedurally — no content."
+    ask: "When did it happen?"
+    criticality: required
+    covers: [when]
+    followups:
+      - trigger: always
+        ask: "And when was it discovered?"
+        why: "The gap between occurrence and discovery is a fact every inquiry establishes, and it is often the difference between an infraction and a violation."
+      - trigger: always
+        ask: "How long was the material exposed or out of place?"
+      - trigger: vague
+        ask: "The security office will have the date in their record. Shall I mark yours approximate for now?"
+
+  - id: location
+    ask: "Where did this happen?"
+    criticality: required
+    covers: [where]
+    entity_ref: organization
+    why: "The facility, and whose facility it was, decides who holds the inquiry record and who the FSO has to talk to. It is also a form-level fact."
+    followups:
+      - trigger: always
+        ask: "Which facility or site, and in what city and state?"
+      - trigger: always
+        ask: "Was it your employer's space, a government facility, another contractor's, or somewhere not cleared at all?"
+      - trigger: answered_yes
+        ask: "Did the material leave the facility at any point?"
+        escalation_if: "yes"
+
+  - id: how-it-happened
+    ask: "How did it happen, procedurally?"
+    criticality: required
+    covers: [how]
+    why: "Mechanism is what the inquiry is about. 'The container was left open' and 'I emailed it to my personal account' are the same guideline and nothing like the same report."
+    followups:
+      - trigger: always
+        ask: "Was any system, device, or account involved that shouldn't have been?"
+        escalation_if: "yes"
+        note: "An affirmative very likely adds Guideline M. Re-run the classifier."
+      - trigger: always
+        ask: "Did anyone else handle it or receive it?"
+
   - id: classification-level
-    ask: "What was the classification level involved? Level only — no subject matter."
+    ask: "What level was involved? The level only."
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: always
+        ask: "Was it a formal classification level, or controlled unclassified information?"
+        why: "CUI mishandling is a real matter and a different one. Users conflate the two in both directions."
+
+  - id: who-was-involved
+    ask: "Who else was involved or present? Roles, not names."
+    criticality: required
+    covers: [who]
+    privacy_notice: |
+      Roles are enough — "a coworker," "my supervisor," "the facility security
+      officer." I will not ask for names and you shouldn't type them.
+    followups:
+      - trigger: always
+        ask: "Were they cleared and did they have need-to-know?"
+        why: "This is the fact that separates a procedural lapse from a disclosure, and it is answerable without identifying anyone."
+      - trigger: answered_no
+        ask: "Was anyone uncleared able to see or hear it?"
+        escalation_if: "yes"
+
   - id: intentional-vs-inadvertent
-    ask: "Was it inadvertent, or a deliberate deviation from procedure?"
-    mitigation_ref: "K — inadvertent, followed by prompt, good-faith effort to correct"
+    ask: "Was it inadvertent, or a deliberate departure from the procedure?"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "K — the conduct was inadvertent, followed by a prompt and good-faith effort to correct"
+    why: "A listed mitigating condition. An honest 'I knew the rule and took the shortcut anyway' is survivable; being caught in a claim of ignorance is much less so."
+    note: |
+      Do not lead toward "inadvertent." If the user says they knowingly departed
+      from procedure, record that, and record why — pressure, deadline, a
+      practice they had seen others follow. Those are the facts that make a
+      deliberate lapse comprehensible, and they only exist if they are asked for.
+    followups:
+      - trigger: answered_no
+        ask: "What was going on that led to it?"
+      - trigger: answered_yes
+        ask: "What did you do once you realised?"
+      - trigger: always
+        ask: "How much time passed between realising and acting?"
+
   - id: self-reported
-    ask: "Did you report it yourself, and to whom, or was it discovered by someone else?"
-    mitigation_ref: "K — prompt, good-faith self-report"
+    ask: "Did you report it yourself?"
+    criticality: required
+    covers: [who, when]
+    mitigation_ref: "K — a prompt, good-faith report to appropriate officials"
+    why: "The strongest single fact available in most of these cases, and the one most often left out because stating it feels like arguing your own case."
+    followups:
+      - trigger: answered_yes
+        ask: "To whom, and how soon after?"
+      - trigger: answered_yes
+        ask: "Is there anything showing when — an email, a log entry, an incident number?"
+        document: "the self-report itself, or the security office's acknowledgement"
+      - trigger: answered_no
+        ask: "How was it discovered, and by whom?"
+
   - id: security-response
-    ask: "Was a security violation or infraction issued? Was there an inquiry or investigation?"
+    ask: "Was a security violation or infraction issued?"
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: answered_yes
+        ask: "Which was it, and is there a reference or case number?"
+        why: "Violation and infraction are distinct determinations with distinct consequences, and the user's security office made one of them in writing."
+      - trigger: answered_yes
+        ask: "Was there an inquiry or investigation, and has it concluded?"
+      - trigger: pending
+        ask: "Is it still open, and do you know who is handling it?"
+        note: "A pending inquiry is reportable now. Waiting for the outcome is a reporting delay, and the requirements advisor should say so plainly."
+      - trigger: answered_no
+        ask: "Was it handled informally, or is it possible no determination was made yet?"
+
+  - id: damage-assessment
+    ask: "As far as you know, was the material actually compromised, or was it contained?"
+    criticality: required
+    covers: [what]
+    followups:
+      - trigger: always
+        ask: "Was there any loss, or was anything unaccounted for?"
+        escalation_if: "yes"
+      - trigger: answered_yes
+        ask: "Did the security office say anything about the outcome?"
+        note: "Record only what they were told. Never characterise the damage and never estimate it — that determination is not the user's to make and not this tool's either."
+
   - id: corrective-action
-    ask: "What corrective action followed — retraining, counseling, administrative action, access change?"
-    document: "training completion records"
-  - id: pattern
-    ask: "Have there been prior security violations or infractions, however minor?"
+    ask: "What followed for you? Retraining, counselling, an administrative action, or a change to your access."
+    criticality: required
+    covers: [what]
+    document: "training completion record, counselling memo, or access determination"
+    followups:
+      - trigger: answered_yes
+        ask: "When, and do you have the record of it?"
+      - trigger: answered_no
+        ask: "Nothing at all, or nothing yet?"
+
   - id: training-adequacy
-    ask: "Had you received training covering the requirement involved?"
-    mitigation_ref: "K — the person responded favorably to counseling or remedial security training"
+    ask: "Had you been trained on the requirement involved?"
+    criticality: required
+    covers: [why]
+    mitigation_ref: "K — the individual responded favorably to counseling or remedial security training"
+    followups:
+      - trigger: answered_yes
+        ask: "Roughly when was that training?"
+      - trigger: answered_no
+        ask: "Was the procedure something you'd been briefed on in any other form?"
+        why: "A genuine training gap is a real mitigating fact. It is also checkable against the employer's records, so it has to be stated accurately rather than hopefully."
+
+  - id: pattern
+    ask: "Have there been prior violations or infractions, however minor?"
+    criticality: required
+    covers: [when]
+    why: "The security office has this list. A report that omits a prior infraction the FSO can see in their own file does more damage than the infraction did."
+    followups:
+      - trigger: answered_yes
+        ask: "Roughly when, and what were they?"
+
+  - id: handling-forward
+    ask: "What's different now in how you handle this kind of material?"
+    criticality: required
+    covers: [future_intent]
+    mitigation_ref: "K — the individual has taken action to eliminate the vulnerability"
+    note: |
+      Concrete changes only, and only real ones. A stated intention to be more
+      careful is worth very little; a changed workflow, a checklist, a habit of
+      double-checking a container, or a rule about where a device goes is worth
+      a great deal. Never invent one, and never upgrade a vague answer.

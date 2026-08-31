@@ -1,0 +1,124 @@
+{
+  "directive": "SEAD-4",
+  "source_file": "SEAD-4_Adjudicative-Guidelines.txt",
+  "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "generated_by": "test fixture",
+  "cut_method": "section headings, reassembly-verified",
+  "sections": [
+    {
+      "file": "01_Directive_Overview_and_Policy.md",
+      "title": "Directive Overview and Policy",
+      "body_sha256": "2a94b53a657e59fbb26bc887dfdbfeb553ac58cdd9e3c1eba5fa625c071ed191",
+      "lines": 1
+    },
+    {
+      "file": "02_Appendix_A_Introduction_and_Adjudicative_Process.md",
+      "title": "Appendix A \u2014 Introduction and the Adjudicative Process",
+      "body_sha256": "e58df40ed6bd79d45da78b12ab05bface38e1d4a687ff9fc1f028f543ef23bdd",
+      "lines": 1
+    },
+    {
+      "file": "03_Guideline_A_Allegiance_to_the_United_States.md",
+      "title": "Guideline A",
+      "body_sha256": "dc51a07a55e0b3de32867745ad5ad4c85ed122f30091d5f16c4b26a17f3cee3d",
+      "lines": 1,
+      "guideline": "A"
+    },
+    {
+      "file": "04_Guideline_B_Foreign_Influence.md",
+      "title": "Guideline B",
+      "body_sha256": "f3f7d869032efcc22570fa5930a7f2b8e9ae28f36cdc5b2c40aa79a21cb9ec14",
+      "lines": 1,
+      "guideline": "B"
+    },
+    {
+      "file": "05_Guideline_C_Foreign_Preference.md",
+      "title": "Guideline C",
+      "body_sha256": "eabb708d8170f7d366b0f16791612ef49e2decb2da9bc6e4df5a3507c255127a",
+      "lines": 1,
+      "guideline": "C"
+    },
+    {
+      "file": "06_Guideline_D_Sexual_Behavior.md",
+      "title": "Guideline D",
+      "body_sha256": "dd87b8720b6af905f303f9260546be6de58cbc43ac475470866bfef5e53d0fb2",
+      "lines": 1,
+      "guideline": "D"
+    },
+    {
+      "file": "07_Guideline_E_Personal_Conduct.md",
+      "title": "Guideline E",
+      "body_sha256": "7db11abeddd19cdc0da9c8ce3ed762b605a1c134db21810adb0b14d5e15fc200",
+      "lines": 1,
+      "guideline": "E"
+    },
+    {
+      "file": "08_Guideline_F_Financial_Considerations.md",
+      "title": "Guideline F",
+      "body_sha256": "f06b2dbc685202fbbfaa100f7a65547698d0cc3e2c0d1b3e080cd536d18f6eb0",
+      "lines": 1,
+      "guideline": "F"
+    },
+    {
+      "file": "09_Guideline_G_Alcohol_Consumption.md",
+      "title": "Guideline G",
+      "body_sha256": "63de8bcd0ccc0679ed3d710de6932bd202ad50c0dd31da9ba84625930da21ad4",
+      "lines": 1,
+      "guideline": "G"
+    },
+    {
+      "file": "10_Guideline_H_Drug_Involvement_and_Substance_Misuse.md",
+      "title": "Guideline H",
+      "body_sha256": "66e5d6eb7dcfe018c8a05441da0e595c1c82aacf8b1eec308d882097ada9a254",
+      "lines": 1,
+      "guideline": "H"
+    },
+    {
+      "file": "11_Guideline_I_Psychological_Conditions.md",
+      "title": "Guideline I",
+      "body_sha256": "a13b0b984bb35bfb8154944178bd3ef4c6c675c77c54bc189e3b03f480127e9f",
+      "lines": 1,
+      "guideline": "I"
+    },
+    {
+      "file": "12_Guideline_J_Criminal_Conduct.md",
+      "title": "Guideline J",
+      "body_sha256": "eff336dae62967fdd711fff6e89c531dadeec193aa2f25f4b28d8afcd99c8521",
+      "lines": 1,
+      "guideline": "J"
+    },
+    {
+      "file": "13_Guideline_K_Handling_Protected_Information.md",
+      "title": "Guideline K",
+      "body_sha256": "d9e75dcee105c57422aa284d291ea5c6cebac76e3440a045196fdb27d6794d25",
+      "lines": 1,
+      "guideline": "K"
+    },
+    {
+      "file": "14_Guideline_L_Outside_Activities.md",
+      "title": "Guideline L",
+      "body_sha256": "cf12c94a1ba4eb1fa471c7b9de61d95000e4ed3834243a19702d980e795a236c",
+      "lines": 1,
+      "guideline": "L"
+    },
+    {
+      "file": "15_Guideline_M_Use_of_Information_Technology.md",
+      "title": "Guideline M",
+      "body_sha256": "0e1b353d12ff8b3772a1604c3694916d0e123bb7113a86ae6855613e7ec8acdc",
+      "lines": 1,
+      "guideline": "M"
+    },
+    {
+      "file": "16_Appendix_B_Bond_Amendment_Guidance.md",
+      "title": "Appendix B",
+      "body_sha256": "bacd96204569813a98336c169f2405256a3f025a1e69adeac26ba737b4654c0f",
+      "lines": 1
+    },
+    {
+      "file": "17_Appendix_C_Exceptions.md",
+      "title": "Appendix C \u2014 Exceptions",
+      "body_sha256": "8fda09f60be3761fa1aaa158b9a1a86df015098d1e99502bcd5a68e1befff5f9",
+      "lines": 1
+    }
+  ]
+}

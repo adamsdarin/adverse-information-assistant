@@ -1,0 +1,62 @@
+# Universal time-ordered development record for every independent incident.
+# This is an interview and completeness structure, not government text.
+schema_version: "1.0"
+maintainer_verified: false
+source: "Maintainer-authored incident-development model"
+
+phases:
+  - id: before
+    label: "What was happening beforehand"
+    ask: "What was happening immediately before this began?"
+    why: "A report that starts at the arrest, complaint, loss, or discovery omits the circumstances that produced it."
+
+  - id: precipitating_circumstances
+    label: "What set the incident in motion"
+    ask: "What happened that set this incident in motion?"
+    why: "This captures the user's stated circumstances without supplying a motive or excuse."
+
+  - id: decisions_and_actions
+    label: "Decisions and actions"
+    ask: "What did you do next?"
+    repeatable: true
+    why: "The relevant conduct is often a sequence rather than a single event label."
+
+  - id: incident
+    label: "The incident itself"
+    ask: "What occurred during the incident?"
+    why: "The narrative must state the conduct plainly rather than relying on a charge or category label."
+
+  - id: immediate_aftermath
+    label: "Immediate aftermath"
+    ask: "What happened immediately afterward?"
+    why: "This captures injury, discovery, reporting, police response, containment, separation, or other immediate results."
+
+  - id: later_consequences
+    label: "Later consequences"
+    ask: "What happened after that as a result of this incident?"
+    why: "Court, employment, financial, medical, treatment, security, and administrative consequences may develop later."
+
+  - id: current_status
+    label: "Current status"
+    ask: "What is the current status today?"
+    why: "Pending is a status; it must not be converted into an invented outcome or date."
+
+  - id: future_developments
+    label: "Known future developments"
+    ask: "What is still expected or scheduled because of this incident?"
+    why: "Known court dates, reviews, payments, treatment, orders, or follow-up obligations drive later updates."
+
+required_phases:
+  - before
+  - precipitating_circumstances
+  - decisions_and_actions
+  - incident
+  - immediate_aftermath
+  - later_consequences
+  - current_status
+  - future_developments
+
+status_values: [answered, unknown, not_applicable, declined]
+unknown_rule: "Surface as outstanding_required using incident_development.<phase>."
+declined_rule: "Surface in the event's declined_elements using incident_development.<phase>."
+not_applicable_rule: "Evidence must state why the phase does not apply; a bare N/A is insufficient."
