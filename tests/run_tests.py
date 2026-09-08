@@ -605,9 +605,11 @@ def main() -> int:
         # window. It does not guarantee that what gets quoted is what the file
         # says. An unverifiable quotation is treated exactly like an
         # unverifiable case citation: as fabricated.
-        MINI4 = (MINI / "ROBOT_READABLE_DIRECTORY" / "TEXT" / "PERSONNEL_VETTING"
-                 / "SECURITY_EXECUTIVE_AGENT_DIRECTIVES_(SEAD)"
-                 / "SEAD-4_Adjudicative-Guidelines")
+        # Derived, not spelled out: when the library rebuild renamed this
+        # folder, a literal path here would have gone on testing a directory
+        # that no longer existed anywhere but in this file.
+        import library_paths as _lp
+        MINI4 = MINI / _lp.SEAD4_DIR
         real = (MINI4 / "09_Guideline_G_Alcohol_Consumption.md").read_text(
             encoding="utf-8").strip().splitlines()[-1]
 

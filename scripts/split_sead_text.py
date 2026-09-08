@@ -58,10 +58,18 @@ import re
 import sys
 from pathlib import Path
 
-SEAD_DIR = ("ROBOT_READABLE_DIRECTORY/TEXT/PERSONNEL_VETTING/"
-            "SECURITY_EXECUTIVE_AGENT_DIRECTIVES_(SEAD)")
-ISL_DIR = ("ROBOT_READABLE_DIRECTORY/TEXT/INDUSTRIAL_SECURITY/"
-           "INDUSTRIAL_SECURITY_LETTERS_(ISL)/CURRENT")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import library_paths as lp  # noqa: E402
+
+# WHERE THE SPLIT GOES IS NOT DECIDED HERE.
+#
+# This script writes the section files and library_paths.py reads them back.
+# When each kept its own copy of the folder names, the library rebuild moved
+# the directives and only ONE copy was updated — the reader looked in a folder
+# the writer had stopped using, and reported the split "absent" while it sat on
+# disk. One definition, imported, cannot drift from itself.
+SEAD_DIR = lp.SEAD_TEXT_DIR
+ISL_DIR = lp.ISL_DIR
 
 # Page furniture. Removed from the output and excluded from the reassembly
 # comparison, so stripping it can never hide a real omission.
@@ -176,24 +184,17 @@ ISL = [
 
 DIRECTIVES = {
     "SEAD-3": {
-        "source": "SEAD-3_Reporting-Requirements.txt",
-        "folder": "SEAD-3_Reporting-Requirements",
         "full": "Security Executive Agent Directive 3: Reporting Requirements "
                 "for Personnel with Access to Classified Information or Who "
                 "Hold a Sensitive Position",
         "anchors": SEAD3,
     },
     "SEAD-4": {
-        "source": "SEAD-4_Adjudicative-Guidelines.txt",
-        "folder": "SEAD-4_Adjudicative-Guidelines",
         "full": "Security Executive Agent Directive 4: National Security "
                 "Adjudicative Guidelines",
         "anchors": SEAD4,
     },
     "ISL-2021-02": {
-        "source": "2021-02_SEAD-3_rev-2024.txt",
-        "folder": "2021-02_SEAD-3_rev-2024",
-        "subdir": ISL_DIR,
         "full": "DCSA Industrial Security Letter 2021-02, SEAD 3 "
                 "implementation for cleared industry (revised 2024)",
         "anchors": ISL,
@@ -213,10 +214,14 @@ def sig(text: str) -> str:
 
 def split_one(name: str, spec: dict, root: Path, dry: bool) -> tuple[bool, list[str]]:
     log: list[str] = []
-    subdir = spec.get("subdir", SEAD_DIR)
-    src = root / subdir / spec["source"]
-    if not src.is_file():
-        return False, [f"source not found: {src}"]
+    src, provenance = lp.directive_source(root, name)
+    if src is None:
+        return False, [
+            f"source text for {name} not found in the library.",
+            f"  Looked up document_id {lp.DIRECTIVE_DOC_IDS.get(name)!r} in "
+            f"{lp.DOCUMENTS_MANIFEST},",
+            f"  then tried {lp.DIRECTIVE_FALLBACK_TEXT.get(name)}."]
+    log.append(f"{name}: source {src.name} (via {provenance})")
     raw = src.read_text(encoding="utf-8", errors="replace")
     lines = raw.splitlines()
 
@@ -279,9 +284,9 @@ def split_one(name: str, spec: dict, root: Path, dry: bool) -> tuple[bool, list[
         return True, log
 
     # ---- write ------------------------------------------------------------
-    out = root / subdir / spec["folder"]
+    out = root / lp.SPLIT_FOLDERS[name]
     out.mkdir(parents=True, exist_ok=True)
-    manifest = {"directive": name, "source_file": spec["source"],
+    manifest = {"directive": name, "source_file": src.name,
                 "source_sha256": hashlib.sha256(raw.encode()).hexdigest(),
                 "generated_by": "scripts/split_sead_text.py",
                 "cut_method": "section headings, reassembly-verified",
@@ -312,7 +317,7 @@ def split_one(name: str, spec: dict, root: Path, dry: bool) -> tuple[bool, list[
         f"Machine-readable text of *{spec['full']}*, split so a reader loads "
         f"only the section it needs.\n\n"
         f"Cut at section headings and verified to reassemble into "
-        f"`../{spec['source']}` with no loss. `manifest.json` carries the "
+        f"`../{src.name}` with no loss. `manifest.json` carries the "
         f"section index and a SHA-256 for each body.\n\n"
         + ("**Load `02_Appendix_A_Introduction_and_Adjudicative_Process.md` "
            "alongside any guideline file.** It carries the adjudicative process "
@@ -330,7 +335,7 @@ def split_one(name: str, spec: dict, root: Path, dry: bool) -> tuple[bool, list[
         f"Regenerate with `python scripts/split_sead_text.py \"<library path>\"`.\n",
         encoding="utf-8")
     log.append(f"{name}: wrote {len(pieces)} sections + manifest.json + README.md "
-               f"to {spec['folder']}/")
+               f"to {out.name}/")
     return True, log
 
 

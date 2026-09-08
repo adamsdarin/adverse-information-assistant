@@ -65,7 +65,7 @@ SOURCE_TIER = ["HUMAN_READABLE_DIRECTORY"]
 #
 # Regenerate the split with scripts/split_sead_text.py after a revision.
 SEAD_TEXT_DIR = ("ROBOT_READABLE_DIRECTORY/TEXT/PERSONNEL_VETTING/"
-                 "SECURITY_EXECUTIVE_AGENT_DIRECTIVES_(SEAD)")
+                 "SECURITY_EXECUTIVE_AGENT_DIRECTIVES_SEAD")
 SEAD4_DIR = f"{SEAD_TEXT_DIR}/SEAD-4_Adjudicative-Guidelines"
 SEAD3_DIR = f"{SEAD_TEXT_DIR}/SEAD-3_Reporting-Requirements"
 
@@ -100,7 +100,7 @@ SEAD3_DATA_ELEMENTS = "06_Appendix_A_Required_Data_Elements.md"
 # a hunt. Each table section records, in the manifest, the corpus table it is
 # source of record for.
 ISL_DIR = ("ROBOT_READABLE_DIRECTORY/TEXT/INDUSTRIAL_SECURITY/"
-           "INDUSTRIAL_SECURITY_LETTERS_(ISL)/CURRENT")
+           "INDUSTRIAL_SECURITY_LETTERS_ISL/CURRENT")
 ISL_FOLDER = "2021-02_SEAD-3_rev-2024"
 ISL_SPLIT_DIR = f"{ISL_DIR}/{ISL_FOLDER}"
 
@@ -119,6 +119,35 @@ SPLIT_FOLDERS = {
     "SEAD-4": SEAD4_DIR,
     "ISL-2021-02": ISL_SPLIT_DIR,
 }
+
+# ---------------------------------------------------------------------------
+# WHERE THE DIRECTIVE SOURCE TEXT LIVES
+# ---------------------------------------------------------------------------
+# The library rebuild renamed every directive file and two of the folders
+# holding them: SECURITY_EXECUTIVE_AGENT_DIRECTIVES_(SEAD) lost its
+# parentheses, and SEAD-4_Adjudicative-Guidelines.txt became
+# "SEAD 4 Adjudicative Guidelines.txt". The hardcoded paths here broke in the
+# quietest way available: the splits could no longer be REGENERATED, so the
+# existing splits simply aged out and every agent lost the ability to quote
+# directive text at all.
+#
+# document_id is the library's own durable key. It survived the rename that
+# broke the paths, and documents.jsonl records the superseded path in
+# rename_history — the manifest knew about the move the whole time; we were
+# just not asking it. So ask it, and keep a literal path only as the answer for
+# a library too old to have a manifest.
+DIRECTIVE_DOC_IDS = {
+    "SEAD-3": "dcsa-sead-sead-3-reporting-requirements",
+    "SEAD-4": "dcsa-sead-sead-4-adjudicative-guidelines",
+    "ISL-2021-02": "dcsa-isl_current-2021-02-sead-3-rev-2024",
+}
+DIRECTIVE_FALLBACK_TEXT = {
+    "SEAD-3": f"{SEAD_TEXT_DIR}/SEAD 3 Reporting Requirements.txt",
+    "SEAD-4": f"{SEAD_TEXT_DIR}/SEAD 4 Adjudicative Guidelines.txt",
+    "ISL-2021-02": f"{ISL_DIR}/ISL 2021-02 SEAD 3 Rev 2024.txt",
+}
+DOCUMENTS_MANIFEST = "ROBOT_READABLE_DIRECTORY/MANIFESTS/documents.jsonl"
+
 
 # Not distributed to users: maintainer build history, audit trails, migration
 # journals. Present in the maintainer's master copy, absent from every bundle.
@@ -308,6 +337,72 @@ def load_jsonl(path: Path) -> list[dict]:
 # "find the right file" can pick the wrong one or read the whole directive out
 # of convenience, and nothing downstream would notice. Here the caller gets a
 # list and reads exactly that list.
+_doc_path_cache: dict[Path, dict[str, str]] = {}
+
+
+def _directive_paths_from_manifest(root: Path) -> dict[str, str]:
+    """document_id -> robot_text_path, for the directives we split.
+
+    Streams documents.jsonl and stops once every directive is accounted for.
+    The manifest is ~13 MB and holds 11,000+ records; we want three of them,
+    and a session should not pay for the other 11,401.
+    """
+    if root in _doc_path_cache:
+        return _doc_path_cache[root]
+    wanted = set(DIRECTIVE_DOC_IDS.values())
+    found: dict[str, str] = {}
+    manifest, _ = find_ci(root, DOCUMENTS_MANIFEST)
+    if manifest and manifest.is_file():
+        try:
+            with manifest.open(encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    did = rec.get("document_id")
+                    if did in wanted:
+                        text = rec.get("robot_text_path")
+                        if text:
+                            found[did] = text
+                        if len(found) == len(wanted):
+                            break
+        except OSError:
+            pass
+    _doc_path_cache[root] = found
+    return found
+
+
+def directive_source(root: Path, directive: str) -> tuple[Path | None, str]:
+    """Path to a directive's machine-readable source text, and how we found it.
+
+    Returns (path_or_None, provenance). Resolution order:
+      1. documents.jsonl, by document_id — survives a rename
+      2. the literal path in DIRECTIVE_FALLBACK_TEXT — for a library with no
+         manifest, or one whose manifest has not caught up
+
+    An unknown directive name returns None rather than defaulting to one the
+    caller did not name, for the same reason sead_manifest does.
+    """
+    doc_id = DIRECTIVE_DOC_IDS.get(directive)
+    if doc_id is None:
+        return None, f"unknown directive {directive!r}"
+    rel = _directive_paths_from_manifest(root).get(doc_id)
+    if rel:
+        path, _ = find_ci(root, rel)
+        if path and path.is_file():
+            return path, f"documents.jsonl ({doc_id})"
+    fallback = DIRECTIVE_FALLBACK_TEXT.get(directive)
+    if fallback:
+        path, _ = find_ci(root, fallback)
+        if path and path.is_file():
+            return path, "conventional path"
+    return None, "not found"
+
+
 def sead_manifest(root: Path, directive: str) -> dict | None:
     """manifest.json for a split directive, or None if the split is absent.
 
