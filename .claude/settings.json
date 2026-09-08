@@ -11,11 +11,13 @@
       "Bash(python scripts/assemble_package.py:*)",
       "Bash(python scripts/verify_output.py:*)",
       "Bash(python scripts/doha_retrieval.py:*)",
+      "Bash(python scripts/sead_lookup.py:*)",
       "Bash(python scripts/court_lookup.py:*)",
       "Bash(python scripts/build_index.py:*)",
       "Bash(python scripts/hash_source.py:*)",
       "Bash(python scripts/score_evals.py:*)",
-      "Bash(python tests/run_tests.py:*)"
+      "Bash(python tests/run_tests.py:*)",
+      "Bash(python tests/run_product_tests.py:*)"
     ],
     "deny": [
       "WebFetch",
