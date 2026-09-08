@@ -12,7 +12,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from adverse_app import core
-from adverse_app.web import serve
 
 passed = 0
 failed = 0
@@ -59,13 +58,6 @@ def main() -> int:
         summary = core.status(session)
         check("status omits narrative content", "fictional owi" not in json.dumps(summary).lower() and "narrative" not in summary)
         check("status exposes exactly one next question", summary["next_question"]["key"] == "privacy_tier")
-        try:
-            serve(session, "0.0.0.0", 0)
-            external_blocked = False
-        except core.SessionError:
-            external_blocked = True
-        check("browser refuses a non-loopback bind", external_blocked)
-
         command = [sys.executable, str(ROOT / "scripts" / "adverse.py"), "--session", str(session), "status"]
         result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
         check("repository CLI entry point works", result.returncode == 0 and '"valid": true' in result.stdout.lower(), result.stdout + result.stderr)

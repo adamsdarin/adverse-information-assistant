@@ -14,17 +14,11 @@ python scripts/adverse.py --session output/session.json status
 python scripts/adverse.py --session output/session.json validate
 ```
 
-Start the loopback-only browser interface with:
-
-```powershell
-python scripts/adverse.py --session output/session.json web
-```
-
-The browser handles safe local intake and checkpointing. A host model continues
-the specialist workflow against the same validated state. The optional `mcp`
-command exposes a narrow allowlist of status, intake, validation, assembly, and
-verification tools when the MCP Python SDK is installed; it never exposes
-unrestricted filesystem access.
+These commands handle safe local intake and checkpointing. Your own assistant
+continues the specialist workflow against the same validated state — see
+[`AGENTS.md`](AGENTS.md). The optional `mcp` command exposes a narrow allowlist
+of status, intake, validation, assembly, and verification tools when the MCP
+Python SDK is installed; it never exposes unrestricted filesystem access.
 
 The working session is plaintext and unencrypted. Never enter classified
 information, a Social Security number, or a date of birth, and delete the

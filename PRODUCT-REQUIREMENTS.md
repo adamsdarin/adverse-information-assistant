@@ -175,7 +175,7 @@ Required capabilities:
 
 **Goal:** Make the validated engine easier to use without duplicating its rules.
 
-- Local browser interface with one question per screen, progress, pause/resume, and final review.
+- ~~Local browser interface~~ — **dropped.** A bundled UI needs a model host wired into it, and the one that existed shelled out to a single vendor's CLI. That contradicts the model-agnostic posture the rest of the product depends on: a user whose vendor was rate-limited lost the workflow, not just the UI. The assistant the user already has is the interface.
 - Narrow MCP server exposing operations such as session status, next approved question, validate state, assemble package, verify package, and scoped source lookup.
 - Model adapters for at least two hosts.
 - Export/import of a portable session bundle with clear plaintext warnings.

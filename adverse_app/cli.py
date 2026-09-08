@@ -25,9 +25,6 @@ def parser() -> argparse.ArgumentParser:
     assemble.add_argument("--output", type=Path)
     verify = sub.add_parser("verify", help="run the hard output gate")
     verify.add_argument("--package", type=Path)
-    web = sub.add_parser("web", help="start the local browser interface")
-    web.add_argument("--host", default="127.0.0.1")
-    web.add_argument("--port", type=int, default=8765)
     sub.add_parser("mcp", help="start the narrow local MCP server over stdio")
     return ap
 
@@ -60,9 +57,6 @@ def main(argv: list[str] | None = None) -> int:
         elif ns.command == "verify":
             digest, detail = core.verify(ns.session, ns.package)
             emit({"sha256": digest, "detail": detail})
-        elif ns.command == "web":
-            from .web import serve
-            serve(ns.session, ns.host, ns.port)
         elif ns.command == "mcp":
             from .mcp_server import run
             run(ns.session)

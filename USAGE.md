@@ -9,7 +9,6 @@
 - `resume` and `status` show compact progress without printing narrative text.
 - `answer` records one intake fact and validates immediately.
 - `validate`, `assemble`, and `verify` invoke the existing deterministic gates.
-- `web` starts the local one-question interface on `127.0.0.1` only.
 - `mcp` starts an optional narrow stdio MCP server; no arbitrary file tool is
   exposed.
 
