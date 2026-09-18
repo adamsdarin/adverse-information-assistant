@@ -1,8 +1,14 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-09-16T19:47:19.937753+00:00 by Codex
+Last updated: 2026-09-18 by Claude
 
 ## Current State
+September 18: Conductor steps 3-6b trimmed from 174 to 79 lines (471 to 376 overall).
+They restated rules the requirements advisor, classifier, gap analyst, interviewer
+and thread detector already own; the conductor now keeps orchestration, the two
+order-changing checklists and the progress line. Interviewer left whole: its rules
+are needed at question time. 464 tests pass. All prior Codex work committed.
+
 September 16: shared release integrity now verifies hashes for newly published
 DOHA stores. Standalone rebuilt cases and directive sections are compatible;
 explicitly ineligible cases are excluded from default precedent selection.
@@ -23,6 +29,10 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-09-18 Claude — Committed and pushed the Sept 10-16 work, then removed duplicated
+specialist rules from the conductor, which every session loads in full. Added the
+"never name a system the user cannot access" rule to the requirements advisor, the
+one conductor rule not already there.
 2026-09-16 Codex — Consumer now honors explicit reviewed-case eligibility, while preserving requested
 pre-SEAD-4 research. Actual case/section retrieval from a standalone synthetic build
 passes; 464 deterministic checks pass. No private case records were read or changed.

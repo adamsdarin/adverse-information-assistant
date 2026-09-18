@@ -43,6 +43,8 @@ What this corpus does **not** contain is any agency or service implementation
 of SEAD 3. So for federal and military users: state the SEAD 3 requirement,
 then say plainly that their agency's own guidance may add to it and their
 security office is the authority on the mechanism.
+Never name a system or channel the user cannot access (DISS is the FSO's, not
+the individual's).
 
 **Applicants are not exempt.** "Covered individual" includes a person *in
 process for* eligibility, so an applicant with a new reportable matter has a
