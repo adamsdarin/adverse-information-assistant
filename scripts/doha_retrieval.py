@@ -27,6 +27,18 @@ are contested SOR cases — a selection-biased sample that says nothing about
 how ordinary reports resolve. Counts exist to balance retrieval, never to
 tell a user what is likely to happen to them.
 
+THREE DIFFERENT NUMBERS ARE ALL CORRECT, AND THEY ARE NOT THE SAME COUNT.
+`check_library.py` reports every row of DOHA_CURRENT_PATHS.jsonl (10,658 as
+of the 2026 library). `parsed_decision_count` below counts only the rows
+whose `case_stem` parses AND whose outcome is approved/denied/remanded — a
+handful of rows carry an unreadable OCR stem or an outcome like
+"unreadable" and are dropped rather than guessed at (10,627). A case number
+can have more than one published decision under it — a hearing followed by
+an appeal, most commonly — so `unique_case_count` (10,327) collapses those
+to distinct case numbers, which is what `--verify-case` checks membership
+against. total >= parsed >= unique is the invariant; it is not a bug if the
+three differ, only if the invariant breaks.
+
 Usage:
   python scripts/doha_retrieval.py --guidelines G,J
   python scripts/doha_retrieval.py --guidelines F --limit 8 --include-pre-sead4
@@ -80,6 +92,7 @@ def load_cases(root: Path) -> list[dict]:
             "document_id": rec.get("document_id"),
             "group": rec.get("current_group"),
             "era": rec.get("sead4_era"),
+            "answer_eligible": rec.get("answer_eligible"),
             "text_path": rec.get("robot_text_path"),
             "source_path": rec.get("human_source_path"),
         })
@@ -93,6 +106,8 @@ def select(cases: list[dict], guidelines: list[str], limit: int = 6,
     want = {g.upper() for g in guidelines}
     scored = []
     for c in cases:
+        if c.get('answer_eligible') is False and not (include_pre_sead4 and c['group'] == 'PRE_SEAD_4'):
+            continue
         overlap = want & set(c["guidelines"])
         if not overlap:
             continue
@@ -148,7 +163,7 @@ def main() -> int:
         known = known_case_numbers(root)
         found = args.verify_case.strip() in known
         print(json.dumps({"case_no": args.verify_case, "in_library": found,
-                          "library_case_count": len(known)}, indent=2))
+                          "unique_case_count": len(known)}, indent=2))
         return 0 if found else 1
 
     if not args.guidelines:
@@ -159,7 +174,8 @@ def main() -> int:
                     args.limit, args.include_pre_sead4)
     print(json.dumps({
         "guidelines": args.guidelines,
-        "library_case_count": len(cases),
+        "parsed_decision_count": len(cases),
+        "unique_case_count": len({c["case_no"] for c in cases}),
         "returned": len(picked),
         "scope": "POST_SEAD_4" + (" + PRE_SEAD_4 (historical)" if args.include_pre_sead4 else ""),
         "reminder": "These are contested SOR cases — a selection-biased sample. "

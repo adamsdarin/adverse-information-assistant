@@ -32,6 +32,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from release_contract import readiness
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCATION_FILE = ROOT / ".library-location.json"
@@ -63,7 +64,12 @@ SOURCE_TIER = ["HUMAN_READABLE_DIRECTORY"]
 # is a physical guarantee rather than an instruction, which makes it the only
 # kind that survives a model deciding to be helpful.
 #
-# Regenerate the split with scripts/split_sead_text.py after a revision.
+# This repo does not generate the split — it only reads it. Regenerating it is
+# the DCSA Archivist's job (dcsa-archivist/src/dcsa_custodian/directive_splits.py,
+# run via `python custodian.py build-candidate` and published through that
+# repo's validate/approve/publish gate) after a directive revision. This repo
+# used to write the split directly into the library from a local script; that
+# was a boundary violation — see HANDOFF.md — and has been removed.
 SEAD_TEXT_DIR = ("ROBOT_READABLE_DIRECTORY/TEXT/PERSONNEL_VETTING/"
                  "SECURITY_EXECUTIVE_AGENT_DIRECTIVES_SEAD")
 SEAD4_DIR = f"{SEAD_TEXT_DIR}/SEAD-4_Adjudicative-Guidelines"
@@ -313,6 +319,11 @@ def require(cli_path: str | None = None, out=sys.stderr) -> Path | None:
             file=out,
         )
         return None
+    health = readiness(path)
+    if not health["ready"]:
+        print("  Library is not approved for retrieval: " + "; ".join(health["errors"])
+              + ". Request a refreshed Custodian release.", file=out)
+        return None
     return path
 
 
@@ -436,8 +447,9 @@ def sead_split_status(root: Path) -> dict:
         m = sead_manifest(root, directive)
         if not m:
             out["problems"].append(
-                f"{directive}: no section split found. Generate it with "
-                f"`python scripts/split_sead_text.py \"<library path>\"`.")
+                f"{directive}: no section split found. This library needs a "
+                f"refreshed DCSA Archivist release "
+                f"(dcsa-archivist: python custodian.py build-candidate).")
             continue
         out[key] = True
         if key == "sead4":
@@ -447,14 +459,16 @@ def sead_split_status(root: Path) -> dict:
             if missing:
                 out["problems"].append(
                     f"SEAD-4 split is incomplete — no file for guideline(s) "
-                    f"{', '.join(missing)}. Re-run split_sead_text.py.")
+                    f"{', '.join(missing)}. Needs a refreshed DCSA Archivist "
+                    f"release.")
         if key == "isl":
             out["isl_tables"] = sorted(_isl_tables(m))
             missing = sorted({"1", "2", "3", "4"} - set(out["isl_tables"]))
             if missing:
                 out["problems"].append(
                     f"ISL 2021-02 split is incomplete — no file for table(s) "
-                    f"{', '.join(missing)}. Re-run split_sead_text.py.")
+                    f"{', '.join(missing)}. Needs a refreshed DCSA Archivist "
+                    f"release.")
     return out
 
 
@@ -487,8 +501,8 @@ def isl_text(root: Path, tables: list[str] | None = None,
     """
     m = sead_manifest(root, "ISL-2021-02")
     if not m:
-        return [], ["ISL 2021-02 section split not found — run "
-                    "split_sead_text.py. Do NOT read the whole letter instead."]
+        return [], ["ISL 2021-02 section split not found — needs a refreshed "
+                    "DCSA Archivist release. Do NOT read the whole letter instead."]
     by_table = _isl_tables(m)
     wanted: list[str] = []
     problems: list[str] = []
@@ -546,8 +560,8 @@ def guideline_text(root: Path, letters: list[str]) -> tuple[list[Path], list[str
     """
     m = sead_manifest(root, "SEAD-4")
     if not m:
-        return [], ["SEAD-4 section split not found — run split_sead_text.py. "
-                    "Do NOT read the whole directive instead."]
+        return [], ["SEAD-4 section split not found — needs a refreshed DCSA "
+                    "Archivist release. Do NOT read the whole directive instead."]
     by_letter = {s["guideline"]: s["file"] for s in m.get("sections", [])
                  if "guideline" in s}
     paths, problems = [], []
@@ -579,8 +593,8 @@ def reporting_text(root: Path, access: str = "baseline",
     ladder — a Top Secret holder reads F + H, not F + G + H.
     """
     if not sead_manifest(root, "SEAD-3"):
-        return [], ["SEAD-3 section split not found — run split_sead_text.py. "
-                    "Do NOT read the whole directive instead."]
+        return [], ["SEAD-3 section split not found — needs a refreshed DCSA "
+                    "Archivist release. Do NOT read the whole directive instead."]
     wanted = list(SEAD3_ALWAYS)
     extra = SEAD3_BY_ACCESS.get(access)
     if extra:

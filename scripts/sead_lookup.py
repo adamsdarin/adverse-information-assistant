@@ -95,6 +95,12 @@ def main() -> int:
         print(json.dumps({"ok": False, "problems": [msg]}) if args.json else msg)
         return 1
 
+    health = lp.readiness(root)
+    if not health["ready"]:
+        msg = "Library is not approved for retrieval: " + "; ".join(health["errors"])
+        print(json.dumps({"ok": False, "problems": [msg]}) if args.json else msg)
+        return 1
+
     if args.status:
         st = lp.sead_split_status(root)
         if args.json:

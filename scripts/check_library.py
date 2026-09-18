@@ -136,7 +136,18 @@ def report(root: Path, as_json: bool) -> dict:
         "doha_outcomes": outcomes,
         "maintainer_only_folders_present": shipped_maintainer,
     }
+    data["readiness"] = lp.readiness(root)
+    split_status = lp.sead_split_status(root) if data["readiness"]["ready"] else {}
+    data["readiness"]["capabilities"]["directive_quotations"] = bool(
+        split_status and not split_status.get("problems")
+        and split_status.get("sead3") and split_status.get("sead4") and split_status.get("isl")
+    )
     if as_json:
+        return data
+
+    if not data["readiness"]["ready"]:
+        print("NOT READY FOR EVIDENCE RETRIEVAL: " + "; ".join(data["readiness"]["errors"]))
+        print("Request a refreshed Custodian release. The interview can continue without library citations.")
         return data
 
     print(f"Library:  {root}")
@@ -293,7 +304,7 @@ def main() -> int:
             print(f"Remembered in {lp.LOCATION_FILE.name} (gitignored). Every "
                   "script will resolve the library from this file unless "
                   "overridden with --library or AIA_LIBRARY.")
-    return 0
+    return 0 if data["readiness"]["ready"] else 1
 
 
 if __name__ == "__main__":

@@ -512,7 +512,19 @@ def main() -> int:
               c == 1 and "session:" in o.lower(), o.strip()[-300:])
 
         print("\nDCSA Library — locator, tiering, retrieval, citation gate")
-        MINI = ROOT / "tests" / "fixtures" / "mini-library"
+        import shutil
+        from approved_fixture import prepare
+        MINI = tmp / "approved-mini-library"
+        shutil.copytree(ROOT / "tests" / "fixtures" / "mini-library", MINI)
+        prepare(MINI)
+
+        raw_mini = ROOT / "tests" / "fixtures" / "mini-library"
+        c, o = run(CHECKLIB, str(raw_mini))
+        check("unapproved legacy bundle cannot claim retrieval readiness", c == 1 and "NOT READY" in o)
+        c, o = run(ROOT / "scripts" / "sead_lookup.py", "--library", str(raw_mini), "--guidelines", "G")
+        check("directive lookup refuses an unapproved bundle", c == 1 and "not approved" in o)
+        c, o = run(RETRIEVAL, "--library", str(raw_mini), "--verify-case", "90-00001")
+        check("case lookup refuses an unapproved bundle", c != 0 or "not approved" in o)
 
         c, o = run(CHECKLIB, str(MINI))
         check("mini-library validates", c == 0, o.strip()[-300:])
@@ -571,7 +583,9 @@ def main() -> int:
         check("absent search bundle is reported as optional, not an error",
               "optional 'Search' bundle" in o and c == 0)
 
-        c, o = run(CHECKLIB, str(tmp))  # a real folder that isn't a library
+        not_library = tmp / "not-a-library"
+        not_library.mkdir()
+        c, o = run(CHECKLIB, str(not_library))
         check("a non-library folder is refused", c == 1 and "DOES NOT LOOK LIKE" in o.upper(),
               o.strip()[-200:])
 
@@ -586,7 +600,10 @@ def main() -> int:
               all(x["group"] == "POST_SEAD_4" for x in cases),
               f"groups: {[x['group'] for x in cases]}")
         check("unparseable/unreadable stems are dropped, not guessed at",
-              picked.get("library_case_count") == 7)
+              picked.get("parsed_decision_count") == 7)
+        check("unique_case_count never exceeds parsed_decision_count",
+              picked.get("unique_case_count") is not None
+              and picked["unique_case_count"] <= picked["parsed_decision_count"])
         check("retrieval output carries the no-prediction reminder",
               "selection-biased" in o)
 
@@ -659,8 +676,7 @@ def main() -> int:
         no_lib_home = tmp / "no-library-home"
         no_lib_home.mkdir(exist_ok=True)
         c, o = run(VERIFY, str(pq), str(sp), env={
-            "HOME": str(no_lib_home), "USERPROFILE": str(no_lib_home),
-            "AIA_LIBRARY": ""})   # no --library
+            "AIA_LIBRARY": str(no_lib_home)})  # overrides remembered local path too
         check("a directive quote with no library available fails",
               c == 1 and "treated as fabricated" in o, o.strip()[-260:])
 
@@ -823,21 +839,20 @@ def main() -> int:
         check("requirements-advisor knows G and H are alternatives, not a ladder",
               "not f + g + h" in ra.lower() or "alternatives, not a ladder" in ra.lower())
 
-        print("\nsplit_sead_text.py — the splitter proves its own output")
-        SPLIT = ROOT / "scripts" / "split_sead_text.py"
-        check("scripts/split_sead_text.py exists", SPLIT.exists())
-        if SPLIT.exists():
-            src = SPLIT.read_text(encoding="utf-8")
-            check("it refuses to write when reassembly fails",
-                  "REASSEMBLY FAILED" in src and "Nothing was written" in src)
-            check("it requires each anchor to match exactly once",
-                  "expected exactly 1" in src)
-            check("it checks every section starts at its own heading",
-                  "does not start at its heading" in src)
-            check("it preserves OCR artifacts rather than correcting them",
-                  "faithful" in src.lower() and "correct" in src.lower())
-            c, o = run(SPLIT, "--help")
-            check("--help works", c == 0, o.strip()[-160:])
+        print("\nthis repo does not write into the governed library")
+        # Regression: split_sead_text.py used to regenerate the SEAD/ISL
+        # section split by writing straight into the DCSA Library from here,
+        # bypassing the DCSA Archivist's validate/approve/publish gate. That
+        # capability now lives in dcsa-archivist (directive_splits.py) and
+        # publishes through its own release pipeline. This repo only reads.
+        check("scripts/split_sead_text.py has been removed",
+              not (ROOT / "scripts" / "split_sead_text.py").exists())
+        lp_src = (ROOT / "scripts" / "library_paths.py").read_text(encoding="utf-8")
+        check("library_paths.py no longer tells anyone to run split_sead_text.py",
+              "split_sead_text.py" not in lp_src)
+        check("library_paths.py points a missing split at the Archivist release, "
+              "not a local regenerate step",
+              "DCSA Archivist" in lp_src)
 
         print("\nverify_output.py — citations checked against the library")
         lib_pkg = tmp / "libcite.md"
