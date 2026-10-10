@@ -16,9 +16,10 @@ Claude Code.
 | `.claude/skills/report/` | `/report` — start a reporting session, following the conductor exactly |
 | `.claude/skills/checkup/` | `/checkup` — run the health check and give a verdict |
 
-Those files are not committed by the remote tooling and are created locally —
-see `BUILD-GUIDE.md` §3.5. If they are missing, everything still works; you
-just get permission prompts and no slash commands.
+Those files are committed with the repo. `.agents/skills/` holds byte-identical
+copies of the skills for other assistants; `tests/run_tests.py` fails if they
+drift. If they are missing, everything still works; you just get permission
+prompts and no slash commands.
 
 ## The one real difference
 
