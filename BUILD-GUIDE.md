@@ -157,102 +157,15 @@ That's the whole invocation. `CLAUDE.md` in the folder is loaded automatically,
 so Claude already knows the project's rules — you don't paste a long prompt
 any more.
 
-### 3.5 Create the Claude Code files
+### 3.5 Check the Claude Code files
 
-These three live under `.claude\` and have to be created locally — tooling
-deliberately refuses to write into that folder remotely, because it controls
-what runs on your machine. Paste this block once:
+Three files under `.claude\` come with the repo: `settings.json` and the
+`/report` and `/checkup` skills. `.agents\skills\` holds byte-identical copies
+of the skills for other assistants; `tests/run_tests.py` fails if they drift.
+Confirm they are there:
 
 ```powershell
 cd "$HOME\src\adverse-information-assistant"
-New-Item -ItemType Directory -Force -Path ".claude\skills\report",".claude\skills\checkup" | Out-Null
-
-@'
-{
-  "_comment": "Pre-approves this project's own read-only and gate scripts so a session isn't interrupted by permission prompts at every step. Nothing here grants network access or file deletion. Personal overrides belong in .claude/settings.local.json, which is gitignored.",
-  "permissions": {
-    "allow": [
-      "Bash(python scripts/check_corpus.py:*)",
-      "Bash(python scripts/check_library.py:*)",
-      "Bash(python scripts/validate_corpus.py:*)",
-      "Bash(python scripts/validate_session.py:*)",
-      "Bash(python scripts/assemble_package.py:*)",
-      "Bash(python scripts/verify_output.py:*)",
-      "Bash(python scripts/doha_retrieval.py:*)",
-      "Bash(python scripts/court_lookup.py:*)",
-      "Bash(python scripts/build_index.py:*)",
-      "Bash(python scripts/hash_source.py:*)",
-      "Bash(python scripts/score_evals.py:*)",
-      "Bash(python tests/run_tests.py:*)"
-    ],
-    "deny": [
-      "WebFetch",
-      "WebSearch",
-      "Bash(curl:*)",
-      "Bash(wget:*)"
-    ]
-  }
-}
-'@ | Set-Content -Encoding UTF8 ".claude\settings.json"
-
-@'
----
-name: report
-description: Start an adverse-information reporting session. Use when the user wants help preparing a self-report for their security office, or says they have something to report.
----
-
-# Run a reporting session
-
-Read `agents/conductor.md` and run the session it describes, exactly as
-written. Follow the stage order. Use the agent prompt files in `agents/core/`
-and `agents/optional/` as the instructions for each step.
-
-Non-negotiable for this session:
-
-- Locate the corpus and the DCSA Library first, and say plainly what you found
-  and what is unavailable as a result.
-- Run the capability canary before any real content is entered.
-- Cite only what exists on disk. Never fetch anything.
-- Maintain `output/session.json` and validate it after every stage.
-- Before showing any final package, run `scripts/verify_output.py`. Do not
-  present output that fails it.
-- At handoff, give the user the exact `verify_output.py` command to run
-  themselves and the SHA-256 the script printed, so they can confirm the file
-  they have is the file that passed.
-'@ | Set-Content -Encoding UTF8 ".claude\skills\report\SKILL.md"
-
-@'
----
-name: checkup
-description: Verify the project is healthy — run the test suite, validate the corpus, and check the DCSA Library. Use before committing, before publishing, or when something seems wrong.
----
-
-# Project health check
-
-Run these in order and report the results plainly. Do not fix anything yet —
-report first, then ask what to address.
-
-```bash
-python tests/run_tests.py
-python scripts/validate_corpus.py
-python scripts/check_corpus.py
-python scripts/check_library.py
-```
-
-How to read it:
-
-- **Tests: any FAIL** — stop. Do not commit or publish. Report the full output.
-- **validate_corpus: ERROR** — genuinely broken; the message names the file.
-- **validate_corpus: WARN** — expected. Corpus and court entries ship
-  unverified until a human checks them against an official source.
-- **check_library: not found** — the tool still runs but cannot cite anything.
-  Say so; do not offer to download it.
-- **check_library: CASE MISMATCH or broken claims** — issues in the library
-  itself. Report them; they break macOS and Linux users.
-
-Finish with a one-line verdict: safe to commit, or not, and why.
-'@ | Set-Content -Encoding UTF8 ".claude\skills\checkup\SKILL.md"
-
 Get-ChildItem -Recurse .claude | Select-Object FullName
 ```
 

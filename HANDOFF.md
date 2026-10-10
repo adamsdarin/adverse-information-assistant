@@ -1,6 +1,6 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-09-18 by Claude
+Last updated: 2026-10-05 by Claude
 
 ## Current State
 September 18: Conductor steps 3-6b trimmed from 174 to 79 lines (471 to 376 overall).
@@ -29,6 +29,8 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-10-05 Claude - Skill-standards audit: /report points to the conductor instead of restating it; skill descriptions are third person; .agents/skills is a byte-identical mirror of .claude/skills, enforced by a new run_tests.py check; BUILD-GUIDE section 3.5 no longer embeds copies of the committed .claude files; CLAUDE.md note corrected. 465 tests pass. Uncommitted.
+
 2026-09-18 Claude — Committed and pushed the Sept 10-16 work, then removed duplicated
 specialist rules from the conductor, which every session loads in full. Added the
 "never name a system the user cannot access" rule to the requirements advisor, the

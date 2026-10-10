@@ -1,6 +1,6 @@
 ---
 name: checkup
-description: Verify the project is healthy — run the test suite, validate the corpus, and check the DCSA Library. Use before committing, before publishing, or when something seems wrong.
+description: Verifies the project is healthy by running the test suite, validating the corpus, and checking the DCSA Library. Use before committing, before publishing, or when something seems wrong.
 ---
 
 # Project health check

@@ -1393,6 +1393,21 @@ def main() -> int:
                 offenders.append(str(f.relative_to(ROOT)))
         check("no script or agent prompt depends on .claude/", not offenders,
               f"these reference it: {offenders}")
+        # .agents/skills/ mirrors .claude/skills/ for assistants that read
+        # skills from there. Edit .claude/skills/ only, then re-copy; a
+        # hand edit to either copy shows up here as drift.
+        claude_skills = ROOT / ".claude" / "skills"
+        agents_skills = ROOT / ".agents" / "skills"
+        def skill_files(base: Path) -> set[str]:
+            return {p.relative_to(base).as_posix() for p in base.rglob("*")
+                    if p.is_file()} if base.is_dir() else set()
+        originals, mirrored = skill_files(claude_skills), skill_files(agents_skills)
+        drift = sorted(originals ^ mirrored) + sorted(
+            n for n in originals & mirrored
+            if (claude_skills / n).read_bytes() != (agents_skills / n).read_bytes())
+        check(".agents/skills mirrors .claude/skills byte for byte", not drift,
+              f"differs: {drift}. Fix: Copy-Item -Recurse -Force "
+              ".claude\\skills\\* .agents\\skills\\")
 
         print("\nrendered process map must not be stale")
         # The failure this catches: PROCESS.md gets updated, docs/process-map.html
