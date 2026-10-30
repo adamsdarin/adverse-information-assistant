@@ -1,8 +1,21 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-09-18 by Claude
+Last updated: 2026-10-30 by Claude
 
 ## Current State
+October 30: phase 1 design for a hosted, stateless MCP server is written at
+`docs/HOSTED-MCP-DESIGN.md` (branch `claude/hosted-mcp-design-5ebc3a`; design
+only, no Worker code, no corpus files, no deploy). Shape: a reference service at
+`fsotools.ai/adverse/mcp` that reuses the Atlas D1 decision shards, serves the
+directive sections and the repo's `corpus/` as a hash-checked release in Worker
+assets, takes only categorical inputs (never narrative or free text), serves the
+agent prompts as MCP prompts so reasoning and session state stay in the client,
+and copies the Atlas privacy posture (no logs, no sessions, 60/min). The six local
+MCP tools and the deterministic gates stay client-side. It names the redeploy
+command for the release-sync agent (`scripts/hosted_release.py`, phase 2) and
+lists seven owner decisions (D1-D7). Mode 1b ("local session, hosted reference")
+must be added to `DEPLOYMENT.md` in the same commit as any Worker.
+
 September 18: Conductor steps 3-6b trimmed from 174 to 79 lines (471 to 376 overall).
 They restated rules the requirements advisor, classifier, gap analyst, interviewer
 and thread detector already own; the conductor now keeps orchestration, the two
@@ -29,6 +42,13 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-10-30 Claude — Wrote the hosted MCP phase 1 design (`docs/HOSTED-MCP-DESIGN.md`)
+on a branch. Decisions: reference-only server so Mode 1 holds; categorical inputs
+only, no free-text decision search on this endpoint (the Atlas has it); directive
+text and `corpus/` as hash-checked Worker assets, decisions from the existing D1
+shards plus a derived exclusions asset; prompts serve the agents verbatim with a
+hosted-mode preamble; gates stay local and the design says so for shell-less
+clients. Corpus population checklist by file is §6; owner decisions §7.
 2026-09-18 Claude — Committed and pushed the Sept 10-16 work, then removed duplicated
 specialist rules from the conductor, which every session loads in full. Added the
 "never name a system the user cannot access" rule to the requirements advisor, the
