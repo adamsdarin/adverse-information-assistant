@@ -13,8 +13,14 @@ agent prompts as MCP prompts so reasoning and session state stay in the client,
 and copies the Atlas privacy posture (no logs, no sessions, 60/min). The six local
 MCP tools and the deterministic gates stay client-side. It names the redeploy
 command for the release-sync agent (`scripts/hosted_release.py`, phase 2) and
-lists seven owner decisions (D1-D7). Mode 1b ("local session, hosted reference")
-must be added to `DEPLOYMENT.md` in the same commit as any Worker.
+records the seven owner decisions (D1-D7) as answered on October 30: Worker
+`adverse-information-assistant`; no hosted package verification, ever, the
+connector runs in the user's own harness; the site presents it on an MCP
+directory page (built in `fsotools-website`, branch `claude/mcp-directory-page`);
+shared 60/min limit; exclusions asset now, shard column at the next rebuild. D2
+(ship before the reporting tables are verified) and D5 (Part 117 split) stay open
+with defaults. Mode 1b ("local session, hosted reference") must be added to
+`DEPLOYMENT.md` in the same commit as any Worker.
 
 September 18: Conductor steps 3-6b trimmed from 174 to 79 lines (471 to 376 overall).
 They restated rules the requirements advisor, classifier, gap analyst, interviewer
@@ -42,6 +48,11 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-10-30 Claude — Recorded the owner's answers to D1-D7 in the design (§7, §5).
+Owner asked why the reporting tables are unverified: because `corpus/BUILDING.md`
+requires a human line-by-line read against the ISL with the PDF hash recorded, and
+that read has not been done. Owner ruled out any hosted verification permanently.
+Site presentation becomes an MCP directory page rather than a product page.
 2026-10-30 Claude — Wrote the hosted MCP phase 1 design (`docs/HOSTED-MCP-DESIGN.md`)
 on a branch. Decisions: reference-only server so Mode 1 holds; categorical inputs
 only, no free-text decision search on this endpoint (the Atlas has it); directive

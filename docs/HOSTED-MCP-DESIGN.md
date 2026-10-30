@@ -460,7 +460,7 @@ asks the owner whether phase 2 should, and under what disclosure.
 Taken from `doha-guidelines-nexus/mcp/wrangler.jsonc` and `worker.js` as
 deployed:
 
-| Control | Atlas (`doha-atlas-mcp`) | Adverse (`adverse-reference-mcp`) |
+| Control | Atlas (`doha-atlas-mcp`) | Adverse (`adverse-information-assistant`) |
 |---|---|---|
 | Request logs | `observability.enabled: false` | same |
 | `console.*` in handlers | none on the request path | none; a test greps the bundle for `console.` |
@@ -494,14 +494,14 @@ which is checkable from the Worker's configuration and code.
 
 ### 5.1 Route and Worker
 
-- Worker name: `adverse-reference-mcp` (decision D1 if the owner prefers
-  another). Route: `{ "pattern": "fsotools.ai/adverse/mcp*", "zone_name":
+- Worker name: `adverse-information-assistant`, connector label "Adverse
+  Information Assistant" (D1, decided 2026-10-30). Route: `{ "pattern": "fsotools.ai/adverse/mcp*", "zone_name":
   "fsotools.ai" }`, beside the Atlas's `fsotools.ai/atlas/mcp*`. A future
   Pages page at `/adverse/` does not collide: the route pattern claims only
   `/adverse/mcp` and below.
 - `GET /adverse/mcp` with `Accept: text/html` → a guide page in the Worker,
   modelled on the Atlas's: the address, the Claude.ai connector steps,
-  `claude mcp add --transport http adverse-reference https://fsotools.ai/adverse/mcp`,
+  `claude mcp add --transport http adverse-information-assistant https://fsotools.ai/adverse/mcp`,
   the `mcp-remote` bridge for stdio-only clients, the tool and prompt lists,
   the Mode 1b statement, and the disclaimer block from `DISCLAIMER.md`
   verbatim. `POST` → MCP Streamable HTTP.
@@ -523,14 +523,16 @@ and only that:
 - `test/build.test.js`: add `/adverse/mcp` to `WORKER_PATHS`, and extend the
   robots tests to assert `/adverse/mcp`, `/adverse/mcp/` and
   `/adverse/mcp?x=1` are blocked while the linking page stays allowed.
-- A `#connect` section ("Connect your AI assistant") on the product page that
-  presents this tool, in the same table shape as `site/atlas/index.html`
-  lines 137–140: server address, Claude.ai steps, the `claude mcp add` line,
-  and a "what it is" row that says: a read-only reference endpoint over the
-  disclosure corpus, categorical queries only, no narrative accepted, no
-  session kept, no logs, nothing predicted. **Which page** is decision D4:
-  the site has no adverse-information product page today, and `/reporting/`
-  (industry, government, public trust) is the nearest home.
+- The connect presentation lives on the site's **MCP directory page**, which
+  lists every fsotools.ai connector with its status (D4, decided 2026-10-30;
+  being built in `fsotools-website` on branch `claude/mcp-directory-page`).
+  This connector appears there as *planned* until the Worker is deployed,
+  then gains the same table shape as `site/atlas/index.html` lines 137–140:
+  server address, Claude.ai steps, the `claude mcp add` line, and a "what it
+  is" row that says: a read-only reference endpoint over the disclosure
+  corpus, categorical queries only, no narrative accepted, no session kept,
+  no logs, nothing predicted. A dedicated `/adverse/` product page is not
+  required for phase 1.
 - `llms.txt` untouched, as for the Atlas (its published-paths test would need
   an allow-list change).
 - No new pages, no analytics, no CSP change. Product work stays in this
@@ -637,36 +639,51 @@ unverified note, hosted or not. Budget it first.
    turns the file's `verified: true` on; the Worker starts reporting
    `citable: true` for it the same minute.
 
-## 7. Owner decisions this design could not settle
+## 7. Owner decisions
 
-- **D1 — Worker name and connector label.** `adverse-reference-mcp` and
-  `adverse-reference` are proposed; the guide page and `claude mcp add` line
-  use whatever is chosen.
-- **D2 — Should the hosted server exist at all before Stage 1 of §6.2 is
-  done?** It can ship now and will honestly answer `consult_fso` everywhere
-  the tables are unverified, exactly like the local scaffold. That is
-  truthful but may read as a product that does nothing; shipping after Stage
-  1 reads as a product that works. Recommendation: build it now so the
-  release-sync hook is real, link it from the site only after Stage 1.
-- **D3 — Clients that cannot run the gates.** Phase 1 serves prompts that
-  tell such a user the package is unverified. Phase 2 options: (a) a
-  client-side JavaScript port of `verify_output.py` so a Claude.ai connector
-  can still verify locally; (b) a hosted `verify_package` tool that receives
-  the package — the first narrative-accepting tool, which would need its own
-  Mode 2-style disclosure even if nothing is stored. Recommendation: (a), and
-  never (b) on this endpoint.
-- **D4 — Where the site presents it.** No adverse-information product page
-  exists; `/reporting/industry/` is the nearest. A new `/adverse/` product
-  page is cleaner and matches the route prefix. The site session decides.
-- **D5 — 32 CFR Part 117 split.** The library holds the Part as one file.
-  Either the Archivist splits it by section (the right fix, benefits the
-  Question Bot too) or the hosted build slices §117.8 with boundaries a human
-  confirms once. Related: whether any other ISL or VOI should be served here
-  (this design says no; they are the Question Bot's).
-- **D6 — Rate limit and bundle size.** 60/min matches the Atlas; the bundle
-  tool returns the whole reference layer in one call, so a lower cap on that
-  one tool (for example 6/min) may be wanted. Needs the measured bundle size
-  from the first build.
-- **D7 — Exclusions as an asset or a shard column.** `doha-exclusions.json`
-  works today; asking the Custodian to carry `answer_eligible` into the shard
-  schema removes a moving part. Owner to raise with the decision-search build.
+Recorded 2026-10-30 from the owner's answers. "Open" items keep the stated
+default until the owner overrules it.
+
+- **D1 — Worker name and connector label. Decided.** Worker
+  `adverse-information-assistant`, connector label "Adverse Information
+  Assistant", and the same short name in the `claude mcp add` line. The
+  owner's words were "adverse information assistance"; the product name is
+  used here and the owner can correct the spelling.
+- **D2 — Ship before Stage 1 of §6.2 is done? Open.** The owner asked why
+  the reporting tables are unverified. Answer: `corpus/BUILDING.md` makes
+  verification a human act. Each table was drafted from ISL 2021-02 and
+  ships `maintainer_verified: false`; flipping it requires a line-by-line
+  read of every row against the ISL, with the ISL PDF's SHA-256 and the
+  check date recorded, or `validate_corpus.py` errors. That read has not been
+  done, and the corpus is still `0.1.0-scaffold`. Everything needed is on
+  disk: the ISL text, split by table, in the library's robot-readable
+  directory (`sead_lookup.py --isl --verifies <table>` names the exact
+  files), and the PDF in the human-readable directory for the hash. Until it
+  is done the tool returns `consult_fso` rather than asserting that anything
+  is reportable, by design, and the hosted server inherits that behaviour
+  unchanged. Default: build now, link from the site only after Stage 1.
+- **D3 — Clients that cannot run the gates. Decided.** The connector runs
+  inside the user's own harness; the server stores nothing and never
+  receives a package, a narrative or any session state. A hosted
+  `verify_package` tool is ruled out permanently, not deferred. A client
+  with no shell is told plainly, by the served prompts, that its package is
+  unverified, and is pointed at the local tool. A later verifier that runs
+  in the user's own browser is still their harness and stays permitted as
+  phase 2 work.
+- **D4 — Where the site presents it. Decided.** An MCP directory page on
+  fsotools.ai listing every connector with its status, instead of a product
+  page per connector. This connector is listed as planned until deployed.
+  See §5.2.
+- **D5 — 32 CFR Part 117 split. Open; default is the Archivist split.** The
+  owner's reply raised a different question, whether the DCSA Library
+  release itself should be hosted on Cloudflare. That does not change this
+  decision, which is about which text is served, not where the library
+  lives. Default until overruled: the Archivist splits the Part by section,
+  which also serves the Question Bot.
+- **D6 — Rate limit and bundle size. Decided.** One shared 60/min limit, as
+  the Atlas. No separate cap on the bundle tool; revisit only if the first
+  build's measured size or observed traffic shows a problem.
+- **D7 — Exclusions as an asset or a shard column. Decided.** The derived
+  `doha-exclusions.json` ships with the release now. The owner will ask the
+  decision-search build to carry `answer_eligible` into the shard schema at
+  the next shard rebuild, after which the asset is dropped.
