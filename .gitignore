@@ -36,3 +36,11 @@ node_modules/
 # Locations recorded at runtime (point outside the repo)
 .corpus-location.json
 .library-location.json
+
+# Hosted MCP release build (scripts/hosted_release.py). It holds Government
+# text copied from the approved DCSA Library release, which is distributed
+# separately and never committed here. Rebuild it; never check it in.
+mcp/release/
+mcp/.wrangler/
+.wrangler/
+package-lock.json
