@@ -30,6 +30,7 @@ export function jsonResponse(body, status = 200, extra = {}) {
 }
 
 const rpcError = (code, message, status) => jsonResponse({ jsonrpc: '2.0', id: null, error: { code, message } }, status);
+export const MAX_BODY_BYTES = 1_000_000;
 
 /**
  * @param {Request} request
@@ -39,6 +40,13 @@ export async function handleMcpHttpRequest(request, mcpServer) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
   if (request.method === 'GET') {
+    // MCP Streamable HTTP: a GET that asks for text/event-stream is a request
+    // to open a server-initiated event stream. This server offers none, and
+    // the spec's answer is 405, not a 200 body a client would try to parse.
+    const accept = request.headers.get('accept') ?? '';
+    if (accept.includes('text/event-stream')) {
+      return rpcError(-32600, 'Method Not Allowed: this server does not open a server-sent event stream.', 405);
+    }
     return jsonResponse({
       name: mcpServer.serverInfo.name,
       version: mcpServer.serverInfo.version,
@@ -53,13 +61,17 @@ export async function handleMcpHttpRequest(request, mcpServer) {
 
   if (request.method !== 'POST') return rpcError(-32600, 'Method Not Allowed: use POST for JSON-RPC messages.', 405);
 
+  // Reject an oversized body before reading it; the post-read check below is
+  // the backstop for chunked requests that declare no length.
+  const declared = Number(request.headers.get('content-length') ?? 0);
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return rpcError(-32600, 'Request body too large.', 413);
   let bodyText;
   try {
     bodyText = await request.text();
   } catch {
     return rpcError(-32700, 'Failed to read request body.', 400);
   }
-  if (bodyText.length > 1_000_000) return rpcError(-32600, 'Request body too large.', 413);
+  if (bodyText.length > MAX_BODY_BYTES) return rpcError(-32600, 'Request body too large.', 413);
   let payload;
   try {
     payload = JSON.parse(bodyText);

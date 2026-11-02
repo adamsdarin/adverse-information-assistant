@@ -34,10 +34,16 @@ npm run mcp:worker:deploy                                                    # o
 ```
 
 The build refuses an unapproved library release, re-verifies every Government
-section against the Archivist's body hashes, converts the `corpus/` YAML to
-JSON without touching a `maintainer_verified` flag, derives
-`doha-exclusions.json` from the library manifest, and runs
-`validate_corpus.py` and `tests/run_tests.py` first. It fetches nothing.
+section against the Archivist's body hashes (a section without one refuses the
+build), converts the `corpus/` YAML to JSON without touching a
+`maintainer_verified` flag, derives `doha-exclusions.json` from the library
+manifest, and runs `validate_corpus.py` and `tests/run_tests.py` first. It
+fetches nothing and never rewrites `wrangler.jsonc` except for a deliberate
+`--doha-shards` rebinding: the release ids live in `release/manifest.json`, and
+`--deploy` passes them as deploy-time `--var`s so `get_release` can report a
+deployment whose vars and manifest disagree. Node 22.13 or newer is needed for
+the node tests (`node:sqlite`); `tests/run_tests.py` skips them visibly on an
+older node.
 Exit codes: 0 built (or nothing changed), 2 refused, 3 deployed but the live
 `get_release` does not report the new ids.
 

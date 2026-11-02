@@ -201,10 +201,14 @@ def collect_directive(root: Path, key: str, files: dict, out: Path) -> dict:
             raise Refused(f"{key}: {name} is listed in the manifest but not on disk")
         raw = src.read_bytes()
         expected = sec.get("body_sha256")
-        if expected:
-            actual = sha256_bytes(section_body(raw.decode("utf-8-sig")).encode("utf-8"))
-            if actual != expected:
-                raise Refused(f"{key}: {name} does not match the body hash the library manifest records")
+        if not expected:
+            # A section the library manifest does not hash cannot be served as
+            # "verified by the Custodian release": there is nothing to verify it
+            # against. Refuse rather than fail open.
+            raise Refused(f"{key}: {name} carries no body_sha256 in the library manifest, so it cannot be verified")
+        actual = sha256_bytes(section_body(raw.decode("utf-8-sig")).encode("utf-8"))
+        if actual != expected:
+            raise Refused(f"{key}: {name} does not match the body hash the library manifest records")
         (out / rel_dir / name).write_bytes(raw)
         files[f"{rel_dir}/{name}"] = {
             "sha256": sha256_bytes(raw),
@@ -268,7 +272,9 @@ def collect_cfr(root: Path, files: dict, out: Path) -> dict:
             raise Refused(f"cfr-117: {name} listed in the manifest but not on disk")
         raw = src.read_bytes()
         expected = sec.get("body_sha256")
-        if expected and sha256_bytes(section_body(raw.decode("utf-8-sig")).encode("utf-8")) != expected:
+        if not expected:
+            raise Refused(f"cfr-117: {name} carries no body_sha256 in the library manifest, so it cannot be verified")
+        if sha256_bytes(section_body(raw.decode("utf-8-sig")).encode("utf-8")) != expected:
             raise Refused(f"cfr-117: {name} does not match the body hash the library manifest records")
         (out / rel_dir / name).write_bytes(raw)
         files[f"{rel_dir}/{name}"] = {"sha256": sha256_bytes(raw), "source": f"library:{lib_rel}/{name}",
@@ -430,13 +436,6 @@ def read_config(path: Path) -> tuple[str, dict]:
     return text, json.loads(strip_jsonc(text))
 
 
-def set_var(text: str, key: str, value: str) -> str:
-    pat = re.compile(r'("%s"\s*:\s*)"[^"]*"' % re.escape(key))
-    if not pat.search(text):
-        raise Refused(f"wrangler.jsonc has no vars.{key} to rewrite")
-    return pat.sub(lambda m: f'{m.group(1)}"{value}"', text, count=1)
-
-
 def set_shard(text: str, binding: str, name: str, database_id: str) -> str:
     pat = re.compile(r'(\{\s*"binding"\s*:\s*"%s"\s*,\s*"database_name"\s*:\s*)"[^"]*"(\s*,\s*"database_id"\s*:\s*)"[^"]*"'
                      % re.escape(binding))
@@ -493,8 +492,7 @@ def run_checks() -> dict:
     for label, args in (("validate_corpus", [sys.executable, str(ROOT / "scripts" / "validate_corpus.py")]),
                         ("run_tests", [sys.executable, str(ROOT / "tests" / "run_tests.py")])):
         print(f"  running {label} …", flush=True)
-        r = subprocess.run(args, cwd=ROOT, capture_output=True, text=True,
-                           env={**os.environ, "AIA_HOSTED_RELEASE_IN_CHECKS": "1"})
+        r = subprocess.run(args, cwd=ROOT, capture_output=True, text=True)
         if r.returncode != 0:
             tail = (r.stdout + r.stderr).strip().splitlines()[-12:]
             raise Refused(f"{label} failed on this checkout:\n    " + "\n    ".join(tail))
@@ -635,13 +633,15 @@ def main() -> int:
                     previous = None
             unchanged = previous is not None and manifest_fingerprint(previous) == manifest_fingerprint(manifest)
 
-            new_vars = {"RELEASE_ID": manifest["library_release"],
-                        "CORPUS_VERSION": manifest["corpus_version"],
-                        "REPO_COMMIT": manifest["repo_commit"]}
-            old_vars = {k: config.get("vars", {}).get(k) for k in new_vars}
+            # The release ids travel in manifest.json, which the Worker reads;
+            # they are also passed as deploy-time vars (--var) so get_release can
+            # report a deployment whose vars and manifest disagree. wrangler.jsonc
+            # itself is rewritten only for a deliberate shard rebinding, which is
+            # a change to commit.
+            deploy_vars = {"RELEASE_ID": manifest["library_release"],
+                           "CORPUS_VERSION": manifest["corpus_version"],
+                           "REPO_COMMIT": manifest["repo_commit"]}
             new_text = config_text
-            for key, value in new_vars.items():
-                new_text = set_var(new_text, key, value)
             if args.doha_shards:
                 for s in shards:
                     new_text = set_shard(new_text, s["binding"], s["database_name"], s["database_id"])
@@ -659,10 +659,7 @@ def main() -> int:
             print(f"32 CFR §117.8: {'available' if manifest['cfr_117']['available'] else 'UNAVAILABLE — ' + manifest['cfr_117']['reason']}")
             print(f"exclusions: {manifest['doha_exclusions']['count']} ineligible document ids of "
                   f"{manifest['doha_exclusions']['manifest_rows']} manifest rows")
-            print("vars:")
-            for k in new_vars:
-                mark = "  " if old_vars[k] == new_vars[k] else "->"
-                print(f"  {mark} {k}: {old_vars[k]!r} -> {new_vars[k]!r}")
+            print("deploy vars: " + "  ".join(f"{k}={v}" for k, v in deploy_vars.items()))
             print("D1:       " + ", ".join(s["database_name"] for s in shards))
             print(f"release folder {'unchanged' if unchanged else 'changed'}; wrangler.jsonc "
                   f"{'changed' if config_changed else 'unchanged'}")
@@ -679,12 +676,14 @@ def main() -> int:
         if not args.deploy:
             if unchanged and not config_changed:
                 print("nothing changed since the previous build.")
-            print("not deployed (no --deploy). Deploy with: npx wrangler deploy --config mcp/wrangler.jsonc")
+            print("not deployed (no --deploy). Deploy with: npx wrangler deploy --config mcp/wrangler.jsonc "
+                  + " ".join(f"--var {k}:{v}" for k, v in deploy_vars.items()))
             return EXIT_OK
 
         print("\ndeploying …", flush=True)
-        r = subprocess.run(["npx", "wrangler", "deploy", "--config", str(config_path)], cwd=ROOT,
-                           shell=(os.name == "nt"))
+        r = subprocess.run(["npx", "wrangler", "deploy", "--config", str(config_path),
+                            *[f"--var={k}:{v}" for k, v in deploy_vars.items()]],
+                           cwd=ROOT, shell=(os.name == "nt"))
         if r.returncode != 0:
             raise Refused("wrangler deploy failed")
         route = (config.get("routes") or [{}])[0].get("pattern", "")

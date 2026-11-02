@@ -31,13 +31,10 @@
   ],
   // One shared limit, keyed on the connecting IP (owner decision D6).
   "ratelimits": [{ "name": "MCP_LIMIT", "namespace_id": "4203", "simple": { "limit": 60, "period": 60 } }],
-  // Rewritten by scripts/hosted_release.py on every build; the Worker reports
-  // the manifest's values and these so a mismatch is visible in get_release.
-  "vars": {
-    "RELEASE_ID": "doha-v9-exceptions-20261003",
-    "CORPUS_VERSION": "0.1.0-scaffold",
-    "REPO_COMMIT": "78e0fb1"
-  },
+  // The release ids live in release/manifest.json. scripts/hosted_release.py
+  // --deploy also passes them as deploy-time vars (--var RELEASE_ID:…,
+  // CORPUS_VERSION:…, REPO_COMMIT:…) so get_release can report a deployment
+  // whose vars and manifest disagree. This file is never rewritten for them.
   // No request logs: a categorical query still describes the shape of someone's matter.
   "observability": { "enabled": false }
 }

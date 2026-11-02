@@ -227,14 +227,22 @@ export function createAdverseMcpServer(release, options = {}) {
   }
 
   // ---- release-derived closed sets ----
+  // These files define tool input enums. A release that cannot supply them
+  // would publish a parameter no value can satisfy, so their absence fails the
+  // server's construction (ReleaseIntegrityError) rather than producing an
+  // empty enum. release.json throws for a missing or unverified file.
+  function closedSet(path, values) {
+    if (!values.length) throw new ReleaseIntegrityError(path, 'yields an empty closed set');
+    return values;
+  }
   const eventIndex = buildEventIndex();
-  const EVENT_IDS = eventIndex.map((e) => e.id);
-  const STATES = Object.keys(safeJson(COURTS)?.states ?? {}).sort();
+  const EVENT_IDS = closedSet(TABLE_FILES['all-covered-individuals'], eventIndex.map((e) => e.id));
+  const STATES = closedSet(COURTS, Object.keys(release.json(COURTS).states ?? {}).sort());
   const FORM_SECTIONS = Object.fromEntries(
     FORMS.map((form) => {
-      const data = safeJson(FORM_FILES[form]);
-      const keys = form === 'incident_report' ? Object.keys(data?.fields ?? {}) : Object.keys(data?.sections ?? {});
-      return [form, keys];
+      const data = release.json(FORM_FILES[form]);
+      const keys = form === 'incident_report' ? Object.keys(data.fields ?? {}) : Object.keys(data.sections ?? {});
+      return [form, closedSet(FORM_FILES[form], keys)];
     }),
   );
   const ALL_SECTIONS = [...new Set(FORMS.flatMap((f) => FORM_SECTIONS[f]))].sort();
@@ -242,13 +250,13 @@ export function createAdverseMcpServer(release, options = {}) {
   function buildEventIndex() {
     const claimedBy = new Map();
     for (const path of release.list('corpus/checklists/events/event-')) {
-      const data = safeJson(path);
+      const data = release.json(path);
       for (const id of data?.event_ids ?? []) claimedBy.set(id, data.event_checklist ?? path);
     }
     const rows = [];
     for (const [table, path] of Object.entries(TABLE_FILES)) {
       if (table === 'channels') continue;
-      const data = safeJson(path);
+      const data = release.json(path);
       for (const entry of data?.entries ?? []) {
         if (!entry?.id) continue;
         rows.push({
@@ -269,19 +277,25 @@ export function createAdverseMcpServer(release, options = {}) {
     return rows;
   }
 
-  // ---- shard metadata, resolved once per server ----
-  let shardInfo = null;
+  // ---- shard metadata, resolved lazily by the tools that need it ----
+  // Only get_release and the decision tools touch the shards. Reference tools
+  // never wait on D1. A failure is cached for SHARD_RETRY_MS so a D1 outage does
+  // not turn every call into a retry.
+  const SHARD_RETRY_MS = 60_000;
+  const NO_SHARDS = { available: false, note: 'decision text shards are not bound in this deployment', meta: [], counts: null };
+  let shardInfo = shards ? null : NO_SHARDS;
+  let shardFailedAt = 0;
   async function ensureShardInfo() {
     if (shardInfo) return shardInfo;
-    if (!shards) {
-      shardInfo = { available: false, note: 'decision text shards are not bound in this deployment', meta: [], counts: null };
-      return shardInfo;
+    if (shardFailedAt && Date.now() - shardFailedAt < SHARD_RETRY_MS) {
+      return { available: false, note: 'decision text shards did not answer recently; retry later', meta: [], counts: null };
     }
     try {
       const [meta, counts] = await Promise.all([shardMeta(env), shardCounts(env)]);
       shardInfo = { available: true, meta, counts };
       return shardInfo;
     } catch {
+      shardFailedAt = Date.now();
       return { available: false, note: 'decision text shards did not answer', meta: [], counts: null };
     }
   }
@@ -345,14 +359,18 @@ export function createAdverseMcpServer(release, options = {}) {
   }
 
   async function releaseBlock(filesUsed) {
-    const info = await ensureShardInfo();
-    const ids = [...new Set(info.meta.map((m) => m.release_id).filter(Boolean))];
+    // Never waits on D1: doha_release is reported once a shard-reading tool
+    // (get_release, find_decisions, verify_case, get_decision_text) has
+    // resolved it in this isolate, and is null until then.
+    const info = shardInfo;
+    const ids = info ? [...new Set(info.meta.map((m) => m.release_id).filter(Boolean))] : [];
     return {
       corpus_version: manifest.corpus_version,
       library_release: manifest.library_release,
       repo_commit: manifest.repo_commit,
       doha_shards: manifest.doha_shards ?? [],
-      doha_release: info.available ? (ids.length === 1 ? ids[0] : ids) : null,
+      doha_release: info?.available ? (ids.length === 1 ? ids[0] : ids) : null,
+      ...(info?.available ? {} : { doha_release_note: 'resolved by get_release or a decision tool; see get_release for the shard metadata' }),
       file_sha256: filesUsed.map((f) => ({ file: f, sha256: f === 'manifest.json' ? release.manifestSha256 : fileMeta(f).sha256 ?? null })),
     };
   }
@@ -821,13 +839,14 @@ export function createAdverseMcpServer(release, options = {}) {
       },
       run: async ({ guidelines, limit, include_pre_sead4 }) => {
         requireShards();
+        await ensureShardInfo();
         const excluded = exclusions();
         const found = await findDecisions(env, guidelines, { limit, includePreSead4: include_pre_sead4, excluded });
         return {
           guidelines,
           scope: 'POST_SEAD_4' + (include_pre_sead4 ? ' + PRE_SEAD_4 (historical)' : ''),
           returned: found.cases.length,
-          candidates: found.candidates,
+          matched_before_exclusions: found.matched_before_exclusions,
           exclusions_applied: excluded.size,
           reminder: DECISIONS_REMINDER,
           cases: found.cases,
@@ -878,6 +897,7 @@ export function createAdverseMcpServer(release, options = {}) {
       },
       run: async ({ decision_id, part_from, part_to }) => {
         requireShards();
+        await ensureShardInfo();
         const text = await decisionText(env, decision_id, part_from, part_to);
         if (!text) throw new ToolError('no decision with that id is in the shards');
         if (text.parts_total > 0 && part_from > text.parts_total) {

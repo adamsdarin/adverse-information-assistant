@@ -67,6 +67,30 @@ test('a tampered or missing file is reported and never served', async () => {
   assert.equal(ok.isError, false);
 });
 
+test('a release that cannot supply a tool enum fails server construction instead of publishing an empty enum', async () => {
+  const dir = tamperableCopy();
+  appendFileSync(join(dir, 'corpus', 'courts', 'state-courts.json'), '\n{"tampered": true}\n');
+  const release = await loadRelease(await directoryFetcher(dir));
+  assert.equal(release.integrity.ok, false);
+  assert.throws(() => createAdverseMcpServer(release, { env: {} }), (e) => e instanceof ReleaseIntegrityError && e.path === 'corpus/courts/state-courts.json');
+});
+
+test('reference tools never wait on the decision shards', async () => {
+  const release = await fixtureRelease();
+  let touched = 0;
+  const slow = { prepare() { touched += 1; throw new Error('D1 must not be queried by a reference tool'); } };
+  const server = createAdverseMcpServer(release, { env: { S1: slow, S2: slow, S3: slow } });
+  const res = await callTool(server, 'get_guideline_text', { guidelines: ['G'] });
+  assert.equal(res.isError, false);
+  assert.equal(res.out.release.doha_release, null);
+  assert.equal(touched, 0);
+  // A shard failure is cached: two decision calls in a row query D1 once.
+  await callTool(server, 'verify_case', { case_number: '90-00001' });
+  await callTool(server, 'verify_case', { case_number: '90-00001' });
+  const status = await callTool(server, 'get_release', {});
+  assert.equal(status.out.decisions.shards_available, false);
+});
+
 test('a release without a manifest is refused outright', async () => {
   const dir = tamperableCopy();
   rmSync(join(dir, 'manifest.json'));

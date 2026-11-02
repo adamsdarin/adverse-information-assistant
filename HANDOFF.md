@@ -13,8 +13,8 @@ agent prompts served verbatim behind a hosted-mode preamble, closed-enum input
 validation whose errors never echo a value, `cache-control: no-store` on every
 response, and a guide page carrying `DISCLAIMER.md` verbatim.
 `scripts/hosted_release.py` builds `mcp/release/` (gitignored: it holds
-Government text copied from the approved library release) and rewrites the
-Worker vars; it refuses an unapproved release, re-verifies every section against
+Government text copied from the approved library release) and passes the
+release ids as deploy-time vars; it refuses an unapproved release, re-verifies every section against
 the Archivist's body hashes, never flips a verified flag, fetches nothing, and
 runs validate_corpus.py and run_tests.py first. The Worker verifies every asset
 against manifest.json once per isolate and fails closed per file. 32 CFR §117.8
@@ -88,6 +88,17 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-02 Claude — Fixed the ten review items on PR #3: event-stream GETs now
+get 405 and oversized bodies 413 before the read; a section without a library
+body hash refuses the build instead of serving as verified; the Node >= 22.13
+need is declared and older nodes skip the node tests visibly; reference tools no
+longer wait on D1 (shard metadata is resolved only by get_release and the
+decision tools, failures cached 60 s); find_decisions ranks and caps in SQL
+per shard and outcome; a release that cannot supply a tool enum fails server
+construction; the build no longer rewrites wrangler.jsonc vars (ids travel in
+the manifest and as deploy-time --var); the dead env var is gone; the lockfile
+is committed. The design's §5.3 carries an implementation note for the vars
+change.
 2026-11-01 Claude — Implemented hosted MCP phase 2 on a branch and opened a pull
 request; nothing deployed. Decisions: the built release is gitignored because it
 holds library Government text (the repo never carries it); the Worker loads and

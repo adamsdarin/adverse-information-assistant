@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { handleMcpHttpRequest } from '../../mcp/http.js';
+import { handleMcpHttpRequest, MAX_BODY_BYTES } from '../../mcp/http.js';
 import worker, { resetWorkerCache } from '../../mcp/worker.js';
 import { renderGuide } from '../../mcp/guide.js';
 import { fixtureReleaseDir, fixtureServer, makeShardEnv, ROOT } from './helpers.mjs';
@@ -26,6 +26,20 @@ test('every transport response is no-store and never carries a session id', asyn
   const info = await handleMcpHttpRequest(new Request(URL_, { method: 'GET', headers: { accept: 'application/json' } }), server);
   assert.equal(info.headers.get('cache-control'), 'no-store');
   assert.equal((await info.json()).stateless, true);
+
+  // MCP Streamable HTTP: no server-initiated event stream is offered, so a GET
+  // asking for one is 405, never a 200 JSON body a client would try to parse.
+  const stream = await handleMcpHttpRequest(new Request(URL_, { method: 'GET', headers: { accept: 'text/event-stream' } }), server);
+  assert.equal(stream.status, 405);
+  assert.equal(stream.headers.get('cache-control'), 'no-store');
+
+  const declaredTooBig = await handleMcpHttpRequest(
+    new Request(URL_, { method: 'POST', headers: { 'content-type': 'application/json', 'content-length': String(MAX_BODY_BYTES + 1) }, body: '{}' }),
+    server,
+  );
+  assert.equal(declaredTooBig.status, 413);
+  const actuallyTooBig = await handleMcpHttpRequest(post('x'.repeat(MAX_BODY_BYTES + 1)), server);
+  assert.equal(actuallyTooBig.status, 413);
 
   const options = await handleMcpHttpRequest(new Request(URL_, { method: 'OPTIONS' }), server);
   assert.equal(options.status, 204);
@@ -66,6 +80,8 @@ function fakeLimiter(results) {
 test('the Worker serves the guide on GET text/html with DISCLAIMER.md verbatim, and MCP on POST', async () => {
   resetWorkerCache();
   const env = { ASSETS: fakeAssets(fixtureReleaseDir()), MCP_LIMIT: fakeLimiter([true, true, false]), ...makeShardEnv(), RELEASE_ID: 'synthetic-test-release' };
+  const sse = await worker.fetch(new Request(URL_, { headers: { accept: 'text/event-stream' } }), env);
+  assert.equal(sse.status, 405, 'an SDK client opening the event stream after initialize gets 405, not the guide');
   const guide = await worker.fetch(new Request(URL_, { headers: { accept: 'text/html,application/xhtml+xml' } }), env);
   assert.equal(guide.status, 200);
   assert.match(guide.headers.get('content-type'), /text\/html/);

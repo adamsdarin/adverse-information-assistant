@@ -1821,8 +1821,18 @@ def main() -> int:
               and (fixture_release / "agents" / "conductor.md").read_bytes()
               == (ROOT / "agents" / "conductor.md").read_bytes())
 
+        # The node tests use node:sqlite (Node >= 22.13, declared in package.json
+        # engines). An older node skips them with a visible message instead of a
+        # module-not-found trace that would also make hosted_release.py refuse.
         node = shutil.which("node")
-        if node and (fixture_release / "manifest.json").exists():
+        node_ok = False
+        if node:
+            v = subprocess.run([node, "--version"], capture_output=True, text=True).stdout.strip().lstrip("v")
+            parts = [int(x) for x in re.findall(r"\d+", v)[:2]] or [0, 0]
+            node_ok = parts[0] > 22 or (parts[0] == 22 and parts[1] >= 13)
+            if not node_ok:
+                print(f"  SKIP  hosted server unit tests — node {v} found, but they need >= 22.13 (node:sqlite)")
+        if node and node_ok and (fixture_release / "manifest.json").exists():
             r = subprocess.run([node, "--test", "tests/mcp/*.test.mjs"], cwd=ROOT, capture_output=True,
                                text=True, encoding="utf-8", errors="replace",
                                env={**os.environ, "AIA_FIXTURE_RELEASE": str(fixture_release)})

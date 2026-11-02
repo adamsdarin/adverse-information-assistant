@@ -21,16 +21,33 @@ const PARSED_OUTCOMES = ['approved', 'denied', 'remanded'];
 
 const DECISION_COLUMNS =
   'decision_id, document_id, case_id, decision_level, decision_family, outcome, guideline_codes, era, decision_date, source_url, pages, parts';
+const OUTCOME_LIST = PARSED_OUTCOMES.map((o) => `'${o}'`).join(', ');
+
+// doha_retrieval.select()'s score, in SQL, over n bound LIKE patterns
+// (?1..?n, each '%,X,%'): overlap * 10, + 5 for the post-SEAD 4 era, minus the
+// distance between the decision's guideline count and the request's.
+const likeClauses = (n) => Array.from({ length: n }, (_, i) => `(',' || guideline_codes || ',') LIKE ?${i + 1}`);
+const scoreSql = (n) =>
+  `(${likeClauses(n).map((c) => `(CASE WHEN ${c} THEN 1 ELSE 0 END)`).join(' + ')}) * 10` +
+  ` + (CASE WHEN era = '${POST_SEAD4}' THEN 5 ELSE 0 END)` +
+  ` - abs((CASE WHEN guideline_codes IS NULL OR guideline_codes = '' THEN 0 ELSE (length(guideline_codes) + 1) / 2 END) - ${n})`;
 
 export const STATEMENTS = {
   meta: 'SELECT key, value FROM meta',
-  counts: `SELECT count(*) AS total, sum(CASE WHEN outcome IN (${PARSED_OUTCOMES.map((o) => `'${o}'`).join(', ')}) THEN 1 ELSE 0 END) AS parsed FROM decisions`,
+  counts: `SELECT count(*) AS total, sum(CASE WHEN outcome IN (${OUTCOME_LIST}) THEN 1 ELSE 0 END) AS parsed FROM decisions`,
   caseIds: 'SELECT DISTINCT case_id FROM decisions',
-  /** n guideline LIKE patterns; postOnly adds the era filter. */
-  byGuidelines: (n, postOnly) =>
-    `SELECT ${DECISION_COLUMNS} FROM decisions WHERE (` +
-    Array.from({ length: n }, (_, i) => `(',' || guideline_codes || ',') LIKE ?${i + 1}`).join(' OR ') +
-    `)${postOnly ? ` AND era = '${POST_SEAD4}'` : ''}`,
+  /**
+   * The top rows for one outcome, ranked in SQL and capped (?n+1 = outcome,
+   * ?n+2 = limit), so a guideline with thousands of decisions never ships
+   * thousands of rows to the Worker. postOnly adds the era filter.
+   */
+  topByGuidelines: (n, postOnly) =>
+    `SELECT ${DECISION_COLUMNS}, ${scoreSql(n)} AS score FROM decisions WHERE (${likeClauses(n).join(' OR ')})` +
+    ` AND outcome = ?${n + 1}${postOnly ? ` AND era = '${POST_SEAD4}'` : ''} ORDER BY score DESC, case_id ASC LIMIT ?${n + 2}`,
+  /** How many decisions matched at all, before exclusions. */
+  countByGuidelines: (n, postOnly) =>
+    `SELECT count(*) AS n FROM decisions WHERE (${likeClauses(n).join(' OR ')}) AND outcome IN (${OUTCOME_LIST})` +
+    `${postOnly ? ` AND era = '${POST_SEAD4}'` : ''}`,
   byCase: `SELECT ${DECISION_COLUMNS} FROM decisions WHERE case_id = ?1`,
   byDecision: `SELECT ${DECISION_COLUMNS}, first_rowid FROM decisions WHERE decision_id = ?1`,
   passages: 'SELECT rowid AS rid, part, first_page, last_page, body FROM passages WHERE rowid BETWEEN ?1 AND ?2 ORDER BY rowid',
@@ -122,9 +139,24 @@ export async function shardCounts(env) {
 export async function findDecisions(env, guidelines, { limit = 6, includePreSead4 = false, excluded = new Set() } = {}) {
   const want = [...new Set(guidelines.map((g) => g.toUpperCase()))];
   const binds = want.map((g) => `%,${g},%`);
-  const sql = STATEMENTS.byGuidelines(want.length, !includePreSead4);
-  const rows = (await eachShard(env, (db) => all(db, sql, binds))).flat();
+  const postOnly = !includePreSead4;
+  // Each shard returns at most `take` rows per outcome, ranked in SQL. The
+  // margin covers rows the exclusion list removes afterwards; a guideline
+  // whose top rows are mostly ineligible can return fewer than `limit`.
+  const take = Math.max(24, limit * 4);
+  const topSql = STATEMENTS.topByGuidelines(want.length, postOnly);
+  const countSql = STATEMENTS.countByGuidelines(want.length, postOnly);
+  const perShard = await eachShard(env, async (db) => {
+    const [count, ...byOutcome] = await Promise.all([
+      all(db, countSql, binds),
+      ...PARSED_OUTCOMES.map((outcome) => all(db, topSql, [...binds, outcome, take])),
+    ]);
+    return { matched: Number(count[0]?.n ?? 0), rows: byOutcome.flat() };
+  });
+  const matched = perShard.reduce((n, s) => n + s.matched, 0);
+  const rows = perShard.flatMap((s) => s.rows);
 
+  // Re-rank in JS with the same score so the merge across shards is stable.
   const wantSet = new Set(want);
   const scored = [];
   for (const r of rows) {
@@ -149,7 +181,7 @@ export async function findDecisions(env, guidelines, { limit = 6, includePreSead
   }
   if (out.length < limit) out.push(...other.slice(0, limit - out.length));
   return {
-    candidates: scored.length,
+    matched_before_exclusions: matched,
     cases: out.slice(0, limit).map(describeDecision),
   };
 }

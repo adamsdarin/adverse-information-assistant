@@ -43,4 +43,3 @@ node_modules/
 mcp/release/
 mcp/.wrangler/
 .wrangler/
-package-lock.json

@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
   "description": "Hosted MCP reference server tooling for the Adverse Information Assistant. The tool itself is Python plus agent prompts and needs none of this; see docs/HOSTED-MCP-DESIGN.md.",
   "scripts": {
     "mcp:worker:dev": "npx wrangler dev --config mcp/wrangler.jsonc --port 8789",
