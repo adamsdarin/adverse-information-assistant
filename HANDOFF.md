@@ -1,25 +1,32 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-11-02 by Claude
+Last updated: 2026-11-03 by Claude
 
 ## Current State
-November 2: the hosted MCP server is live at `https://fsotools.ai/adverse/mcp`
-(Worker `adverse-information-assistant`, version 03d95d7b). Pull request #3
-was reviewed (ten findings, all fixed in 893e51f) and merged by the owner;
-the owner approved the deploy, run from this machine with
-`hosted_release.py --library … --deploy` at commit 814e644. The live
-`get_release` reports library `doha-v9-exceptions-20261003`, corpus
-`0.1.0-scaffold`, repo commit `814e644`, and all three decision shards
-(`doha-robot-lf-20260929`). The script's own post-deploy confirmation first
-got a 403: the zone's browser-integrity check (Cloudflare error 1010) rejects
-urllib's default user agent before the Worker runs, so the confirmation request
-now sends a named user agent; MCP clients were unaffected. Still to do for
-launch: the site's MCP directory entry stays Planned (and the Worker path is not
-yet in the site's robots/worker-path lists), and `mcp-release-sync` has no
-`adverse_mcp` hook yet. 32 CFR §117.8 is served as `unavailable` (D5 default).
+DEPLOYED with the owner's approval: Worker `adverse-information-assistant` at
+`https://fsotools.ai/adverse/mcp`, from `main` 814e644 (PR 3, reviewed with ten
+findings all fixed in 893e51f, merged by the owner). Two sessions deployed the
+same build within minutes of each other on 2026-11-03 UTC: version 03d95d7b via
+`hosted_release.py --library … --deploy`, then version 3aebd4cf (~00:45 UTC) via
+the wrangler command the builder prints with `RELEASE_ID`, `CORPUS_VERSION` and
+`REPO_COMMIT`; the content is identical and 3aebd4cf is the live version. Live
+checks: protocol 2025-06-18, 17 tools listed, `get_release` reports library
+`doha-v9-exceptions-20261003`, corpus 0.1.0-scaffold, commit 814e644 and the
+three `doha-robot-lf-20260929` shards; the guide page serves with the
+`claude mcp add` line; `GET` with `Accept: text/event-stream` answers 405. The
+builder's own post-deploy confirmation first got a 403: the zone's
+browser-integrity check (Cloudflare error 1010) rejects urllib's default user
+agent before the Worker runs, so `rpc_live_get_release` now names itself; MCP
+clients were unaffected. `package-lock.json` now carries the `engines` field
+npm syncs from package.json, so `npm install` no longer rewrites it. The
+website lists the connector as Live on /mcp/. Open: the tools carry no MCP
+annotations (`readOnlyHint`), so ChatGPT's chat mode treats each call as a
+possible write and asks before it (the Atlas and Question Bot servers set them
+on 2026-11-02); `mcp-release-sync` has no `adverse_mcp` hook yet. 32 CFR §117.8
+is served as `unavailable` (D5 default).
 
 November 1: phase 2 of the hosted MCP design was implemented on branch
-`claude/pensive-sutherland-5a809b` (pull request #3, since merged). `mcp/` holds the Cloudflare Worker `adverse-information-assistant`
+`claude/pensive-sutherland-5a809b` (PR 3, merged 2026-11-03). `mcp/` holds the Cloudflare Worker `adverse-information-assistant`
 (wrangler.jsonc, worker.js, server.js, http.js, d1.js, release.js, guide.js):
 17 tools as design §2.2 enumerates them (the task brief said sixteen; the
 design lists seventeen and all are built), three resource families, the 16
@@ -83,10 +90,9 @@ Branch, commit, dirty files and last-fetched upstream comparison are generated,
 not copied into this document. See `HANDOFF-archive.md` for prior decisions.
 
 ## Next
-1. In `fsotools-website`: move the `/mcp/` directory entry for this server from
-   Planned to Live, add `/adverse/mcp` to the robots disallow list and the
-   `WORKER_PATHS` test. D2's default keeps the reporting tables unlinked until
-   they are verified.
+1. Add MCP tool annotations (`readOnlyHint`, as the Atlas and Question Bot
+   servers set them) so chat clients stop asking before every call; redeploy.
+   D2's default keeps the reporting tables unlinked until they are verified.
 2. Hand the release-sync agent (`mcp-release-sync`) the deploy contract: the
    command, exit codes 0/2/3, and that `--doha-shards` needs `name=id` pairs or a
    logged-in `wrangler d1 list` to resolve database ids.
@@ -101,6 +107,7 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-03 Claude — Deployed the hosted MCP Worker (version 3aebd4cf) from merged main with the owner's approval and checked it live; noted the missing tool annotations.
 2026-11-02 Claude — Deployed the Worker after the owner merged PR #3 and said
 "Deploy it". Build, corpus validation, the full suite and the deploy passed; the
 script's live confirmation hit the zone's browser-integrity check (403, error
