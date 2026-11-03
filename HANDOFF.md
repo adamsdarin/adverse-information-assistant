@@ -1,11 +1,25 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-11-01 by Claude
+Last updated: 2026-11-03 by Claude
 
 ## Current State
-November 1: phase 2 of the hosted MCP design is implemented on branch
-`claude/pensive-sutherland-5a809b` (pull request against `main`; nothing
-deployed). `mcp/` holds the Cloudflare Worker `adverse-information-assistant`
+DEPLOYED 2026-11-03 ~00:45 UTC with the owner's approval: Worker
+`adverse-information-assistant` version 3aebd4cf-dc83-44a3-b1c3-880bb79041ec at
+`https://fsotools.ai/adverse/mcp`, from `main` 814e644 (PR 3, merged by the owner).
+Release built by `scripts/hosted_release.py --library <DCSA Library root>` (exit 0;
+validate_corpus and the suite ran inside it; 98 files from library
+`doha-v9-exceptions-20261003`, corpus 0.1.0-scaffold), then the wrangler command it
+printed with `RELEASE_ID`, `CORPUS_VERSION` and `REPO_COMMIT`. Live checks: protocol
+2025-06-18, 17 tools listed, `get_release` reports those ids and the three
+`doha-robot-lf-20260929` shards, the guide page serves with the `claude mcp add`
+line, `GET` with `Accept: text/event-stream` answers 405. Open: the tools carry no
+MCP annotations (`readOnlyHint`), so ChatGPT's chat mode treats each call as a
+possible write and asks before it; the Atlas and Question Bot servers set them on
+2026-11-02. `npm install` rewrites the tracked `package-lock.json`; restore it rather
+than commit it. The website lists the connector as Live on /mcp/.
+
+November 1: phase 2 of the hosted MCP design was implemented on branch
+`claude/pensive-sutherland-5a809b` (PR 3, merged 2026-11-03). `mcp/` holds the Cloudflare Worker `adverse-information-assistant`
 (wrangler.jsonc, worker.js, server.js, http.js, d1.js, release.js, guide.js):
 17 tools as design §2.2 enumerates them (the task brief said sixteen; the
 design lists seventeen and all are built), three resource families, the 16
@@ -88,6 +102,7 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-03 Claude — Deployed the hosted MCP Worker (version 3aebd4cf) from merged main with the owner's approval and checked it live; noted the missing tool annotations.
 2026-11-02 Claude — Fixed the ten review items on PR #3: event-stream GETs now
 get 405 and oversized bodies 413 before the read; a section without a library
 body hash refuses the build instead of serving as verified; the Node >= 22.13
