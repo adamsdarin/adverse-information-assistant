@@ -19,10 +19,13 @@ browser-integrity check (Cloudflare error 1010) rejects urllib's default user
 agent before the Worker runs, so `rpc_live_get_release` now names itself; MCP
 clients were unaffected. `package-lock.json` now carries the `engines` field
 npm syncs from package.json, so `npm install` no longer rewrites it. The
-website lists the connector as Live on /mcp/. Open: the tools carry no MCP
-annotations (`readOnlyHint`), so ChatGPT's chat mode treats each call as a
-possible write and asks before it (the Atlas and Question Bot servers set them
-on 2026-11-02); `mcp-release-sync` has no `adverse_mcp` hook yet. 32 CFR §117.8
+website lists the connector as Live on /mcp/. REDEPLOYED 2026-11-03 ~01:20 UTC (version 8f9a759b-c7ed-48ad-bed9-c8053b425b25,
+`hosted_release.py --deploy` from `main` bfe0d01, live `get_release` confirmed by the
+script): PR 6 gave every tool MCP annotations (`readOnlyHint: true`, `destructiveHint:
+false`, `idempotentHint: true`, `openWorldHint: false`; `READ_ONLY` in server.js) and
+bumped the server to 0.1.1, so ChatGPT's chat mode no longer asks before each call;
+the http test checks all 17. Live check: 17 tools, one annotation set, version 0.1.1.
+Open: `mcp-release-sync` has no `adverse_mcp` hook yet. 32 CFR §117.8
 is served as `unavailable` (D5 default).
 
 November 1: phase 2 of the hosted MCP design was implemented on branch
@@ -90,8 +93,7 @@ Branch, commit, dirty files and last-fetched upstream comparison are generated,
 not copied into this document. See `HANDOFF-archive.md` for prior decisions.
 
 ## Next
-1. Add MCP tool annotations (`readOnlyHint`, as the Atlas and Question Bot
-   servers set them) so chat clients stop asking before every call; redeploy.
+1. Done 2026-11-03 (PR 6, redeployed as version 8f9a759b): MCP tool annotations.
    D2's default keeps the reporting tables unlinked until they are verified.
 2. Hand the release-sync agent (`mcp-release-sync`) the deploy contract: the
    command, exit codes 0/2/3, and that `--doha-shards` needs `name=id` pairs or a
@@ -107,6 +109,7 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-03 Claude — Read-only annotations on every tool (PR 6, server 0.1.1); redeployed as version 8f9a759b with the owner's approval and checked live.
 2026-11-03 Claude — Deployed the hosted MCP Worker (version 3aebd4cf) from merged main with the owner's approval and checked it live; noted the missing tool annotations.
 2026-11-02 Claude — Deployed the Worker after the owner merged PR #3 and said
 "Deploy it". Build, corpus validation, the full suite and the deploy passed; the
