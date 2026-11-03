@@ -15,7 +15,11 @@
 import { ReleaseIntegrityError } from './release.js';
 import { MAX_TEXT_PARTS, decisionText, findDecisions, hasShards, shardCounts, shardMeta, verifyCase } from './d1.js';
 
-export const SERVER_INFO = { name: 'adverse-information-assistant', version: '0.1.0' };
+export const SERVER_INFO = { name: 'adverse-information-assistant', version: '0.1.1' };
+// Every tool reads published reference material and changes nothing (design §2.1), and
+// says so in MCP tool annotations: a client such as ChatGPT's chat mode then calls them
+// without asking the user to confirm each one as a possible write.
+export const READ_ONLY = Object.freeze({ readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false });
 export const MCP_PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 // One rate-limited POST may carry a JSON-RPC batch; cap it so a batch cannot
 // stand in for thousands of requests.
@@ -912,6 +916,7 @@ export function createAdverseMcpServer(release, options = {}) {
   const tools = toolDefs.map((t) => ({
     name: t.name,
     description: t.description,
+    annotations: { ...READ_ONLY },
     inputSchema: {
       type: 'object',
       additionalProperties: false,
