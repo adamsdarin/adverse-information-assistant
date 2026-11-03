@@ -556,7 +556,10 @@ python scripts/hosted_release.py --library "<library root>" [--doha-shards s1,s2
   verifying every hash; refuses on any mismatch or a failing
   `validate_corpus.py` / `tests/run_tests.py` (exit 2).
 - Rewrites `RELEASE_ID`, `CORPUS_VERSION` and `REPO_COMMIT` in
-  `mcp/wrangler.jsonc` `vars`. **Does not** rebind the D1 shards on its own:
+  `mcp/wrangler.jsonc` `vars`. *Implementation note (2026-11-02, from the
+  phase 2 review): the ids are carried in `mcp/release/manifest.json` and
+  passed as deploy-time `--var`s instead, so `wrangler.jsonc` stays unchanged
+  and the checkout stays clean after a build.* **Does not** rebind the D1 shards on its own:
   those are built and uploaded by `doha-decision-search`, which names each
   database for its release (`doha-text-<release>-s<N>`); the agent passes
   `--doha-shards <name-s1>,<name-s2>,<name-s3>` after that upload, and the

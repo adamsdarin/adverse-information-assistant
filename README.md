@@ -87,6 +87,7 @@ it and point your assistant at it — see [`USAGE.md`](USAGE.md).
 | Test it before trusting it | [`BETA-TESTING.md`](BETA-TESTING.md) |
 | Understand how it works | [`PROCESS.md`](PROCESS.md) · [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | Know what it does with my data | [`DEPLOYMENT.md`](DEPLOYMENT.md) · [`DISCLAIMER.md`](DISCLAIMER.md) |
+| Use the hosted reference server instead of a library on disk | [`DEPLOYMENT.md`](DEPLOYMENT.md#mode-1b--local-session-hosted-reference) (Mode 1b) · [`mcp/README.md`](mcp/README.md) |
 
 See [`PROCESS.md`](PROCESS.md) for the process map — session flow, question
 sourcing, trust gates, and corpus grounding, as diagrams that render here on
@@ -124,7 +125,11 @@ tool names what's absent and points you at the link. See
 Privacy here is a property of **how you deploy this**, not of the software.
 Read [`DEPLOYMENT.md`](DEPLOYMENT.md) — it defines local vs hosted modes and
 what each can honestly promise. The tool states its own mode before it
-collects anything.
+collects anything. There is also a middle mode, **1b**: the session stays on
+your machine and only reference material (directive text, reporting tables,
+published decisions) comes from the project's hosted MCP server, requested by
+category, never in your words. `DEPLOYMENT.md` says exactly what that server
+can and cannot promise.
 
 Running locally, which is what this repo describes:
 

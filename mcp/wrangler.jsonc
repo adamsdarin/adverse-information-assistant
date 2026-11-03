@@ -1,0 +1,40 @@
+{
+  // Cloudflare Worker for the Adverse Information Assistant's hosted MCP
+  // reference server (design: docs/HOSTED-MCP-DESIGN.md). Stateless: it serves
+  // reference material by categorical key and never receives a narrative.
+  // Local dev:   npm run mcp:worker:dev      (needs mcp/release/, built by scripts/hosted_release.py)
+  // Production:  npm run mcp:worker:deploy   (owner's machine only; see DEPLOYMENT.md Mode 1b)
+  "name": "adverse-information-assistant",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  // The route is the only address. No workers.dev subdomain, no preview URLs.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "fsotools.ai/adverse/mcp*", "zone_name": "fsotools.ai" }],
+  // The hash-checked release built by scripts/hosted_release.py, read through
+  // env.ASSETS only. run_worker_first keeps every file behind the Worker: no
+  // asset is ever served as a bare URL.
+  "assets": {
+    "directory": "./release",
+    "binding": "ASSETS",
+    "not_found_handling": "none",
+    "run_worker_first": true
+  },
+  // Read-only bindings to the Adjudication Atlas's three D1 FTS5 shards of
+  // published DOHA decision text (built by doha-decision-search). Only SELECT
+  // statements exist in mcp/d1.js; the Worker owns no writable binding.
+  // Rebound by hosted_release.py --doha-shards after a shard rebuild.
+  "d1_databases": [
+    { "binding": "S1", "database_name": "doha-text-doha-robot-lf-20260929-s1", "database_id": "fb229f01-9cdd-4f9e-b734-625631df8fc3", "remote": true },
+    { "binding": "S2", "database_name": "doha-text-doha-robot-lf-20260929-s2", "database_id": "a584f3b4-dafb-4692-9c43-a78f90389c79", "remote": true },
+    { "binding": "S3", "database_name": "doha-text-doha-robot-lf-20260929-s3", "database_id": "128bdbc7-b030-4f25-80e4-5548d05b17bc", "remote": true }
+  ],
+  // One shared limit, keyed on the connecting IP (owner decision D6).
+  "ratelimits": [{ "name": "MCP_LIMIT", "namespace_id": "4203", "simple": { "limit": 60, "period": 60 } }],
+  // The release ids live in release/manifest.json. scripts/hosted_release.py
+  // --deploy also passes them as deploy-time vars (--var RELEASE_ID:…,
+  // CORPUS_VERSION:…, REPO_COMMIT:…) so get_release can report a deployment
+  // whose vars and manifest disagree. This file is never rewritten for them.
+  // No request logs: a categorical query still describes the shape of someone's matter.
+  "observability": { "enabled": false }
+}

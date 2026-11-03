@@ -15,6 +15,7 @@ Exit:   0 all passed · 1 something failed
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -40,6 +41,8 @@ RETRIEVAL = ROOT / "scripts" / "doha_retrieval.py"
 COURTS = ROOT / "scripts" / "court_lookup.py"
 VALIDATE = ROOT / "scripts" / "validate_corpus.py"
 SYNTHETIC = ROOT / "scripts" / "generate_synthetic_workflow_runs.py"
+HOSTED = ROOT / "scripts" / "hosted_release.py"
+FIXTURE_RELEASE = ROOT / "tests" / "mcp" / "build_fixture_release.py"
 
 # Drift check: conductor.md is the generative source of the session flow and
 # PROCESS.md renders it. These two anchor lists encode the SAME canonical
@@ -1735,6 +1738,109 @@ def main() -> int:
         c, o = run(SCORE, "--only", "federal-never-diss",
                    "--results-dir", str(rdir))
         check("missing result file fails the eval", c == 1 and "missing" in o.lower())
+
+        print("\nhosted MCP reference server — a convenience, never a dependency")
+        # The local tool must keep working with no network at all. Nothing an
+        # agent prompt or a script does may route through mcp/ (design §5.1);
+        # the hosted server consumes the repo, never the reverse.
+        offenders = []
+        for p in list((ROOT / "agents").rglob("*.md")) + list((ROOT / "scripts").glob("*.py")):
+            if p.name == "hosted_release.py":
+                continue
+            if re.search(r"\bmcp/", p.read_text(encoding="utf-8", errors="replace")):
+                offenders.append(str(p.relative_to(ROOT)))
+        check("nothing under agents/ or scripts/ references mcp/", not offenders, str(offenders))
+
+        # Worker bundle hygiene (design §4): nothing logs on the request path
+        # and the only outbound fetch is the static-assets binding.
+        bad_console, bad_fetch = [], []
+        for js in sorted((ROOT / "mcp").glob("*.js")):
+            code = "\n".join(l for l in js.read_text(encoding="utf-8").splitlines()
+                             if not l.lstrip().startswith(("//", "*", "/*")))
+            if "console." in code:
+                bad_console.append(js.name)
+            for m in re.finditer(r"\bfetch\(", code):
+                before = code[max(0, m.start() - 8):m.start()]
+                if not (before.endswith(("ASSETS.", "assets.")) or before.endswith("async ")):
+                    bad_fetch.append(f"{js.name}:{code[:m.start()].count(chr(10)) + 1}")
+        check("no console.* in the Worker modules", not bad_console, str(bad_console))
+        check("no outbound fetch except the assets binding", not bad_fetch, str(bad_fetch))
+
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import hosted_release as hr  # noqa: E402
+        _, cfg = hr.read_config(ROOT / "mcp" / "wrangler.jsonc")
+        posture = (
+            cfg.get("name") == "adverse-information-assistant"
+            and cfg.get("workers_dev") is False and cfg.get("preview_urls") is False
+            and cfg.get("observability", {}).get("enabled") is False
+            and cfg.get("routes") == [{"pattern": "fsotools.ai/adverse/mcp*", "zone_name": "fsotools.ai"}]
+            and cfg.get("assets", {}).get("directory") == "./release"
+            and [d["binding"] for d in cfg.get("d1_databases", [])] == ["S1", "S2", "S3"]
+            and all(d.get("remote") is True for d in cfg.get("d1_databases", []))
+            and cfg.get("ratelimits", [{}])[0].get("simple") == {"limit": 60, "period": 60}
+            and not any(k in cfg for k in ("kv_namespaces", "r2_buckets", "durable_objects", "queues", "services"))
+        )
+        check("wrangler.jsonc keeps the design's privacy posture", posture)
+
+        # The release build: refuses an unapproved library, builds the fixture,
+        # never flips a verified flag, fails closed on 32 CFR 117.
+        tmpcfg = tmp / "wrangler.jsonc"
+        tmpcfg.write_text((ROOT / "mcp" / "wrangler.jsonc").read_text(encoding="utf-8"), encoding="utf-8")
+        c, o = run(HOSTED, "--library", str(ROOT / "tests" / "fixtures" / "mini-library"),
+                   "--out", str(tmp / "unapproved-release"), "--config", str(tmpcfg), "--skip-checks")
+        check("hosted_release.py refuses an unapproved library (exit 2)",
+              c == 2 and "REFUSED" in o and not (tmp / "unapproved-release").exists(), o.strip()[-300:])
+
+        fixture_release = tmp / "fixture-release"
+        c, o = run(FIXTURE_RELEASE, str(fixture_release))
+        check("hosted_release.py builds the approved fixture release", c == 0 and (fixture_release / "manifest.json").exists(),
+              o.strip()[-400:])
+        manifest = {}
+        if (fixture_release / "manifest.json").exists():
+            manifest = json.loads((fixture_release / "manifest.json").read_text(encoding="utf-8"))
+        files = manifest.get("files", {})
+        check("release manifest carries the library release and approval",
+              manifest.get("library_release") == "synthetic-test-release"
+              and manifest.get("library_approval", {}).get("approved_by") == "synthetic-fixture")
+        check("every served file has a SHA-256 in the manifest",
+              bool(files) and all(re.fullmatch(r"[0-9a-f]{64}", f.get("sha256", "")) for f in files.values()))
+        check("Government files are verified by the Custodian release, maintainer files are not flipped",
+              all(f["verified"] is True for f in files.values() if f["source"].startswith("library:"))
+              and all(f["verified"] is False and f["maintainer_verified"] is False
+                      for f in files.values() if f["source"].startswith("repo:corpus/"))
+              and manifest.get("counts", {}).get("maintainer_verified") == 0)
+        check("32 CFR 117 is unavailable rather than sliced when the library has no split",
+              manifest.get("cfr_117", {}).get("available") is False
+              and not any(p.startswith("government/cfr-117/") for p in files))
+        check("doha-exclusions.json is derived from answer_eligible: false",
+              manifest.get("doha_exclusions", {}).get("count") == 1)
+        check("the release carries no mcp/ or output/ paths and no session files",
+              not any(p.startswith(("mcp/", "output/")) or p.endswith(".session.json") for p in files))
+        check("agent prompts ship verbatim in the release",
+              (fixture_release / "agents" / "conductor.md").exists()
+              and (fixture_release / "agents" / "conductor.md").read_bytes()
+              == (ROOT / "agents" / "conductor.md").read_bytes())
+
+        # The node tests use node:sqlite (Node >= 22.13, declared in package.json
+        # engines). An older node skips them with a visible message instead of a
+        # module-not-found trace that would also make hosted_release.py refuse.
+        node = shutil.which("node")
+        node_ok = False
+        if node:
+            v = subprocess.run([node, "--version"], capture_output=True, text=True).stdout.strip().lstrip("v")
+            parts = [int(x) for x in re.findall(r"\d+", v)[:2]] or [0, 0]
+            node_ok = parts[0] > 22 or (parts[0] == 22 and parts[1] >= 13)
+            if not node_ok:
+                print(f"  SKIP  hosted server unit tests — node {v} found, but they need >= 22.13 (node:sqlite)")
+        if node and node_ok and (fixture_release / "manifest.json").exists():
+            r = subprocess.run([node, "--test", "tests/mcp/*.test.mjs"], cwd=ROOT, capture_output=True,
+                               text=True, encoding="utf-8", errors="replace",
+                               env={**os.environ, "AIA_FIXTURE_RELEASE": str(fixture_release)})
+            summary = " ".join(l.strip() for l in r.stdout.splitlines() if l.startswith(("ℹ tests", "ℹ pass", "ℹ fail")))
+            check(f"hosted server unit tests pass (node --test: {summary or 'no summary'})", r.returncode == 0,
+                  (r.stdout + r.stderr).strip()[-600:])
+        else:
+            print("  SKIP  hosted server unit tests — node not found; run `npm run mcp:test` where it is")
 
     print(f"\n{passed} passed, {failed} failed")
     return 1 if failed else 0
