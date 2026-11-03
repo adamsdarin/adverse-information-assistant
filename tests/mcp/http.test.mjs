@@ -21,7 +21,10 @@ test('every transport response is no-store and never carries a session id', asyn
   assert.equal(listed.headers.get('cache-control'), 'no-store');
   assert.equal(listed.headers.get('mcp-session-id'), null);
   assert.equal(listed.headers.get('set-cookie'), null);
-  assert.equal((await listed.json()).result.tools.length, 17);
+  const tools = (await listed.json()).result.tools;
+  assert.equal(tools.length, 17);
+  // Every tool declares itself read-only, non-destructive and idempotent (closed world).
+  for (const t of tools) assert.deepEqual(t.annotations, { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }, `${t.name}: annotations`);
 
   const info = await handleMcpHttpRequest(new Request(URL_, { method: 'GET', headers: { accept: 'application/json' } }), server);
   assert.equal(info.headers.get('cache-control'), 'no-store');
