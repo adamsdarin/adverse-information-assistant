@@ -578,8 +578,11 @@ def rpc_live_get_release(url: str) -> dict:
          "params": {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "hosted_release.py", "version": "1"}}},
         {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "get_release", "arguments": {}}},
     ]).encode("utf-8")
+    # A named user agent: the zone's browser-integrity check answers urllib's
+    # default signature with a 403 (Cloudflare error 1010) before the Worker runs.
     req = urllib.request.Request(url, data=body, method="POST",
-                                 headers={"content-type": "application/json", "accept": "application/json"})
+                                 headers={"content-type": "application/json", "accept": "application/json",
+                                          "user-agent": "hosted_release.py (adverse-information-assistant deploy check)"})
     with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310 - our own Worker
         payload = json.loads(resp.read().decode("utf-8"))
     for msg in payload if isinstance(payload, list) else [payload]:

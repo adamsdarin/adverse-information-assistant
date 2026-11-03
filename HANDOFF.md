@@ -1,11 +1,25 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-11-01 by Claude
+Last updated: 2026-11-02 by Claude
 
 ## Current State
-November 1: phase 2 of the hosted MCP design is implemented on branch
-`claude/pensive-sutherland-5a809b` (pull request against `main`; nothing
-deployed). `mcp/` holds the Cloudflare Worker `adverse-information-assistant`
+November 2: the hosted MCP server is live at `https://fsotools.ai/adverse/mcp`
+(Worker `adverse-information-assistant`, version 03d95d7b). Pull request #3
+was reviewed (ten findings, all fixed in 893e51f) and merged by the owner;
+the owner approved the deploy, run from this machine with
+`hosted_release.py --library … --deploy` at commit 814e644. The live
+`get_release` reports library `doha-v9-exceptions-20261003`, corpus
+`0.1.0-scaffold`, repo commit `814e644`, and all three decision shards
+(`doha-robot-lf-20260929`). The script's own post-deploy confirmation first
+got a 403: the zone's browser-integrity check (Cloudflare error 1010) rejects
+urllib's default user agent before the Worker runs, so the confirmation request
+now sends a named user agent; MCP clients were unaffected. Still to do for
+launch: the site's MCP directory entry stays Planned (and the Worker path is not
+yet in the site's robots/worker-path lists), and `mcp-release-sync` has no
+`adverse_mcp` hook yet. 32 CFR §117.8 is served as `unavailable` (D5 default).
+
+November 1: phase 2 of the hosted MCP design was implemented on branch
+`claude/pensive-sutherland-5a809b` (pull request #3, since merged). `mcp/` holds the Cloudflare Worker `adverse-information-assistant`
 (wrangler.jsonc, worker.js, server.js, http.js, d1.js, release.js, guide.js):
 17 tools as design §2.2 enumerates them (the task brief said sixteen; the
 design lists seventeen and all are built), three resource families, the 16
@@ -69,11 +83,10 @@ Branch, commit, dirty files and last-fetched upstream comparison are generated,
 not copied into this document. See `HANDOFF-archive.md` for prior decisions.
 
 ## Next
-1. Owner reviews and merges the phase 2 pull request, then deploys from their
-   machine: `python scripts/hosted_release.py --library "<library root>"` followed
-   by `npm run mcp:worker:deploy` (or add `--deploy` to the build). The site's MCP
-   directory entry moves from Planned to live only after that, and D2's default
-   keeps it unlinked until the reporting tables are verified.
+1. In `fsotools-website`: move the `/mcp/` directory entry for this server from
+   Planned to Live, add `/adverse/mcp` to the robots disallow list and the
+   `WORKER_PATHS` test. D2's default keeps the reporting tables unlinked until
+   they are verified.
 2. Hand the release-sync agent (`mcp-release-sync`) the deploy contract: the
    command, exit codes 0/2/3, and that `--doha-shards` needs `name=id` pairs or a
    logged-in `wrangler d1 list` to resolve database ids.
@@ -88,6 +101,13 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-02 Claude — Deployed the Worker after the owner merged PR #3 and said
+"Deploy it". Build, corpus validation, the full suite and the deploy passed; the
+script's live confirmation hit the zone's browser-integrity check (403, error
+1010) on urllib's default user agent, so `rpc_live_get_release` now names
+itself. Re-run of the confirmation matched the deployed ids. Decision: no zone
+rule change; a named user agent is the right fix because the check protects
+the whole site and real MCP clients pass it.
 2026-11-02 Claude — Fixed the ten review items on PR #3: event-stream GETs now
 get 405 and oversized bodies 413 before the read; a section without a library
 body hash refuses the build instead of serving as verified; the Node >= 22.13
