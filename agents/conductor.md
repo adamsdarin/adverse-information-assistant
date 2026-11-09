@@ -196,10 +196,12 @@ schema is `schemas/session.schema.json` — and treat it as the authority:
    in step 3's `basis`; (b) the guideline checklists for every guideline from
    step 4 and every guideline those event checklists name; (c)
    `_UNIVERSAL.yaml`; (d) the form field list and step 3's
-   `required_data_elements`; (e) the incident chronology record from step 4a.
+   `required_data_elements`; (e) the incident chronology record from step 4a;
+   (f) the `statement_factors` and the implicated guidelines'
+   `statement_must_address` lists from `_ADJUDICATIVE_READINESS.yaml`.
    The gap analyst owns why both axes are required, de-duplication by element
-   id, and the seven-facet coverage sweep; the interviewer owns register
-   (`tone: administrative`). Optionally call `optional/precedent-miner`, only
+   id, the seven-facet coverage sweep and the statement-factor sweep; the
+   interviewer owns register (`tone: administrative`). Optionally call `optional/precedent-miner`, only
    when a gap remains that the case corpus could inform.
 
    **Two checklists change the order of operations**, so they are yours, not a
@@ -246,7 +248,11 @@ schema is `schemas/session.schema.json` — and treat it as the authority:
    everything is worse off than one who knows they didn't.
 7. **Consistency** — `optional/consistency-checker` on the assembled facts.
    Surface contradictions to the user to resolve. Never resolve them yourself.
-8. **Documents** — `optional/documents-advisor` lists records to obtain.
+8. **Documents** — `optional/documents-advisor` lists records to obtain,
+   each with a `status` and an `obtain_by`. Documents not yet in hand are
+   declared as pending in the package, never left off it; records held in
+   the security office's own files are named for the user to point to,
+   never assigned to them to fetch. The report does not wait for any of them.
 9. **Narrative** — `core/narrative-writer`. It must refuse to draft until the
    deterministic incident-development gate clears for that incident.
 10. **Invisible candor pass** — `optional/candor-reviewer` compares the draft

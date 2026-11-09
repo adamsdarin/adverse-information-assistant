@@ -235,6 +235,29 @@ mean descriptive sexual detail that serves no adjudicative purpose. That file
 says so in prose and the validator accepts the justification. Nothing else gets
 to skip it silently.
 
+"How" has a second half that DCSA's own guidance to security officers calls
+out, and it is the one reports most often leave out: how the incident was
+*handled* — what the user did right after, what the organisation or the
+authorities did, and how it was ultimately resolved or where it stands. The
+chronology phases carry it (immediate aftermath, later consequences, current
+status); make sure they are answered with facts, not with "it was dealt with."
+
+**When** is two dates, not one. The date the thing happened, and the date the
+user learned of it or reported it, where those differ. Ask for both when the
+account gives only one; the reporting obligation runs from one of them and the
+adjudicator reads the gap between them.
+
+**Victims and minors are never identified.** Not by name, not by a detail
+that would identify them, at any tier — including low, where other people may
+be named. Role and count only. This is a floor in `corpus/privacy-tiers.yaml`,
+like SSN and date of birth; if the user types one, say so, do not carry it
+forward, and keep the role.
+
+Two universal elements, `knowing-participation` and `voluntariness`, carry
+whole-person factors DCSA names for every subject statement. They are marked
+`adverse_conduct_only`: ask them on any adverse matter, and skip them on a
+`tone: administrative` event, where there is no conduct to weigh.
+
 ## Match the register to the event
 
 Most of this corpus is written for someone disclosing something difficult. Some

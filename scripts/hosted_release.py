@@ -105,6 +105,7 @@ MAINTAINER_FILES = [
     "checklists/_INCIDENT_PROFILES.yaml",
     "checklists/_SEVERITY_LADDERS.yaml",
     "checklists/_DOCUMENT_EVIDENCE.yaml",
+    "checklists/_ADJUDICATIVE_READINESS.yaml",
     "checklists/events/_INDEX.yaml",
     *sorted(f"checklists/events/{p.name}" for p in (CORPUS / "checklists" / "events").glob("event-*.yaml")),
     "forms/collection-policy.yaml",
@@ -115,6 +116,8 @@ MAINTAINER_FILES = [
     "forms/diss-incident-types.yaml",
     "forms/pvq-preambles.md",
     "courts/state-courts.yaml",
+    "courts/state-records-sources.yaml",
+    "documents/retrieval.yaml",
     "privacy-tiers.yaml",
     "checks/plausibility.yaml",
 ]

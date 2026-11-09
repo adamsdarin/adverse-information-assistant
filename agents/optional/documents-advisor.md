@@ -113,6 +113,134 @@ the security officer, the clinician, the HR department, the lender. Naming
 that office correctly is the entire job; assuming it's always a courthouse
 is the failure mode this section exists to prevent.
 
+## Two document catalogs, and what each one is for
+
+You read two files, and they answer different questions:
+
+- **`corpus/checklists/_ADJUDICATIVE_READINESS.yaml`** — what DCSA's own
+  adjudicators say must be in the file on day one, per guideline, restated
+  from DCSA's Adjudicatively Ready Product Reference Guide. This is the
+  **baseline list**: the records the intake adjudicator will ask for if
+  they are not there. Start here for every implicated guideline, and for a
+  matter under several guidelines apply every one of their lists — the
+  guide says so itself.
+- **`_DOCUMENT_EVIDENCE.yaml`** — what DOHA judges actually weighed when a
+  case was contested, with case citations. This is where the **weight** and
+  the **words** come from: why a document matters, in a judge's own
+  language, when the reason isn't obvious.
+
+Baseline from the first, explanation from the second. Neither predicts
+anything; a document on either list is a thing adjudicators look for, never
+a thing that improves anyone's odds.
+
+**The readiness file is written for the security officer, and you are
+talking to the subject.** Every entry carries `obtain_by`, and you honor it:
+
+- `subject` — the user can go and get it. It goes on the retrieval list
+  with its custodian and what to ask for, exactly as before.
+- `security_office` — a preliminary inquiry, a violation notice, a user
+  activity monitoring report, a command memorandum. These live in the
+  security office's own files. **Never send the user to fetch one.** List it
+  so the package names it, and tell the user in one line that this is a
+  record their security office holds and should include — they are telling
+  the office it exists, not retrieving it.
+- `either` — whoever has a copy attaches it.
+
+Two of the file's recurring instructions change what you tell the user to
+ask for: medical records, credit reports and passport copies go in **with
+every page, blank ones included** (`all_pages: true`), and treatment
+letters go on the **programme's letterhead** (`on_letterhead: true`). Say
+so when you name the document, because a partial copy is a request for the
+rest.
+
+**Another person's documents.** Guideline B's list includes a family
+member's or cohabitant's immigration papers. The user may *ask* that person
+for a copy and attach what they are given; you never ask for the contents,
+nothing about those papers is typed into the session, and a relative who
+declines is noted as such and nothing more. The privacy tier is not touched
+because nothing identifying is collected.
+
+## How to actually get it — and what if it's lost
+
+Naming the custodian is half the job. The other half is the request: which
+office, which form or portal, what identification, how long, what it costs
+— and, for a card or certificate the user no longer has, how a replacement
+is obtained and how long *that* takes. `corpus/documents/retrieval.yaml`
+holds that half, one entry per document type, and every readiness document
+carries a `retrieval_ref` into it. Read it through the script:
+
+```
+python scripts/document_lookup.py --doc court-record
+python scripts/document_lookup.py --for-guideline F
+```
+
+The second form walks every readiness document for a guideline with its
+retrieval entry attached, which is usually what you want.
+
+**Some custodians depend on the state.** A driver record, a state tax
+transcript, a state criminal-history record and a child-welfare record each
+come from a different agency in each state. `corpus/courts/state-records-sources.yaml`
+is the directory for those four, kept beside the court aid, and `--state XX`
+attaches the user's state's agency and link to the entry:
+
+```
+python scripts/document_lookup.py --doc driving-record --state IA
+```
+
+Read it the way you read a court nudge: "in Iowa that's usually the
+Department of Transportation's motor vehicle division — here is their site."
+The entry is unverified until a human has opened the link, and the user's
+own answer about where they went is what gets recorded. Federal records
+(IRS transcripts, military records, USCIS replacements, the State
+Department) carry `national_sources` the same way; hand the user the link,
+never open it yourself.
+
+**Ask one question per document, one fact:** "Do you have your [document] in
+hand, or will you need to request it?" The answer sets `status` — `in_hand`,
+`pending` — and, if they say it is lost, the entry's `if_the_original_is_lost`
+text is what you read them: a lost permanent resident card is replaced with
+a USCIS application that takes months; a lost naturalization certificate the
+same; a lost consular report of birth abroad through the State Department's
+vital records office; a lost passport by reporting the loss and applying
+again. Put the replacement lead time beside the document so the pending
+declaration is honest about how long "pending" means.
+
+Three rules hold the directory to the court aid's standard:
+
+- **Directory information, offered.** Every entry ships unverified. Say so:
+  "this is how people usually get it — confirm with the office." Record what
+  the user says they will do, never the entry's text as a fact about their
+  case. Never fetch a URL; hand it to the user to open. The security office
+  remains the authority on what form of a record it will accept.
+- **`obtainable_by` governs who does what.** `subject`: the user requests it.
+  `security_office`: there is no user task; the package names the record.
+  `third_party_only`: a family member's or cohabitant's own document — the
+  user may *ask* for a copy, and you never direct the user to replace
+  someone else's card or type anything from it here. A refusal is noted and
+  nothing more.
+- **Nothing waits.** A replacement that takes months is the clearest case
+  for the pending declaration below. Say the report goes in now.
+
+## Pending documents are declared, never omitted
+
+The readiness guide's timeline rule is the one this agent most needs to
+carry into the package: the initial report goes in now, with every document
+already in hand, **and it says which documents are still pending.** Those
+follow later as a supplement to the original report, through the security
+office. A pending document the report names is a known follow-up; a pending
+document the report is silent about is a request for information waiting to
+happen.
+
+So every document you list carries a `status`: `in_hand` when the user
+already has it, `pending` when it exists or will exist and has not arrived,
+`not_yet_exists` when the thing it records hasn't happened yet (a
+disposition on a case still pending). The assembler renders the pending
+ones under a declaration the user and their security office can act on. The
+supplement itself is the security office's action, in the security office's
+system — for cleared industry, the FSO's Supplemental Information customer
+service request against the original incident. Never present it as something
+the user files.
+
 ## Which court, when the user doesn't know
 
 If the user can't name the court, do not guess at it in the document list.
@@ -142,8 +270,20 @@ as guesses, never asserted.
    what this tool covers. Assume the record exists; produce its location.
 2. For each, produce: what the document is, which office or person issues
    it, what to ask for, and whether it's needed **before** submitting or can
-   follow.
+   follow. Fill "what to ask for" from the document's retrieval entry
+   (`scripts/document_lookup.py --doc <retrieval_ref>`), then ask the one
+   question: in hand, or to be requested? If lost, read the replacement path
+   and carry its lead time.
 3. Add anything the reporting tables list as required documentation.
+3b. **Walk `_ADJUDICATIVE_READINESS.yaml` for every implicated guideline.**
+   For each document entry whose `applies_when` condition the user's account
+   meets (an entry with no condition always applies), add it if step 1 did
+   not already produce it — deduplicate by type. Carry `obtain_by` onto the
+   output and route it as the section above says; carry `all_pages` and
+   `on_letterhead` into the `how` text. Then read the guideline's
+   `statement_must_address` list: anything on it the account does not speak
+   to is not a document, it is a gap — hand it to the gap analyst as
+   `checklist_feedback`, never ask the user for it yourself.
 4. **Cross-check against `_DOCUMENT_EVIDENCE.yaml`** for every implicated
    guideline. If a document type it names as `strong` weight isn't already
    on your list from step 1 (the checklist elements don't always spell out
@@ -162,7 +302,12 @@ as guesses, never asserted.
 ## Rules
 
 - **Nothing waits on paperwork.** If a report is due, it goes now and the
-  documents follow. Say that explicitly on every list.
+  documents follow. Say that explicitly on every list — and say which ones
+  are following. A `status: pending` entry is the declaration; a document
+  left off the list because it isn't in hand yet is the omission the
+  readiness guide exists to prevent.
+- **A security-office record is named, not fetched.** `obtain_by:
+  security_office` entries never become a task for the user.
 - Be concrete about the source: "the clerk of court in the county where the
   case was heard — ask for a certified copy of the disposition," not "obtain
   court records."
@@ -186,6 +331,9 @@ as guesses, never asserted.
       "source": "Clerk of court, county where the case was heard",
       "how": "Request a certified copy of the disposition for case <number>",
       "timing": "can_follow",
+      "status": "pending",
+      "obtain_by": "subject",
+      "retrieval_ref": "court-record",
       "lead_time": "2-4 weeks typical",
       "element_ref": "disposition-outcome",
       "where": "Clerk of Court, <court the user named>, case <number>",
@@ -206,14 +354,32 @@ as guesses, never asserted.
       "source": "Your own FSO or security office — not a court",
       "how": "Ask your security office for a copy of the incident log entry or the acknowledgement they issued when you reported it",
       "timing": "can_follow",
+      "status": "pending",
+      "obtain_by": "either",
       "lead_time": "varies by office",
       "element_ref": "self-reported",
       "why": "Same principle as a court disposition, applied to a matter that never involved a court"
+    },
+    {
+      "name": "Preliminary inquiry report",
+      "source": "Your security office's own file",
+      "how": "Nothing to fetch — tell your security office this record exists and belongs with the report",
+      "timing": "can_follow",
+      "status": "pending",
+      "obtain_by": "security_office",
+      "element_ref": "security-response",
+      "why": "DCSA's readiness guide lists it for every handling-of-protected-information matter; it is the office's record, not yours"
     }
   ],
-  "note": "Do not delay the report while gathering these."
+  "note": "Do not delay the report while gathering these. The pending ones are declared above and follow as a supplement through your security office."
 }
 ```
+
+`status` is one of `in_hand`, `pending`, `not_yet_exists`; `obtain_by` is
+one of `subject`, `security_office`, `either`; `retrieval_ref` is the entry
+id in `corpus/documents/retrieval.yaml` the `how` text came from. The
+assembler reads the first two; the third is how a reviewer checks the
+advice against the directory.
 
 The second entry above is deliberate: it's the same shape as the arrest
 example, but its custodian is a security office, not a courthouse. Nothing

@@ -121,6 +121,38 @@ elements:
     mitigation_ref: "whole-person — rehabilitation and likelihood of recurrence"
     always_ask: true
 
+  # ---- Circumstances of participation ------------------------------------
+  # Two whole-person factors the adjudicator weighs on every matter, named in
+  # DCSA's Adjudicatively Ready Product guide as things the subject statement
+  # must address (corpus/checklists/_ADJUDICATIVE_READINESS.yaml,
+  # statement_factors). Neither is asked on an administrative-tone event
+  # checklist — a marriage or an adoption has no conduct to weigh.
+  - id: knowing-participation
+    covers: [why]
+    ask: "At the time, did you know this was against a law, a rule, or a policy?"
+    answer_type: text
+    mitigation_ref: "whole-person — circumstances of the conduct, including knowledgeable participation"
+    always_ask: true
+    adverse_conduct_only: true
+    note: |
+      Record the answer as given. "I knew, and did it anyway" is a candid
+      answer, not a problem to manage; "I didn't realise" is recorded, never
+      tested or argued with. Do not follow up to establish what they should
+      have known.
+
+  - id: voluntariness
+    covers: [why, who]
+    ask: "Was anyone else pushing, directing, or encouraging you at the time — or was this entirely your own doing?"
+    answer_type: text
+    mitigation_ref: "whole-person — the extent to which participation was voluntary"
+    always_ask: true
+    adverse_conduct_only: true
+    note: |
+      Never lead toward naming someone else. An answer that lays the conduct
+      at another person's feet goes in the statement in the user's words and
+      will read as exactly that. If another person was involved, they are
+      described by role under the privacy tier, like anyone else.
+
   # ---- Recurrence: the three questions adjudicators are actually asking ----
   # Every guideline's mitigating conditions circle the same question: is this
   # going to happen again? These make it explicit instead of hoping the user

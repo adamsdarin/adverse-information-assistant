@@ -1,0 +1,798 @@
+# What DCSA's adjudicators say a complete incident report contains — the
+# "Adjudicatively Ready Product" standard, restated in this corpus's own
+# structure so the agents can measure a package against it.
+#
+# ===========================================================================
+# WHAT THIS FILE IS AND IS NOT
+# ===========================================================================
+# DCSA publishes a reference guide for security officers on what an incident
+# report must carry so the adjudicator can act on it without asking for more.
+# It has three parts the tool can use directly:
+#
+#   1. a definition of "adjudicatively ready", and a timeline rule — report
+#      now, never wait for paperwork, and SAY which documents are still coming;
+#   2. the shape of a complete incident picture and a complete subject
+#      statement — the factors the statement must address;
+#   3. per-guideline lists of the supporting documentation the adjudicator
+#      expects to find in the file.
+#
+# This file is NOT the guide's text. It is the maintainer's restatement of its
+# requirements, in the tool's own vocabulary (coverage facets, element ids,
+# custodians), authored so each requirement can be cross-checked by
+# validate_corpus.py against the checklists that are supposed to satisfy it.
+# Anyone can read the guide at source_url and compare; that is the point of
+# recording the URL and the retrieval date.
+#
+# It is NOT evidence of how any case is decided, and it says nothing about
+# outcomes. _DOCUMENT_EVIDENCE.yaml records what DOHA judges weighed and why;
+# this file records what the intake adjudicator wants in the file on day one.
+# The documents advisor reads both: this one for the baseline list, that one
+# for weight and for the words to explain why a document matters.
+#
+# ===========================================================================
+# AUDIENCE TRANSLATION — the single most important thing to understand here
+# ===========================================================================
+# The guide is written for the security officer who SUBMITS the report, and
+# calls the person reported on "the Subject". This tool serves the Subject,
+# preparing a self-report before approaching that security officer. So every
+# document below carries `obtain_by`:
+#
+#   subject          — the user can go and get it (their own court record,
+#                      bank statement, treatment letter, passport copy)
+#   security_office  — it exists only in the security office's own files
+#                      (a preliminary inquiry, a violation notice, a user
+#                      activity monitoring report). The user is never sent to
+#                      fetch these. The package NAMES them so the user can tell
+#                      their security office the record exists and belongs in
+#                      the submission.
+#   either           — the user may hold a copy and the security office may
+#                      also; whoever has it attaches it.
+#
+# Nothing here changes the tool's own rules: no system the user cannot access
+# is ever presented as theirs to use, nothing is obtained about another
+# person, and the report never waits for any of it.
+schema_version: "1.0"
+maintainer_verified: false
+source_url: "https://www.dcsa.mil/Trust-Decision-Adjudications/Adjudicatively-Ready-Product-Reference-Guide/"
+source_title: "DCSA, Trust Decision (Adjudications) — Adjudicatively Ready Product Reference Guide"
+retrieved: "2026-11-09"
+method: >
+  Read once in full from the DCSA site on the retrieval date and restated by
+  the maintainer into this corpus's structure. Paraphrase throughout; no
+  passage is reproduced. Maintainer review against the live page is still
+  owed before maintainer_verified can be set, and the page is HTML without a
+  stable published hash, so the provenance for a future verification is the
+  retrieval date plus the saved copy described below.
+saved_copy:
+  file: "DCSA-Adjudicatively-Ready-Product-Reference-Guide-2026-11-09.pdf"
+  kept_where: >
+    Outside this repository, with the maintainer's reference material. The
+    repo never carries Government text; this is a pointer, not the copy.
+  pdf_sha256: "a4d92c07650bc7d8f5788c5fe3032ab6fb30c5c984fcc41ec1c09a7b9b73751e"
+  content_text_sha256: "2a56731791eeabb8e49c2a471cef027d5c7349372835c2e00a14df9ca0c70244"
+  content_text_hash_method: >
+    SHA-256 of the page's main content element (#dnn_ContentPaneRight) as
+    rendered innerText with every guideline panel expanded, whitespace runs
+    collapsed to one space and the ends trimmed, UTF-8. Computed in the live
+    page and again from the saved copy on 2026-11-09; the two matched, which
+    is what makes the saved copy a faithful record of the text as served.
+    Recompute it against the live page to see whether DCSA has changed the
+    guide since.
+  companion:
+    file: "Where-to-obtain-the-documents-companion-2026-11-09.pdf"
+    pdf_sha256: "4eb9ea747e9be435c302d02a54f8730a05f167e62ff06f0dca5ca3510d217e2a"
+    what: >
+      The same guide text, verbatim, with maintainer annotation boxes after
+      each guideline naming who holds each document, a national sources
+      table, and a state-by-state custodian table generated from
+      corpus/courts/state-courts.yaml and corpus/courts/state-records-sources.yaml.
+      A derived document, not a saved copy: its annotations are the
+      maintainer's, and its links were unchecked when generated.
+
+# ---------------------------------------------------------------------------
+# THE STANDARD
+# ---------------------------------------------------------------------------
+definition: >
+  A report is adjudicatively ready when it carries enough context, detail and
+  supporting documentation for the adjudicator to take the next adjudicative
+  step without asking for more information or opening a reimbursable
+  investigation to get it. That is the bar the finished package is measured
+  against: not "did the user say what happened" but "could a stranger act on
+  this file as it stands".
+
+why_it_matters_to_the_user: >
+  Every piece the adjudicator has to ask for is a round trip measured in weeks,
+  during which the matter stays open. A complete first submission is faster
+  for the user and reads as the candid act it is.
+
+# ---------------------------------------------------------------------------
+# TIMELINE — report now; declare what is still coming
+# ---------------------------------------------------------------------------
+timeline:
+  report_when: "immediately upon discovery, as SEAD 3 requires"
+  never_delay_for_documents: true
+  pending_documents_are_declared: true
+  rule: |
+    The initial report goes in with every known detail and every document
+    already in hand, and it SAYS which supporting documents are still pending.
+    Documents obtained afterwards are submitted as a supplement to the original
+    report — they are not a reason to hold it, and they are not left unspoken
+    so that the adjudicator discovers the gap. A pending document the report
+    names is a known follow-up; a pending document the report is silent about
+    is a request for information waiting to happen.
+  supplement_mechanism:
+    industry: >
+      The FSO submits later-obtained documents as a Supplemental Information
+      customer service request against the original incident in DISS. That is
+      the FSO's action, in the FSO's system; the user's part is to hand the
+      document over as soon as it arrives.
+    federal_military: >
+      The servicing security office forwards later-obtained documents against
+      the original report. This corpus does not name the agency mechanism;
+      the security office is the authority on it.
+  user_facing_rule: |
+    Tell the user, in their own terms: nothing waits on paperwork; list what
+    you have, name what is still coming, and give each pending document to
+    your security office the day you receive it so it can be added to the
+    file. Never present the supplement as something the user files themselves.
+
+# ---------------------------------------------------------------------------
+# THE COMPLETE INCIDENT PICTURE — six questions, mapped onto the coverage spine
+# ---------------------------------------------------------------------------
+# The guide's six questions and this corpus's seven facets are the same audit
+# from two directions. The guide adds three specifics the facet definitions in
+# _COVERAGE.yaml now carry; they are repeated here so a reader of this file
+# alone sees them.
+incident_picture:
+  - facet: when
+    coverage_facet: when
+    requires: >
+      The date the incident occurred AND the date it was reported or
+      discovered, stated as two separate dates. A report that gives one date
+      leaves the reader to guess which it is.
+  - facet: where
+    coverage_facet: where
+    requires: >
+      The location and the jurisdiction — which state, county or installation's
+      rules and which court or authority the matter fell under, not only the
+      street or the city.
+  - facet: who
+    coverage_facet: who
+    requires: >
+      The people involved, by role under the privacy tier. Victims and minors
+      are never identified by name or identifying detail at any tier, in any
+      output. That is a floor, recorded in privacy-tiers.yaml.
+  - facet: what
+    coverage_facet: what
+    requires: "The specific actions or events, plainly, with the values the forms demand."
+  - facet: why
+    coverage_facet: why
+    requires: "The context, circumstances and motivation, in the user's own words — never supplied."
+  - facet: how
+    coverage_facet: how
+    requires: >
+      Two things, and the second is the one reports skip: how it happened
+      (mechanism, which _COVERAGE.yaml already demands) and how it was handled
+      — what was done about it at the time, and how it was ultimately
+      resolved or where it stands now. The chronology phases
+      immediate_aftermath, later_consequences and current_status carry this.
+  - facet: chronological
+    coverage_facet: null
+    requires: >
+      The account is in time order. Not a facet of its own in _COVERAGE.yaml:
+      _INCIDENT_CHRONOLOGY.yaml is the gate that enforces it.
+
+# ---------------------------------------------------------------------------
+# THE COMPLETE SUBJECT STATEMENT — the factors it must address
+# ---------------------------------------------------------------------------
+# These are the whole-person factors, as the guide lists them for the subject
+# statement, plus the one it puts first: whether the matter was self-reported,
+# and why or why not. Each is mapped to the checklist elements and coverage
+# facets whose answers supply it, so the gap analyst can sweep the list and the
+# narrative writer can confirm the statement carries each one the user spoke
+# to. "Applicable" is the guide's word: a factor with no bearing on the matter
+# is left silent, never filled.
+#
+# HARD RULE for every consumer of this list: a factor is satisfied by facts
+# the USER stated. The tool never supplies a motivation, a rehabilitation, a
+# statement of intent, or a reassurance about recurrence, and never coaches
+# toward one. An unaddressed factor is a GAP to ask about, in neutral words,
+# once — not a blank to fill.
+statement_factors:
+  - id: self-reported-and-why
+    label: "Whether the matter was self-reported, and why or why not"
+    satisfied_by:
+      elements: [employer-awareness, reporting-delay, disclosure-timing]
+    why: >
+      The guide asks for this before any other factor. A delay or a prior
+      non-disclosure is stated directly, in the user's words; the statement
+      never leaves the reader to notice it.
+
+  - id: nature-extent-seriousness
+    label: "The nature, extent and seriousness of the conduct"
+    satisfied_by:
+      facets: [what]
+    why: "An adjudicator cannot grade a category; the specific conduct and its scale have to be on the page."
+
+  - id: circumstances-and-knowing-participation
+    label: "The circumstances, including whether participation was knowing"
+    satisfied_by:
+      facets: [why]
+      elements: [knowing-participation]
+    why: "Knowing the conduct was prohibited and doing it anyway is weighed differently from not knowing; both are stated as the user states them."
+
+  - id: frequency-and-recency
+    label: "How often, and how recently"
+    satisfied_by:
+      facets: [when]
+      elements: [pattern-check]
+    why: "A single dated event and a pattern are different matters; the dates and the count are what tell them apart."
+
+  - id: age-and-maturity
+    label: "Age and maturity at the time of the conduct"
+    satisfied_by:
+      elements: [age-at-conduct]
+    why: "Approximate age is enough; it places the conduct in the user's life."
+
+  - id: voluntariness
+    label: "The extent to which participation was voluntary"
+    satisfied_by:
+      elements: [voluntariness]
+    why: "Pressure, direction or encouragement by someone else is a circumstance the adjudicator weighs; so is its absence."
+
+  - id: rehabilitation-and-change
+    label: "Rehabilitation or other lasting behavioural change, where applicable"
+    satisfied_by:
+      elements: [changes-made, current-controls]
+    why: "What is in place now that was not before, in concrete terms the user supplied."
+
+  - id: motivation
+    label: "The motivation for the conduct"
+    satisfied_by:
+      facets: [why]
+    why: "Recorded, never improved. An unexplained account gets explained by the reader."
+
+  - id: pressure-coercion-exploitation-duress
+    label: "Potential for pressure, coercion, exploitation or duress"
+    satisfied_by:
+      elements: [coercion-exposure, others-aware-count]
+    why: "Who knows, and whether anyone has tried to use it, is the exposure question every guideline shares."
+
+  - id: likelihood-of-recurrence
+    label: "The likelihood of continuation or recurrence"
+    satisfied_by:
+      elements: [future-intent, prior-controls]
+    why: "The user's stated intent and what previously failed to hold, as given — never hardened into a promise."
+
+# ---------------------------------------------------------------------------
+# PER-GUIDELINE SUPPORTING DOCUMENTATION
+# ---------------------------------------------------------------------------
+# For a matter under several guidelines, apply every implicated guideline's
+# list — the guide says so explicitly. `statement_must_address` is what the
+# guide expects the subject statement to speak to under that guideline;
+# `documents` is the file it expects behind the statement. Recurring
+# instructions the guide attaches to records are carried as flags:
+#   all_pages: true   — include every page, blank pages included (medical
+#                       records, credit reports, passports)
+#   on_letterhead: true — the issuing organisation's official letterhead
+cross_reference_rule: >
+  A matter that implicates more than one guideline gets each guideline's
+  statement topics and each guideline's document list, deduplicated by type.
+
+guidelines:
+
+  # =========================================================== A ==========
+  A:
+    statement_must_address:
+      - "The specific events, statements or associations that raised the concern"
+      - "The user's allegiance to the United States, in their own words, and their position on any conflicting loyalty"
+      - "The nature of any involvement with a group — passive, academic, or entered under a misrepresentation — and whether all ties are severed"
+    documents:
+      - type: "Proof of resignation, termination of membership, or end of financial or other support to the organisation"
+        retrieval_ref: [organization-disassociation-proof]
+        custodian: "the organisation itself, or the user's own records of the resignation"
+        obtain_by: subject
+        purpose: "shows the disassociation actually happened, and when"
+        applies_when: "an organisation or group is part of the matter"
+      - type: "Transcripts or reports from any law-enforcement or investigative inquiry into the matter"
+        retrieval_ref: [investigation-report]
+        custodian: "the investigating agency (federal, military or civil)"
+        obtain_by: either
+        purpose: "the official account of what was examined and found"
+        applies_when: "the concern led to an official inquiry"
+      - type: "Command or employer endorsement attesting to day-to-day reliability and trustworthiness"
+        retrieval_ref: [security-office-record]
+        custodian: "the commanding officer or the supervisor, via the security office"
+        obtain_by: security_office
+        purpose: "whole-person context from someone who sees the user work"
+
+  # =========================================================== B ==========
+  B:
+    statement_must_address:
+      - "Each foreign national: relationship, how close, how often and by what means in contact, where they live, their employment, and any connection to a foreign government"
+      - "Whether any contact could be used to pressure the user, and how"
+      - "Any money, gifts or support in either direction, with amounts"
+      - "Any foreign property or financial interest: how and why it was acquired, its value, where it is, how much of the user's finances it represents, and who maintains it"
+      - "Whether the user or any close family member or associate works for or is connected to a foreign military, intelligence, police or government body"
+    documents:
+      - type: "Proof of a foreign-born family member's lawful U.S. status — permanent resident card, naturalization certificate, consular report of birth abroad, or a foreign passport with a current visa and arrival record, or an employment authorisation document"
+        retrieval_ref: [permanent-resident-card, naturalization-or-citizenship-certificate, consular-report-of-birth-abroad, i94-record, employment-authorization-document]
+        custodian: "the family member, who holds their own documents"
+        obtain_by: subject
+        purpose: "establishes the family member's immigration status, which the adjudicator otherwise has to request"
+        applies_when: "a foreign-born family member is part of the matter and is willing to provide it"
+        note: >
+          These are another person's documents. The user may ask a family
+          member for a copy and attach what they are given; the tool never
+          collects the contents, and a family member who declines is simply
+          noted as such. Nothing about this reaches the privacy tier — no
+          identifying detail is typed into the session.
+      - type: "Financial records of support or significant gifts sent to or received from a foreign national — wire transfers, bank receipts, tax forms"
+        retrieval_ref: [bank-statements]
+        custodian: "the user's own bank or tax records"
+        obtain_by: subject
+        purpose: "shows the real size of a financial relationship"
+        applies_when: "money moves in either direction"
+      - type: "Citizenship, visa or lawful-residency documentation for a foreign national who shares the user's home, business or finances"
+        retrieval_ref: [permanent-resident-card, i94-record, employment-authorization-document]
+        custodian: "that person, who holds their own documents"
+        obtain_by: subject
+        purpose: "status of a cohabitant, business partner or close associate in the U.S."
+        applies_when: "a foreign national lives with the user or shares a business or financial interest"
+        note: "Same handling as the family-member documents above: asked for, never collected into the session."
+
+  # =========================================================== C ==========
+  C:
+    statement_must_address:
+      - "How and why the foreign citizenship, passport or identity document was obtained, used or renewed, and whether it has ever been used to enter or leave the United States"
+      - "Any travel on a foreign passport"
+      - "Whether the user has voted in a foreign election while a U.S. citizen, how and where, and their intent going forward"
+      - "Willingness to renounce the foreign citizenship, and the user's own account of where their loyalty sits"
+    documents:
+      - type: "Proof of U.S. citizenship — naturalization or citizenship certificate, consular report of birth abroad, or the U.S. passport booklet and card"
+        retrieval_ref: [naturalization-or-citizenship-certificate, consular-report-of-birth-abroad, us-passport]
+        custodian: "the user's own documents"
+        obtain_by: subject
+        purpose: "establishes U.S. citizenship and its date, which fixes the sequence against any foreign-rights exercise"
+        all_pages: true
+        note: "Passport copies include every page, blank ones too; the stamps are the travel record."
+      - type: "Proof the foreign passport was surrendered, destroyed or cancelled — a receipt from the issuing government, or a destruction statement witnessed and signed by the security office"
+        retrieval_ref: [foreign-passport-surrender-proof]
+        custodian: "the issuing foreign government, or the user's own security office"
+        obtain_by: either
+        purpose: "shows relinquishment actually happened, not only that it was intended"
+        applies_when: "a foreign passport exists or existed"
+      - type: "Formal renunciation of the foreign citizenship — a certificate of loss of nationality or correspondence with the foreign government"
+        retrieval_ref: [renunciation-certificate]
+        custodian: "the foreign government's consular or interior authority"
+        obtain_by: subject
+        purpose: "shows the citizenship was given up, as distinct from a stated willingness"
+        applies_when: "the user has renounced or is renouncing"
+
+  # =========================================================== D ==========
+  D:
+    statement_must_address:
+      - "The circumstances and current status of the conduct"
+      - "Whether the conduct leaves the user open to blackmail or coercion — would exposure cause serious harm with a spouse, family, employer or the law"
+      - "If the conduct has stopped, what led to stopping, and whether it affected work or relationships"
+      - "Whether any minor was involved"
+    documents:
+      - type: "Police records — arrest reports, incident reports, investigation notes, complaints or indictments"
+        retrieval_ref: [police-report]
+        custodian: "the law-enforcement agency involved"
+        obtain_by: subject
+        purpose: "the official account of any criminal aspect"
+        applies_when: "law enforcement was involved"
+      - type: "Court records — dockets, summons, plea agreement, final disposition, sentencing order, probation agreement or discharge"
+        retrieval_ref: [court-record]
+        custodian: "the clerk of the court that heard the matter"
+        obtain_by: subject
+        purpose: "charge and outcome"
+        applies_when: "the conduct led to a criminal case"
+      - type: "Command or employer action records — memorandum for record, reprimand, non-judicial punishment, or a user activity monitoring report"
+        retrieval_ref: [security-office-record]
+        custodian: "the command or the security office"
+        obtain_by: security_office
+        purpose: "what the organisation did about it"
+        applies_when: "the employer or command took action"
+      - type: "Child protective services records, a court-ordered psychological evaluation, and current custody status"
+        retrieval_ref: [family-court-or-cps-record, court-ordered-evaluation]
+        custodian: "the agency or court involved"
+        obtain_by: subject
+        purpose: "where a child-related concern or family court is part of the matter"
+        applies_when: "a child-related concern or family-court proceeding exists"
+      - type: "Treatment records, a written statement or progress report from a qualified mental-health professional or court-ordered counsellor, and completion certificates for any ordered or voluntary programme"
+        retrieval_ref: [medical-records, provider-letter, treatment-completion-certificate]
+        custodian: "the treating professional or programme"
+        obtain_by: subject
+        purpose: "shows treatment or counselling actually occurred and where it stands"
+        applies_when: "counselling, treatment or a programme is part of the account"
+        all_pages: true
+
+  # =========================================================== E ==========
+  E:
+    statement_must_address:
+      - "For an omission or incorrect answer on a form or in an interview: the specific reason — a misunderstanding of the question, no access to the records at the time, or a decision — and whether there was intent to deceive"
+      - "For workplace misconduct: what happened and what the employer did"
+      - "For a vulnerability to coercion: the circumstance, and how it has been neutralised — who has been told"
+      - "For a refusal or delay in cooperating with a security process: what was happening at the time, and that full cooperation has since been given"
+    documents:
+      - type: "Records showing a prompt, voluntary correction once the omission or error was discovered — messages to the investigator, the investigating agency or the security office"
+        retrieval_ref: [own-correspondence]
+        custodian: "the user's own correspondence"
+        obtain_by: subject
+        purpose: "distinguishes a corrected mistake from a concealment"
+        applies_when: "a form or interview answer was wrong or incomplete"
+      - type: "Administrative investigation reports or human-resources records of the incident, and any disciplinary, counselling, suspension or termination paperwork"
+        retrieval_ref: [employer-hr-record]
+        custodian: "the employer's HR or security office"
+        obtain_by: either
+        purpose: "the employer's account and what it did"
+        applies_when: "workplace misconduct or a rules violation is the matter"
+      - type: "Letters from a current employer or supervisor attesting to present honesty and reliability"
+        retrieval_ref: [employer-reference-letter]
+        custodian: "the current employer"
+        obtain_by: subject
+        purpose: "whole-person context after the fact"
+        applies_when: "the conduct is in the past and the user is employed"
+      - type: "Proof of later full cooperation — signed releases, completed questionnaires, or an investigator's confirmation"
+        retrieval_ref: [cooperation-proof]
+        custodian: "the investigating agency, via the security office"
+        obtain_by: either
+        purpose: "closes a refusal-to-cooperate concern on the record"
+        applies_when: "there was a refusal or delay in cooperating"
+      - type: "For a period of unauthorised military absence: court-martial orders, non-judicial punishment record, separation-board documents, discharge paperwork, and any civilian police, court or employment records from the period"
+        retrieval_ref: [command-personnel-record, dd214, police-report, court-record, employer-hr-record]
+        custodian: "the service's personnel and legal records; civilian agencies for the period of absence"
+        obtain_by: subject
+        purpose: "the official disposition and what happened during the absence"
+        applies_when: "a desertion or unauthorised absence is part of the account"
+
+  # =========================================================== F ==========
+  F:
+    statement_must_address:
+      - "What caused the delinquency — medical event, job loss, divorce, mismanagement, overspending, or otherwise"
+      - "What is being done about each account, and the user's intention toward the rest"
+      - "Whether there is a history or pattern of delinquency"
+      - "Why it is, or is not, likely to recur"
+    statement_warning: >
+      A debt described as "not owed" with nothing signed behind it is treated
+      as unresolved. A dispute needs the dispute letter and the updated credit
+      report showing it.
+    documents:
+      - type: "Proof of payment or resolution from each creditor — receipts, zero-balance letters, or a release"
+        retrieval_ref: [creditor-letter]
+        custodian: "the creditor, collection agency or servicer"
+        obtain_by: subject
+        purpose: "shows a specific account is paid, settled or current"
+      - type: "Signed payment or consolidation agreements, and the payment history under them — bank statements, cancelled cheques or account ledgers showing on-time payments"
+        retrieval_ref: [creditor-letter, bank-statements]
+        custodian: "the creditor and the user's own bank"
+        obtain_by: subject
+        purpose: "an active plan and a track record under it"
+        applies_when: "an account is on a payment plan"
+      - type: "An updated credit report from a national bureau showing the accounts' current status"
+        retrieval_ref: [credit-report]
+        custodian: "Equifax, Experian or TransUnion; the user pulls their own"
+        obtain_by: subject
+        purpose: "the independent record of where every account stands"
+        all_pages: true
+      - type: "Formal dispute letters to the bureau, with the updated report showing the dispute"
+        retrieval_ref: [dispute-letter, credit-report]
+        custodian: "the user's own correspondence and the bureau"
+        obtain_by: subject
+        purpose: "the only acceptable form of 'I don't owe this'"
+        applies_when: "an account is disputed"
+      - type: "Bankruptcy petition schedules and the court's discharge order"
+        retrieval_ref: [bankruptcy-records]
+        custodian: "the bankruptcy court"
+        obtain_by: subject
+        purpose: "what was filed and what was discharged"
+        applies_when: "a bankruptcy was filed"
+      - type: "Tax account transcripts showing filing and payment, any instalment agreement with proof of payment, lien release documents, and pay stubs showing an active garnishment"
+        retrieval_ref: [irs-transcript, lien-release, pay-stubs]
+        custodian: "the IRS or state revenue agency; the issuing authority for a lien; the employer for a garnishment"
+        obtain_by: subject
+        purpose: "tax compliance and the status of any lien or garnishment"
+        applies_when: "delinquent taxes, a lien or a garnishment is part of the matter"
+      - type: "A written monthly budget, and a completion certificate from an accredited financial counselling or debt-management programme"
+        retrieval_ref: [budget-plan, financial-counseling-certificate]
+        custodian: "the user; the counselling programme"
+        obtain_by: subject
+        purpose: "financial rehabilitation, in evidence rather than assertion"
+        applies_when: "the user has budgeted or attended counselling"
+
+  # =========================================================== G ==========
+  G:
+    statement_must_address:
+      - "The exact details, timeline and context of the alcohol use and any incident it produced"
+      - "Quantity, frequency and recency of use, and current status"
+      - "Intent regarding future use, and any recovery plan or lifestyle change"
+    documents:
+      - type: "Police records — arrest reports, incident reports, investigation notes, complaints or indictments"
+        retrieval_ref: [police-report]
+        custodian: "the arresting or investigating agency"
+        obtain_by: subject
+        purpose: "the official account of any alcohol-related incident"
+        applies_when: "law enforcement was involved"
+      - type: "Court records — dockets, summons, plea agreement, final disposition, sentencing order, probation agreement or discharge"
+        retrieval_ref: [court-record]
+        custodian: "the clerk of the court that heard the matter"
+        obtain_by: subject
+        purpose: "charge and outcome"
+        applies_when: "charges were filed"
+      - type: "Proof every court-ordered requirement was completed — probation completion letter, community-service logs, receipts for fines, fees or restitution, a zero-balance ledger, programme completion certificates"
+        retrieval_ref: [sentence-completion-proof]
+        custodian: "the probation office, the court and the programme providers"
+        obtain_by: subject
+        purpose: "sentence completion, item by item"
+        applies_when: "a sentence or conditions were imposed"
+      - type: "Employer or command disciplinary records — non-judicial punishment, letters of counselling or reprimand, user activity monitoring reports, counselling logs"
+        retrieval_ref: [security-office-record]
+        custodian: "the employer or command, via the security office"
+        obtain_by: security_office
+        purpose: "what the organisation did"
+        applies_when: "the employer or command took action"
+      - type: "Breath or blood alcohol test results"
+        retrieval_ref: [bac-test-results]
+        custodian: "the arresting agency or the testing facility"
+        obtain_by: subject
+        purpose: "the measured level, where one was taken"
+        applies_when: "a test was administered"
+      - type: "Proof of treatment — completion certificates or enrolment letters on the programme's letterhead, intake and discharge records, and a provider letter on diagnosis, progress and prognosis"
+        retrieval_ref: [treatment-completion-certificate, medical-records, provider-letter]
+        custodian: "the treatment programme or medical provider"
+        obtain_by: subject
+        purpose: "that treatment occurred, what was found, and how it is going"
+        applies_when: "evaluation or treatment occurred"
+        on_letterhead: true
+        all_pages: true
+      - type: "A signed statement or progress report from a licensed behavioural-health professional or credentialed substance-abuse counsellor, including prognosis for continued sobriety"
+        retrieval_ref: [provider-letter]
+        custodian: "the counsellor or clinician"
+        obtain_by: subject
+        purpose: "a professional's current view, as distinct from the user's own"
+        applies_when: "the user is or was in counselling"
+      - type: "Drug or alcohol screening results"
+        retrieval_ref: [drug-screen-results]
+        custodian: "the testing laboratory, employer programme or probation office"
+        obtain_by: subject
+        purpose: "objective evidence of current abstinence"
+        applies_when: "screening has occurred"
+
+  # =========================================================== H ==========
+  H:
+    statement_must_address:
+      - "The exact details, timeline and context of the drug use or involvement"
+      - "Which substances, how much, how often, how recently, and current status"
+      - "Intent regarding future use, and any recovery plan or lifestyle change"
+    documents:
+      - type: "Police records — arrest reports, incident reports, investigation notes, complaints or indictments"
+        retrieval_ref: [police-report]
+        custodian: "the arresting or investigating agency"
+        obtain_by: subject
+        purpose: "the official account of any drug-related incident"
+        applies_when: "law enforcement was involved"
+      - type: "Court records — dockets, summons, plea agreement, final disposition, sentencing order, probation agreement or discharge"
+        retrieval_ref: [court-record]
+        custodian: "the clerk of the court that heard the matter"
+        obtain_by: subject
+        purpose: "charge and outcome"
+        applies_when: "charges were filed"
+      - type: "Proof every court-ordered requirement was completed — probation completion letter, community-service logs, receipts for fines, fees or restitution, programme completion certificates"
+        retrieval_ref: [sentence-completion-proof]
+        custodian: "the probation office, the court and the programme providers"
+        obtain_by: subject
+        purpose: "sentence completion, item by item"
+        applies_when: "a sentence or conditions were imposed"
+      - type: "Employer or command disciplinary records — non-judicial punishment, letters of counselling or reprimand, user activity monitoring reports"
+        retrieval_ref: [security-office-record]
+        custodian: "the employer or command, via the security office"
+        obtain_by: security_office
+        purpose: "what the organisation did"
+        applies_when: "the employer or command took action"
+      - type: "Positive drug test results"
+        retrieval_ref: [drug-screen-results]
+        custodian: "the employer's testing programme or the testing laboratory"
+        obtain_by: either
+        purpose: "the result that raised or confirmed the concern"
+        applies_when: "a test was positive"
+      - type: "Proof of treatment — completion certificates or enrolment letters on the programme's letterhead, intake and discharge records, and a provider letter on diagnosis, progress and prognosis"
+        retrieval_ref: [treatment-completion-certificate, medical-records, provider-letter]
+        custodian: "the treatment programme or medical provider"
+        obtain_by: subject
+        purpose: "that treatment occurred, what was found, and how it is going"
+        applies_when: "evaluation or treatment occurred"
+        on_letterhead: true
+        all_pages: true
+      - type: "A signed statement or progress report from a licensed behavioural-health professional or credentialed substance-abuse counsellor, including prognosis for a drug-free life"
+        retrieval_ref: [provider-letter]
+        custodian: "the counsellor or clinician"
+        obtain_by: subject
+        purpose: "a professional's current view"
+        applies_when: "the user is or was in counselling"
+      - type: "Drug screening results"
+        retrieval_ref: [drug-screen-results]
+        custodian: "the testing laboratory, employer programme or probation office"
+        obtain_by: subject
+        purpose: "objective evidence of current abstinence"
+        applies_when: "screening has occurred"
+
+  # =========================================================== I ==========
+  I:
+    always_state: >
+      Seeking mental-health care is not itself disqualifying, and the guide's
+      document list is about a condition's management, not its existence. Say
+      so with any document guidance under this guideline.
+    statement_must_address:
+      - "What the condition is and how it is being managed, in the user's words"
+      - "What happened, and who first raised it — the user, a co-worker, the command"
+      - "Any local step the organisation took at the time, such as an access restriction"
+    documents:
+      - type: "Employer or command records of any administrative action — non-judicial punishment, memorandum for record, letters of counselling or reprimand, user activity monitoring reports, counselling logs"
+        retrieval_ref: [security-office-record]
+        custodian: "the employer or command, via the security office"
+        obtain_by: security_office
+        purpose: "what the organisation did and observed"
+        applies_when: "the employer or command took action"
+      - type: "Records of any local mitigation — facility access restriction or a local suspension of access"
+        retrieval_ref: [security-office-record]
+        custodian: "the security office"
+        obtain_by: security_office
+        purpose: "what was done to manage risk at the time"
+        applies_when: "access was restricted or suspended locally"
+      - type: "Emergency-room and inpatient records, and any police or emergency-medical report connected to a hospitalisation"
+        retrieval_ref: [medical-records, police-report, ems-report]
+        custodian: "the hospital; the responding agency"
+        obtain_by: subject
+        purpose: "the record of a voluntary or involuntary hospitalisation"
+        applies_when: "a hospitalisation occurred"
+        all_pages: true
+      - type: "Medical records and clinical progress notes showing the treatment plan is being followed"
+        retrieval_ref: [medical-records]
+        custodian: "the treating provider"
+        obtain_by: subject
+        purpose: "diagnosis, treatment and adherence over time"
+        applies_when: "the user is or was in treatment"
+        all_pages: true
+      - type: "Pharmacy records showing consistent prescription refills"
+        retrieval_ref: [pharmacy-fill-history]
+        custodian: "the dispensing pharmacy"
+        obtain_by: subject
+        purpose: "adherence to prescribed medication, independently recorded"
+        applies_when: "medication is prescribed"
+      - type: "Completion certificates for any ordered or voluntary programme — stress management, anger management, structured counselling"
+        retrieval_ref: [treatment-completion-certificate]
+        custodian: "the programme provider"
+        obtain_by: subject
+        purpose: "that the programme was completed"
+        applies_when: "a programme was ordered or undertaken"
+
+  # =========================================================== J ==========
+  J:
+    statement_must_address:
+      - "The exact details, timeline and context of the arrest or conduct"
+      - "Whether a formal investigation is open, by which agency, and under what case or report number"
+      - "Whether the user is currently in custody or subject to an active warrant"
+      - "Where drugs or alcohol are involved: quantity, frequency and types, current status, future intent, and any recovery plan"
+    documents:
+      - type: "Police records — arrest reports, incident reports, investigation notes, complaints or indictments"
+        retrieval_ref: [police-report, state-criminal-history]
+        custodian: "the arresting or investigating agency"
+        obtain_by: subject
+        purpose: "the official account of the incident"
+      - type: "The investigating agency's report of investigation, where one exists, with its case or tracking number"
+        retrieval_ref: [investigation-report]
+        custodian: "the investigating agency (local police, military criminal investigators)"
+        obtain_by: either
+        purpose: "lets the adjudicator follow a live investigation rather than wait for it"
+        applies_when: "a formal investigation is or was open"
+      - type: "Court records — dockets, summons, plea agreement, final disposition, sentencing order, probation agreement or discharge"
+        retrieval_ref: [court-record]
+        custodian: "the clerk of the court that heard the matter"
+        obtain_by: subject
+        purpose: "charge, plea, sentence and dates"
+        applies_when: "charges were filed"
+      - type: "Proof every court-ordered requirement was completed — probation completion letter, community-service logs, receipts for fines, fees or restitution, a zero-balance ledger, completion certificates for any ordered or voluntary programme"
+        retrieval_ref: [sentence-completion-proof]
+        custodian: "the probation office, the court and the programme providers"
+        obtain_by: subject
+        purpose: "sentence completion, item by item"
+        applies_when: "a sentence or conditions were imposed"
+      - type: "Certificate of release from custody, or custody records from the correctional facility"
+        retrieval_ref: [custody-release-record]
+        custodian: "the correctional facility"
+        obtain_by: subject
+        purpose: "the dates of any incarceration and release"
+        applies_when: "the user was incarcerated"
+      - type: "Command action records — memorandum for record, letters of reprimand, counselling or admonishment, access determinations, non-judicial punishment, command correspondence, or a record that no action was taken"
+        retrieval_ref: [security-office-record, command-personnel-record]
+        custodian: "the command, via the security office"
+        obtain_by: security_office
+        purpose: "what the command did, including a documented decision to do nothing"
+        applies_when: "the user is or was in a military command"
+
+  # =========================================================== K ==========
+  K:
+    statement_must_address:
+      - "What happened, and whether a spillage or unauthorised disclosure occurred"
+      - "The reporting steps taken immediately afterwards"
+      - "Whether this was isolated or part of a pattern, and the user's own attitude toward security discipline"
+    documents:
+      - type: "Preliminary inquiry reports"
+        retrieval_ref: [security-office-record]
+        custodian: "the security office"
+        obtain_by: security_office
+        purpose: "the security office's own account of what happened and whether compromise was assumed"
+      - type: "Security violation or infraction notices"
+        retrieval_ref: [security-office-record]
+        custodian: "the security office"
+        obtain_by: security_office
+        purpose: "the formal finding and its level"
+        applies_when: "a violation or infraction was issued"
+      - type: "Records of any access suspension and of command or employer disciplinary action"
+        retrieval_ref: [security-office-record]
+        custodian: "the security office; the command or employer"
+        obtain_by: security_office
+        purpose: "what followed for the user"
+        applies_when: "access was suspended or discipline followed"
+      - type: "Completion certificate for remedial classification, handling or personal-information protection training"
+        retrieval_ref: [remedial-training-certificate]
+        custodian: "the training provider or the security office"
+        obtain_by: either
+        purpose: "that retraining was completed"
+        applies_when: "retraining was ordered or taken"
+
+  # =========================================================== L ==========
+  L:
+    statement_must_address:
+      - "The exact nature of the relationship with the foreign government, organisation or individuals, including whether the user has been asked to act as an agent or representative"
+      - "Why the activity was not reported on the questionnaire or to the security office, if it was not"
+    documents:
+      - type: "Foreign work visas, permits, or registration documents with foreign authorities"
+        retrieval_ref: [foreign-work-authorization]
+        custodian: "the user's own documents"
+        obtain_by: subject
+        purpose: "the formal terms of the foreign activity"
+        applies_when: "the activity involved foreign authorisation or registration"
+      - type: "Written disclosure of financial accounts, assets or property connected to the activity"
+        retrieval_ref: [self-authored-disclosure]
+        custodian: "the user"
+        obtain_by: subject
+        purpose: "the financial dimension of the activity, stated in full"
+        applies_when: "the activity carries accounts, assets or property"
+      - type: "A memorandum from the chain of command or employer acknowledging and approving the activity"
+        retrieval_ref: [command-approval-memo]
+        custodian: "the command or employer, via the security office"
+        obtain_by: either
+        purpose: "shows the activity was known and approved"
+        applies_when: "approval was sought"
+
+  # =========================================================== M ==========
+  M:
+    statement_must_address:
+      - "What happened on the system, whether it was inadvertent or intentional, and what the user did afterwards"
+    documents:
+      - type: "Official IT incident reports and security audit logs"
+        retrieval_ref: [security-office-record]
+        custodian: "the organisation's IT security office"
+        obtain_by: security_office
+        purpose: "the technical record of what occurred"
+      - type: "Findings of any command-directed or administrative investigation"
+        retrieval_ref: [security-office-record]
+        custodian: "the command or employer, via the security office"
+        obtain_by: security_office
+        purpose: "the organisation's conclusions"
+        applies_when: "an investigation was conducted"
+      - type: "Records of any resulting administrative or disciplinary action — memorandum for record, letter of counselling, loss of network privileges"
+        retrieval_ref: [security-office-record]
+        custodian: "the command or employer, via the security office"
+        obtain_by: security_office
+        purpose: "what followed for the user"
+        applies_when: "action was taken"
+      - type: "Completion certificate for remedial cybersecurity training"
+        retrieval_ref: [remedial-training-certificate]
+        custodian: "the training provider or the security office"
+        obtain_by: either
+        purpose: "that retraining was completed"
+        applies_when: "retraining was ordered or taken"

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 
 import { callTool, fixtureServer, makeShardEnv, rpc } from './helpers.mjs';
 
-const vars = { RELEASE_ID: 'synthetic-test-release', CORPUS_VERSION: '0.1.0-scaffold' };
+const vars = { RELEASE_ID: 'synthetic-test-release', CORPUS_VERSION: '0.1.1-scaffold' };
 
 test('get_release reports ids, counts from the shards, sections present and the Mode 1b disclosure', async () => {
   const { server } = await fixtureServer({ env: makeShardEnv(), vars });
@@ -57,7 +57,7 @@ test('get_guideline_text returns the named guidelines plus Appendix A and nothin
     assert.match(s.sha256, /^[0-9a-f]{64}$/);
   }
   assert.equal(out.release.file_sha256.length, 3);
-  assert.equal(out.release.corpus_version, '0.1.0-scaffold');
+  assert.equal(out.release.corpus_version, '0.1.1-scaffold');
 });
 
 test('get_reporting_requirements applies the additive rule (F + G or F + H, never a ladder)', async () => {
@@ -186,6 +186,12 @@ test('court_lookup serves one state without a county and labels the guess', asyn
   const plain = (await callTool(server, 'court_lookup', { state: 'IA' })).out;
   assert.equal(plain.court.data.court_for_offense, null);
   assert.equal(plain.court.data.dui_note, null);
+  // The same state's other custodians ride along, labelled unverified, so the
+  // documents advisor has the driver-record and tax agencies without a second call.
+  assert.equal(plain.records_sources.data.verified, false);
+  assert.match(plain.records_sources.data.dmv.url, /^https:\/\//);
+  assert.ok(plain.records_sources.data.tax.name);
+  assert.equal(plain.records_sources.file, 'corpus/courts/state-records-sources.json');
 });
 
 test('get_corpus_file and the corpus resources agree', async () => {
@@ -198,6 +204,21 @@ test('get_corpus_file and the corpus resources agree', async () => {
   assert.equal(JSON.parse(res.result.contents[0].text).data.default_tier, 'high');
   const preambles = (await callTool(server, 'get_corpus_file', { file: 'pvq-preambles' })).out;
   assert.ok(preambles.data.body_markdown.length > 100);
+  // DCSA's adjudicatively-ready standard and the per-state custodian directory
+  // ship as standalone files, unverified, with the audience translation intact.
+  const readiness = (await callTool(server, 'get_corpus_file', { file: 'adjudicative-readiness' })).out;
+  assert.equal(readiness.maintainer_verified, false);
+  assert.equal(Object.keys(readiness.data.guidelines).length, 13);
+  for (const g of Object.values(readiness.data.guidelines)) {
+    for (const d of g.documents) assert.ok(['subject', 'security_office', 'either'].includes(d.obtain_by), d.type);
+  }
+  const sources = (await callTool(server, 'get_corpus_file', { file: 'state-records-sources' })).out;
+  assert.equal(Object.keys(sources.data.states).length, 51);
+  assert.ok(sources.data.national.some((n) => n.id === 'irs-transcript'));
+  const retrieval = (await callTool(server, 'get_corpus_file', { file: 'document-retrieval' })).out;
+  assert.equal(retrieval.maintainer_verified, false);
+  assert.ok(Object.keys(retrieval.data.entries).length >= 40);
+  assert.deepEqual(retrieval.data.obtainable_by_values, ['subject', 'security_office', 'third_party_only']);
 });
 
 test('get_corpus_bundle carries every Government section and maintainer file', async () => {
@@ -285,7 +306,7 @@ test('resources: three families, all readable', async () => {
   const { server } = await fixtureServer();
   const list = (await rpc(server, 'resources/list')).result.resources;
   assert.ok(list.some((r) => r.uri === 'adverse://release'));
-  assert.equal(list.filter((r) => r.uri.startsWith('adverse://corpus/')).length, 10);
+  assert.equal(list.filter((r) => r.uri.startsWith('adverse://corpus/')).length, 13);
   assert.equal(list.filter((r) => r.uri.startsWith('adverse://government/')).length, 17 + 6 + 5);
   for (const r of list) {
     const read = await rpc(server, 'resources/read', { uri: r.uri });

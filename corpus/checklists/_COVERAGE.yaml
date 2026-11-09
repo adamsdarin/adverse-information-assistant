@@ -29,6 +29,7 @@ sources:
   - "Maintainer (FSO) judgment — the standard shape of an incident report"
   - "SEAD 4 whole-person considerations (the 'why' and 'future intent' facets)"
   - "ISL 2021-02 required_data_elements (the 'what' and 'when' facets)"
+  - "DCSA Adjudicatively Ready Product Reference Guide — the six-question incident picture; see _ADJUDICATIVE_READINESS.yaml for the restatement and source URL"
 
 facets:
 
@@ -47,6 +48,11 @@ facets:
       The universal knowledgeable-parties element covers who *knows*. It does
       not cover who was *involved*. Those are different questions and a
       checklist needs its own.
+    hard_rule: |
+      A victim, and anyone under eighteen, is never identified by name or by
+      identifying detail at any tier, in any output. Role and count only.
+      This is a floor in privacy-tiers.yaml, not a tier property, and DCSA's
+      own guidance to security officers says the same.
 
   - id: what
     label: "What"
@@ -63,16 +69,24 @@ facets:
       Dates and duration. The date of the event, the dates of anything
       continuing, and the date the user learned of it where that differs.
       A stated approximation is acceptable; a silent guess is not.
+
+      The incident date and the report date are two different facts and the
+      account states both. The reporting obligation runs from one; the
+      adjudicator reads the gap between them.
     common_failure: |
       A single year with no month, for an event whose reporting deadline runs
-      from a specific day.
+      from a specific day. Or one date, with no way to tell whether it is
+      when the thing happened or when it was reported.
 
   - id: where
     label: "Where"
     definition: |
       Geography and jurisdiction, with the addresses of every organisation
       involved. Where matters twice — it locates the event, and it tells
-      whoever has to retrieve the record which office holds it.
+      whoever has to retrieve the record which office holds it. Jurisdiction
+      is its own fact: the state, county, installation or authority whose
+      rules applied, and the court or office the matter fell under — not only
+      the street or the city.
     common_failure: |
       The beta session that correctly identified the right county court and
       never asked for its address. Nobody could act on the result.
@@ -96,6 +110,13 @@ facets:
       Mechanism — how the conduct happened, how contact was made, how funds
       moved, how information left where it belonged. Relevant to most events
       and central to some.
+
+      And handling: how the incident was dealt with at the time, and how it
+      was ultimately resolved or where it stands now. The chronology phases
+      (_INCIDENT_CHRONOLOGY.yaml: immediate_aftermath, later_consequences,
+      current_status) carry this half, so a checklist that declares
+      how_relevant: false is declining the mechanism half only — the
+      handling half is still owed through the chronology.
     relevance: conditional
     note: |
       A checklist may declare `how_relevant: false`, but it must then supply

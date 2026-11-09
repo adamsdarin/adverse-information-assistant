@@ -88,6 +88,9 @@ export const CORPUS_FILES = {
   coverage: 'corpus/checklists/_COVERAGE.json',
   'pvq-preambles': 'corpus/forms/pvq-preambles.json',
   'events-index': 'corpus/checklists/events/_INDEX.json',
+  'adjudicative-readiness': 'corpus/checklists/_ADJUDICATIVE_READINESS.json',
+  'state-records-sources': 'corpus/courts/state-records-sources.json',
+  'document-retrieval': 'corpus/documents/retrieval.json',
 };
 const TABLE_FILES = {
   'all-covered-individuals': 'corpus/reporting/tables/all-covered-individuals.json',
@@ -782,22 +785,39 @@ export function createAdverseMcpServer(release, options = {}) {
           source_url: st.source_url ?? null,
           verified_date: st.verified_date ?? null,
         });
+        // The other state-held custodians for the same state (driver record,
+        // state tax, criminal history, child welfare), when the release
+        // carries the directory. Front doors only, unverified, never used to
+        // look up anyone but the user.
+        const sourcesPath = CORPUS_FILES['state-records-sources'];
+        const src = release.has(sourcesPath) ? release.json(sourcesPath).states?.[state] : null;
+        const sources = src
+          ? fileBlock(sourcesPath, {
+              state,
+              verified: src.verified === true,
+              dmv: src.dmv ?? null,
+              tax: src.tax ?? null,
+              criminal_history: src.criminal_history ?? null,
+              child_welfare: src.child_welfare ?? null,
+            })
+          : null;
         return {
           state,
           offense: offense ?? null,
           court: block,
+          records_sources: sources,
           ask_first: 'What court did your case go through?',
           nudge_template: "In {state_name}, that's usually the {court_for_offense} for {county} {unit_label}. {lower courts, if any} {dui_note, if any}",
           usage_rule: COURT_USAGE_RULE,
           fallback_if_still_unknown: COURT_FALLBACK,
-          release: await releaseBlock(usedFiles([block])),
+          release: await releaseBlock(usedFiles(sources ? [block, sources] : [block])),
         };
       },
     },
     {
       name: 'get_corpus_file',
       description:
-        'One standalone maintainer-authored file by name: privacy-tiers, plausibility, collection-policy, entity-capture, diss-incident-types, incident-chronology, incident-profiles, coverage, pvq-preambles or events-index. Also available as resources adverse://corpus/<file>.',
+        'One standalone maintainer-authored file by name: privacy-tiers, plausibility, collection-policy, entity-capture, diss-incident-types, incident-chronology, incident-profiles, coverage, pvq-preambles, events-index, adjudicative-readiness (DCSA\'s adjudicatively-ready standard restated: statement factors and per-guideline supporting documents with obtain_by) state-records-sources (per-state motor-vehicle, tax, criminal-history and child-welfare custodians plus national sources) or document-retrieval (how each supporting document is requested or replaced, with obtainable_by and lead times; directory information, never fetched). Also available as resources adverse://corpus/<file>.',
       schema: { file: { type: 'string', enum: Object.keys(CORPUS_FILES) } },
       spec: { file: { required: true, check: enumOf(Object.keys(CORPUS_FILES)) } },
       run: async ({ file }) => {
@@ -1084,7 +1104,7 @@ export function createAdverseMcpServer(release, options = {}) {
         arguments: [],
         preamble: () =>
           common([
-            'Document weight: get_document_evidence(guidelines). Court recognition: court_lookup(state, offense?) — compose the nudge from unit_label and the court names; the county stays in the client.',
+            'Baseline documents per guideline, with obtain_by: get_corpus_file(adjudicative-readiness); how each is requested or replaced: get_corpus_file(document-retrieval). Document weight: get_document_evidence(guidelines). Court recognition: court_lookup(state, offense?) — compose the nudge from unit_label and the court names; the county stays in the client. Its records_sources carry the state\'s other custodians; the national list is get_corpus_file(state-records-sources).',
           ]),
       },
       {
