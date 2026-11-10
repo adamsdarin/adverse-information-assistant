@@ -24,11 +24,16 @@ export const MCP_PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 // One rate-limited POST may carry a JSON-RPC batch; cap it so a batch cannot
 // stand in for thousands of requests.
 export const MAX_BATCH = 20;
+// The limiter charges one unit per POST, not per message, and a tools/call can
+// cost several D1 queries. Without this, 60 POSTs of 20 tool calls would be
+// 1,200 tool calls a minute from one address; with it the ceiling is 240.
+export const MAX_TOOL_CALLS_PER_BATCH = 4;
 export const RATE_LIMIT = {
   limit: 60,
   period_seconds: 60,
   keyed_on: 'the connecting IP address',
   scope: 'one shared limit across every tool, resource and prompt call',
+  batch: `one request may carry up to ${MAX_BATCH} JSON-RPC messages, of which at most ${MAX_TOOL_CALLS_PER_BATCH} may be tools/call`,
 };
 export const ENDPOINT = 'https://fsotools.ai/adverse/mcp';
 
@@ -1217,6 +1222,10 @@ export function createAdverseMcpServer(release, options = {}) {
     if (Array.isArray(payload)) {
       if (payload.length === 0) return rpcError(null, -32600, 'Invalid Request: empty batch.');
       if (payload.length > MAX_BATCH) return rpcError(null, -32600, `Invalid Request: batch exceeds ${MAX_BATCH} messages.`);
+      const toolCalls = payload.filter((item) => isPlainObject(item) && item.method === 'tools/call').length;
+      if (toolCalls > MAX_TOOL_CALLS_PER_BATCH) {
+        return rpcError(null, -32600, `Invalid Request: a batch may carry at most ${MAX_TOOL_CALLS_PER_BATCH} tools/call messages.`);
+      }
       const responses = (await Promise.all(payload.map((item) => handleRpcMessage(item)))).filter(Boolean);
       return responses.length ? responses : null;
     }

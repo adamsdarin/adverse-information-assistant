@@ -3,8 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { MAX_BATCH } from '../../mcp/server.js';
-import { callTool, fixtureServer, rpc } from './helpers.mjs';
+import { MAX_BATCH, MAX_TOOL_CALLS_PER_BATCH } from '../../mcp/server.js';
+import { callTool, fixtureServer, makeShardEnv, rpc } from './helpers.mjs';
 
 const SENTINEL = 'ZQX-SENTINEL-4471';
 
@@ -111,4 +111,58 @@ test('JSON-RPC framing: batches are capped, notifications are silent, unknown me
   const res = await rpc(server, 'resources/read', { uri: `adverse://corpus/${SENTINEL}` });
   assert.equal(res.error.code, -32002);
   assert.ok(!JSON.stringify(res).includes(SENTINEL));
+});
+
+test('a batch cannot multiply tool calls behind one rate-limited request', async () => {
+  const { server } = await fixtureServer();
+  const call = (id) => ({ jsonrpc: '2.0', id, method: 'tools/call', params: { name: 'get_corpus_file', arguments: { file: 'coverage' } } });
+  const atCap = await server.handleMessage(Array.from({ length: MAX_TOOL_CALLS_PER_BATCH }, (_, i) => call(i)));
+  assert.equal(atCap.length, MAX_TOOL_CALLS_PER_BATCH);
+  assert.ok(atCap.every((r) => r.result.isError === false));
+
+  // One over the cap: the whole batch is refused and no tool runs.
+  const over = await server.handleMessage(Array.from({ length: MAX_TOOL_CALLS_PER_BATCH + 1 }, (_, i) => call(i)));
+  assert.ok(!Array.isArray(over));
+  assert.equal(over.error.code, -32600);
+  assert.match(over.error.message, /tools\/call/);
+
+  // Id-less tools/call messages count too, so they cannot pad a batch.
+  const padded = await server.handleMessage([...Array.from({ length: MAX_TOOL_CALLS_PER_BATCH }, (_, i) => call(i)), { jsonrpc: '2.0', method: 'tools/call', params: { name: 'get_release' } }]);
+  assert.equal(padded.error.code, -32600);
+
+  // Cheap messages still fill the rest of a batch.
+  const mixed = await server.handleMessage([
+    ...Array.from({ length: MAX_TOOL_CALLS_PER_BATCH }, (_, i) => call(i)),
+    ...Array.from({ length: MAX_BATCH - MAX_TOOL_CALLS_PER_BATCH }, (_, i) => ({ jsonrpc: '2.0', id: 100 + i, method: 'ping' })),
+  ]);
+  assert.equal(mixed.length, MAX_BATCH);
+
+  const { out } = await callTool(server, 'get_release', {});
+  assert.match(out.rate_limit.batch, new RegExp(`at most ${MAX_TOOL_CALLS_PER_BATCH} may be tools/call`));
+});
+
+test('an unexpected exception reaches the caller as a fixed message, never its own text', async () => {
+  // A shard that fails with text the caller must never see: an internal
+  // message can carry a bound parameter or a database detail.
+  const boom = () => { throw new Error(`D1_ERROR near ${SENTINEL}: no such table`); };
+  const shards = makeShardEnv();
+  const env = { ...shards, S2: { prepare: boom, batch: boom } };
+  const { server } = await fixtureServer({ env });
+  for (const [name, args] of [
+    ['verify_case', { case_number: '90-00001' }],
+    ['get_decision_text', { decision_id: '90-00003.h1' }],
+    ['find_decisions', { guidelines: ['G'] }],
+  ]) {
+    const res = await rpc(server, 'tools/call', { name, arguments: args });
+    const wire = JSON.stringify(res);
+    assert.ok(!wire.includes(SENTINEL) && !wire.includes('D1_ERROR') && !wire.includes('no such table'), `${name} leaked an internal message: ${wire.slice(0, 200)}`);
+    if (res.error) assert.deepEqual(res.error, { code: -32603, message: 'Internal error.' }, name);
+  }
+  // At least the direct read path must surface as the generic internal error.
+  const direct = await rpc(server, 'tools/call', { name: 'get_decision_text', arguments: { decision_id: '90-00003.h1' } });
+  assert.deepEqual(direct.error, { code: -32603, message: 'Internal error.' });
+  // Intended validation errors still reach the caller, named by parameter.
+  const invalid = await rpc(server, 'tools/call', { name: 'verify_case', arguments: { case_number: 'nope' } });
+  assert.equal(invalid.error.code, -32602);
+  assert.match(invalid.error.message, /case_number/);
 });
