@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+
+# No pip entry: the repo has no requirements file or pyproject.toml (the
+# scripts need only PyYAML, installed by name). Add one here if that changes.

@@ -469,7 +469,7 @@ deployed:
 | Storage bindings | assets (read), D1 ×3 | assets (read), D1 ×3; **no KV, no Durable Objects, no R2 write, no queues** |
 | D1 statements | prepared, parameterised, read-only SQL | same; only `SELECT`, with the statement list enumerated in one module so review is a diff |
 | Outbound fetch | none except `env.ASSETS` | same; a test asserts no `fetch(` to a non-asset URL exists in the bundle |
-| Batch cap | 20 JSON-RPC messages per POST | same |
+| Batch cap | 20 JSON-RPC messages per POST | same, and at most 4 of them `tools/call`: the limiter charges per POST, so an uncapped batch would multiply the 60/min limit by 20 for the calls that reach D1 |
 | Caching | guide page `public, max-age=3600` | guide page the same; **every tool response `cache-control: no-store`** |
 | Cookies, analytics on the guide page | none | none |
 | CORS | `access-control-allow-origin: *` | same |
