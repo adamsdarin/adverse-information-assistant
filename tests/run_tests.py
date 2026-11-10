@@ -1754,7 +1754,9 @@ def main() -> int:
         # Worker bundle hygiene (design §4): nothing logs on the request path
         # and the only outbound fetch is the static-assets binding.
         bad_console, bad_fetch = [], []
-        for js in sorted((ROOT / "mcp").glob("*.js")):
+        # The vendored dispatcher (mcp/vendor/mcp-core/) is bundled into the Worker too.
+        worker_js = sorted((ROOT / "mcp").glob("*.js")) + sorted((ROOT / "mcp" / "vendor").rglob("*.js"))
+        for js in worker_js:
             code = "\n".join(l for l in js.read_text(encoding="utf-8").splitlines()
                              if not l.lstrip().startswith(("//", "*", "/*")))
             if "console." in code:
