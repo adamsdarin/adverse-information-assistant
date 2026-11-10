@@ -13,6 +13,7 @@
 // that error names the parameter, never what was sent.
 
 import { ReleaseIntegrityError } from './release.js';
+import { RpcError, createDispatcher, toolErrorResult, toolResult } from './vendor/mcp-core/dispatcher.js';
 import { MAX_TEXT_PARTS, decisionText, findDecisions, hasShards, shardCounts, shardMeta, verifyCase } from './d1.js';
 
 export const SERVER_INFO = { name: 'adverse-information-assistant', version: '0.1.1' };
@@ -143,11 +144,11 @@ const DECISIONS_REMINDER =
 // ---------------------------------------------------------------------------
 // Errors
 // ---------------------------------------------------------------------------
-export class InvalidParams extends Error {
+/** A rejected argument; the dispatcher answers it as JSON-RPC error -32602. */
+export class InvalidParams extends RpcError {
   constructor(message) {
-    super(message);
+    super(-32602, message);
     this.name = 'InvalidParams';
-    this.code = -32602;
   }
 }
 
@@ -1123,114 +1124,69 @@ export function createAdverseMcpServer(release, options = {}) {
     };
   }
 
-  // ---- JSON-RPC ----
-  const rpcError = (id, code, message) => ({ jsonrpc: '2.0', id, error: { code, message } });
-
+  // ---- JSON-RPC: mcp/vendor/mcp-core/dispatcher.js, shared with the sibling fsotools.ai servers ----
   async function callTool(name, args) {
     const def = toolDefs.find((t) => t.name === name);
     if (!def) throw new InvalidParams('unknown tool');
     const validated = validate(args, def.spec);
     try {
-      const output = await def.run(validated);
-      return { content: [{ type: 'text', text: JSON.stringify(output, null, 2) }], structuredContent: output, isError: false };
+      return toolResult(await def.run(validated));
     } catch (err) {
       if (err instanceof InvalidParams) throw err;
-      if (err instanceof ToolError) {
-        const payload = { error: err.message, ...err.detail };
-        return { content: [{ type: 'text', text: JSON.stringify(payload) }], structuredContent: payload, isError: true };
-      }
+      if (err instanceof ToolError) return toolErrorResult({ error: err.message, ...err.detail }, { structured: true });
       if (err instanceof ReleaseIntegrityError) {
-        const payload = { error: 'a release file failed verification and was not served', file: err.path, reason: err.reason };
-        return { content: [{ type: 'text', text: JSON.stringify(payload) }], structuredContent: payload, isError: true };
+        return toolErrorResult({ error: 'a release file failed verification and was not served', file: err.path, reason: err.reason }, { structured: true });
       }
       throw err;
     }
   }
 
-  async function handleRpcMessage(msg) {
-    if (!isPlainObject(msg) || msg.jsonrpc !== '2.0') {
-      return rpcError(isPlainObject(msg) ? msg.id ?? null : null, -32600, 'Invalid Request: expected a JSON-RPC 2.0 object.');
-    }
-    if (msg.id === undefined) return null; // notification
-    const { id, method, params = {} } = msg;
-    try {
-      switch (method) {
-        case 'initialize': {
-          const requested = params?.protocolVersion;
-          return {
-            jsonrpc: '2.0',
-            id,
-            result: {
-              protocolVersion: MCP_PROTOCOL_VERSIONS.includes(requested) ? requested : MCP_PROTOCOL_VERSIONS[0],
-              capabilities: { tools: { listChanged: false }, resources: { subscribe: false, listChanged: false }, prompts: { listChanged: false } },
-              serverInfo: SERVER_INFO,
-              instructions: STANDING_RULES.join(' '),
-            },
-          };
-        }
-        case 'ping':
-          return { jsonrpc: '2.0', id, result: {} };
-        case 'tools/list':
-          return { jsonrpc: '2.0', id, result: { tools } };
-        case 'tools/call': {
-          if (typeof params?.name !== 'string') return rpcError(id, -32602, 'tools/call requires a string "name".');
-          try {
-            return { jsonrpc: '2.0', id, result: await callTool(params.name, params.arguments) };
-          } catch (err) {
-            if (err instanceof InvalidParams) return rpcError(id, err.code, err.message);
-            throw err;
-          }
-        }
-        case 'resources/list':
-          return { jsonrpc: '2.0', id, result: { resources } };
-        case 'resources/templates/list':
-          return { jsonrpc: '2.0', id, result: { resourceTemplates: [] } };
-        case 'resources/read': {
-          if (typeof params?.uri !== 'string') return rpcError(id, -32602, 'resources/read requires a string "uri".');
-          let data;
-          try {
-            data = readResource(params.uri);
-          } catch (err) {
-            if (err instanceof ReleaseIntegrityError) return rpcError(id, -32002, `Resource unavailable: ${err.path} failed verification (${err.reason}).`);
-            throw err;
-          }
-          if (!data) return rpcError(id, -32002, 'Resource not found.');
-          return { jsonrpc: '2.0', id, result: { contents: [{ uri: params.uri, mimeType: data.mimeType, text: data.text }] } };
-        }
-        case 'prompts/list':
-          return { jsonrpc: '2.0', id, result: { prompts } };
-        case 'prompts/get': {
-          if (typeof params?.name !== 'string') return rpcError(id, -32602, 'prompts/get requires a string "name".');
-          try {
-            return { jsonrpc: '2.0', id, result: getPrompt(params.name, params.arguments) };
-          } catch (err) {
-            if (err instanceof InvalidParams) return rpcError(id, err.code, err.message);
-            if (err instanceof ReleaseIntegrityError) return rpcError(id, -32002, `Prompt unavailable: ${err.path} failed verification (${err.reason}).`);
-            throw err;
-          }
-        }
-        default:
-          return rpcError(id, -32601, 'Method not found.');
+  // An InvalidParams thrown by a hook is answered as -32602 (it is an RpcError).
+  // No onInternalError: nothing logs on the request path (design §4), and an
+  // internal message is never surfaced, since it could carry a bound parameter.
+  const { handleMessage } = createDispatcher({
+    protocolVersions: MCP_PROTOCOL_VERSIONS,
+    serverInfo: SERVER_INFO,
+    capabilities: { tools: { listChanged: false }, resources: { subscribe: false, listChanged: false }, prompts: { listChanged: false } },
+    instructions: STANDING_RULES.join(' '),
+    tools,
+    resources,
+    callTool: (name, args) => {
+      if (typeof name !== 'string') throw new RpcError(-32602, 'tools/call requires a string "name".');
+      return callTool(name, args);
+    },
+    readResource: (uri) => {
+      try {
+        return readResource(uri);
+      } catch (err) {
+        if (err instanceof ReleaseIntegrityError) throw new RpcError(-32002, `Resource unavailable: ${err.path} failed verification (${err.reason}).`);
+        throw err;
       }
-    } catch {
-      // Never surface an internal message: it could carry a bound parameter.
-      return rpcError(id, -32603, 'Internal error.');
-    }
-  }
-
-  async function handleMessage(payload) {
-    if (Array.isArray(payload)) {
-      if (payload.length === 0) return rpcError(null, -32600, 'Invalid Request: empty batch.');
-      if (payload.length > MAX_BATCH) return rpcError(null, -32600, `Invalid Request: batch exceeds ${MAX_BATCH} messages.`);
-      const toolCalls = payload.filter((item) => isPlainObject(item) && item.method === 'tools/call').length;
-      if (toolCalls > MAX_TOOL_CALLS_PER_BATCH) {
-        return rpcError(null, -32600, `Invalid Request: a batch may carry at most ${MAX_TOOL_CALLS_PER_BATCH} tools/call messages.`);
-      }
-      const responses = (await Promise.all(payload.map((item) => handleRpcMessage(item)))).filter(Boolean);
-      return responses.length ? responses : null;
-    }
-    return handleRpcMessage(payload);
-  }
+    },
+    methods: {
+      'resources/templates/list': () => ({ resourceTemplates: [] }),
+      'prompts/list': () => ({ prompts }),
+      'prompts/get': (params) => {
+        if (typeof params?.name !== 'string') throw new RpcError(-32602, 'prompts/get requires a string "name".');
+        try {
+          return getPrompt(params.name, params.arguments);
+        } catch (err) {
+          if (err instanceof ReleaseIntegrityError) throw new RpcError(-32002, `Prompt unavailable: ${err.path} failed verification (${err.reason}).`);
+          throw err;
+        }
+      },
+    },
+    maxBatch: MAX_BATCH,
+    maxBatchToolCalls: MAX_TOOL_CALLS_PER_BATCH,
+    messages: {
+      invalidRequest: 'Invalid Request: expected a JSON-RPC 2.0 object.',
+      batchToolCalls: `Invalid Request: a batch may carry at most ${MAX_TOOL_CALLS_PER_BATCH} tools/call messages.`,
+      resourceUriRequired: 'resources/read requires a string "uri".',
+      resourceNotFound: () => 'Resource not found.',
+      methodNotFound: () => 'Method not found.',
+      internalError: 'Internal error.',
+    },
+  });
 
   return {
     serverInfo: SERVER_INFO,

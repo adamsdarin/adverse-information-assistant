@@ -1,0 +1,11 @@
+{
+  "product": "doha-guidelines-nexus",
+  "bundle": "mcp-core",
+  "commit": "2512e63",
+  "dirty": false,
+  "exportedAt": "2026-11-10T01:45:51.342Z",
+  "lineEndings": "lf",
+  "files": {
+    "dispatcher.js": "258fbd22ab12ce9795204f3973089ff950f888437545d9f3d6df29ed512e8be4"
+  }
+}
