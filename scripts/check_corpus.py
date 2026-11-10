@@ -44,7 +44,9 @@ def frontmatter(path: Path) -> dict:
             return {}
         _, fm, _ = text.split("---", 2)
         return yaml.safe_load(fm) or {}
-    except Exception:
+    except (OSError, ValueError, yaml.YAMLError):
+        # Unreadable, not front-matter shaped (ValueError also covers a bad
+        # encoding), or invalid YAML: no front matter to report.
         return {}
 
 
@@ -129,15 +131,21 @@ def main() -> int:
 
     # Reporting tables verified?
     tables_dir = path / "reporting" / "tables"
-    tables, verified_tables = [], []
+    tables, verified_tables, unreadable_tables = [], [], []
     if tables_dir.is_dir():
-        for t in tables_dir.glob("*.yaml"):
+        for t in sorted(tables_dir.glob("*.yaml")):
             tables.append(t.name)
+            # A table that cannot be parsed is not the same as one that is
+            # merely unverified, so say so instead of counting it quietly.
             try:
-                if (yaml.safe_load(t.read_text(encoding="utf-8")) or {}).get("maintainer_verified"):
-                    verified_tables.append(t.name)
-            except Exception:
-                pass
+                data = yaml.safe_load(t.read_text(encoding="utf-8")) or {}
+            except (OSError, ValueError, yaml.YAMLError) as e:
+                unreadable_tables.append(f"{t.name} ({type(e).__name__})")
+                continue
+            if not isinstance(data, dict):
+                unreadable_tables.append(f"{t.name} (not a YAML mapping)")
+            elif data.get("maintainer_verified"):
+                verified_tables.append(t.name)
 
     checklists_dir = path / "checklists"
     checklists = sorted(p.name for p in checklists_dir.glob("guideline-*.yaml")) \
@@ -150,6 +158,9 @@ def main() -> int:
     print(f"Question checklists: {len(checklists)}/13 guidelines, "
           f"{len(events)} reportable events")
     print(f"Reporting tables:   {len(tables)} present, {len(verified_tables)} verified")
+    for name in unreadable_tables:
+        print(f"  WARNING: reporting table could not be read: {name} — "
+              "counted as unverified; run scripts/validate_corpus.py")
     print(f"Guideline notes:    {len(notes)} authored "
           "(analysis only — the directive text lives in the DCSA Library)")
 

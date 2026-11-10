@@ -109,6 +109,7 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-09 Claude — Repo hygiene on branch `claude/repo-hygiene` (not pushed, not deployed). Added a CI workflow (Ubuntu and Windows, Python 3.12, Node 24) and Dependabot for npm and actions; the suite needs no library, credentials or network because it builds the synthetic fixture release. Decision: a batch may carry at most 4 `tools/call` messages, since the limiter charges per POST and 20 tool calls per POST made the real ceiling 1,200 a minute; live only after the owner redeploys. Decision: unexpected errors already return a fixed "Internal error." and stay unlogged, because design §4 and a suite check forbid `console.*` in the Worker; whether to log error class names is the owner's call. `check_corpus.py` now warns when a reporting table cannot be parsed instead of counting it silently as unverified.
 2026-11-03 Claude — Read-only annotations on every tool (PR 6, server 0.1.1); redeployed as version 8f9a759b with the owner's approval and checked live.
 2026-11-03 Claude — Deployed the hosted MCP Worker (version 3aebd4cf) from merged main with the owner's approval and checked it live; noted the missing tool annotations.
 2026-11-02 Claude — Deployed the Worker after the owner merged PR #3 and said
