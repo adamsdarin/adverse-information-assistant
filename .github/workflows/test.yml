@@ -24,6 +24,10 @@ jobs:
     env:
       PYTHONUTF8: "1"
     steps:
+      # The fixture library has paths past 260 characters, which Git for Windows refuses by default.
+      - name: Allow long paths
+        run: git config --global core.longpaths true
+
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
