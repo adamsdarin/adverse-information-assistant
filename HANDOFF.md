@@ -180,8 +180,9 @@ not copied into this document. See `HANDOFF-archive.md` for prior decisions.
    live. Still open: the maintainer verifies the restatements against the
    live pages (`document_lookup.py --check-links`) before any
    `maintainer_verified` flip. The saved DCSA guide and its annotated
-   companion (a PDF and a Word copy of each) live outside the repo, still in
-   a session scratch folder awaiting a permanent home; the PDF hashes are in
+   companion (a PDF and a Word copy of each) live outside the repo, in the
+   owner's Documents folder since 2026-11-12 (both PDFs re-hashed after the
+   move and still matching); the PDF hashes are in
    `_ADJUDICATIVE_READINESS.yaml` under `saved_copy`.
 1. Done 2026-11-03 (PR 6, redeployed as version 8f9a759b): MCP tool annotations.
    D2's default keeps the reporting tables unlinked until they are verified.
