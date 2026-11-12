@@ -521,6 +521,10 @@ def main() -> int:
             got = core.normalize("role", said)
             check(f"role {said!r} is applicant", got == "applicant", got)
         check("a holder is still a holder", core.normalize("role", "I already hold a clearance") == "holder")
+        for said in ("I have a clearance and the decision on my reinvestigation is pending",
+                     "I already hold one; my reinvestigation is pending"):
+            got = core.normalize("role", said)
+            check(f"a holder awaiting reinvestigation stays a holder: {said!r}", got == "holder", got)
         check("the role question names all three routes",
               all(w in core.QUESTIONS[2].prompt for w in ("holder", "in process", "applicant")))
         ip = tmp / "inprocess.json"

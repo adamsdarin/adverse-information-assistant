@@ -51,9 +51,10 @@ PHRASE_ALIASES = {
         "holder": ("clearance holder", "currently cleared", "i have a clearance", "already hold"),
         # in_process is its own route (agents/core/intake.md §5): it notifies
         # the sponsoring security office instead of preparing an initial form.
+        # No generic "decision is pending": a current holder awaiting a
+        # reinvestigation decision says that too, and is still a holder.
         "in_process": ("in process", "investigation pending", "investigation is pending",
-                       "pending investigation", "decision pending", "decision is pending",
-                       "awaiting adjudication", "awaiting a decision", "pending adjudication"),
+                       "pending investigation", "awaiting adjudication", "pending adjudication"),
         "applicant": ("clearance applicant", "applying", "candidate", "not yet submitted",
                       "have not submitted", "haven t submitted"),
     },
