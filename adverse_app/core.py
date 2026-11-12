@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from difflib import get_close_matches
@@ -128,6 +129,21 @@ def start(path: Path = DEFAULT_SESSION, privacy_tier: str | None = None, force: 
     return read_session(path)
 
 
+def _words(text: str) -> str:
+    """Lowercase words, with every run of punctuation read as a space.
+
+    "Top-Secret/SCI" and "top secret sci" must read the same, or the hyphen
+    hides "top secret" and only "secret" is left to match.
+    """
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", text.lower()).split())
+
+
+def _contains_phrase(words: str, phrase: str) -> bool:
+    """Whole-word containment. A bare substring test reads the "ts" inside
+    "results" as Top Secret."""
+    return re.search(rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])", words) is not None
+
+
 def normalize(key: str, answer: str) -> str:
     value = " ".join(answer.strip().lower().split())
     if key == "narrative":
@@ -135,23 +151,26 @@ def normalize(key: str, answer: str) -> str:
             raise SessionError("The narrative cannot be empty.")
         return answer.strip()
     mapping = NORMALIZE.get(key, {})
-    if value not in mapping:
-        phrases: list[tuple[str, str]] = []
-        for canonical, aliases in PHRASE_ALIASES.get(key, {}).items():
-            phrases.extend((alias, canonical) for alias in aliases)
-        for alias, canonical in sorted(phrases, key=lambda item: len(item[0]), reverse=True):
-            if alias in value:
-                return canonical
+    if value in mapping:
+        return mapping[value]
+    words = _words(value)
+    if words in mapping:
+        return mapping[words]
+    phrases: list[tuple[str, str]] = []
+    for canonical, aliases in PHRASE_ALIASES.get(key, {}).items():
+        phrases.extend((alias, canonical) for alias in aliases)
+    for alias, canonical in sorted(phrases, key=lambda item: len(item[0]), reverse=True):
+        if _contains_phrase(words, alias):
+            return canonical
 
-        candidates = {**mapping}
-        for alias, canonical in phrases:
-            candidates[alias] = canonical
-        close = get_close_matches(value, candidates.keys(), n=1, cutoff=0.72)
-        if close:
-            return candidates[close[0]]
-        examples = ", ".join(sorted(set(mapping.values())))
-        raise SessionError(f"I could not confidently understand that answer for {key}. Please say it another way; examples are: {examples}.")
-    return mapping[value]
+    candidates = {**mapping}
+    for alias, canonical in phrases:
+        candidates[alias] = canonical
+    close = get_close_matches(words, candidates.keys(), n=1, cutoff=0.72)
+    if close:
+        return candidates[close[0]]
+    examples = ", ".join(sorted(set(mapping.values())))
+    raise SessionError(f"I could not confidently understand that answer for {key}. Please say it another way; examples are: {examples}.")
 
 
 def next_question(data: dict[str, Any]) -> IntakeQuestion | None:

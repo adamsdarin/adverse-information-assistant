@@ -444,6 +444,25 @@ def main() -> int:
               core.normalize("access_tier", "I hold Secret, not Top Secret") == "baseline")
         check("case and spacing do not matter", core.normalize("form", "  PVQ  ") == "pvq")
 
+        print("\nPhase 2 — intake language never lowers the access tier")
+        # A Top Secret holder read as Secret is pointed at the wrong reporting
+        # table: the TS/Q requirements simply never come up.
+        for said in ("Top-Secret", "TOP SECRET.", "Top Secret/SCI", "TS/SCI", "TS-SCI", "topsecret", "Q."):
+            got = core.normalize("access_tier", said)
+            check(f"access {said!r} is Top Secret/Q", got == "ts_q", got)
+        for said in ("Secret.", "Secret, interim", "confidential"):
+            got = core.normalize("access_tier", said)
+            check(f"access {said!r} is Secret", got == "baseline", got)
+        # A phrase must be a whole word: the "ts" inside "results" is not TS.
+        check("a word that merely contains 'ts' is not Top Secret",
+              raises(core.normalize, "access_tier", "No clearance yet, I am still waiting on my results") is not None)
+        check("'none' inside 'someone' is not 'not applicable'",
+              raises(core.normalize, "access_tier", "someone else handles that") is not None)
+        check("a whole-word 'none' still means not applicable",
+              core.normalize("access_tier", "None, my parents say I need one") == "not_applicable")
+        check("SF-86 with punctuation inside a sentence is still the SF-86",
+              core.normalize("form", "the SF-86 form") == "sf86")
+
     print(f"\n{passed} passed, {failed} failed")
     return 1 if failed else 0
 
