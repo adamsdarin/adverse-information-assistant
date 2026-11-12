@@ -85,6 +85,21 @@ the same hash-checked release folder. The checkout is back on `main`: the
 daily release sync had deferred on 11-09, 11-10 and 11-11 because this
 checkout sat on `claude/dcsa-adjudicative-readiness`.
 
+COURT PORTAL LINKS FIXED 2026-11-12 at the owner's request: ten
+`statewide_portal` addresses in `corpus/courts/state-courts.yaml` no longer
+resolved (AZ, DC, IL, IA, KS, MN, NE, SD, UT, VT; found by the website's link
+check of the companion PDF, confirmed dead in the app's browser). Each now
+points at the most direct working address, opened in the browser that day.
+Illinois has no single public case search, so its portal is the statewide
+re:SearchIL repository and its `notes` say to check the county Circuit Clerk
+first. Owner direction: links as direct as possible, lowest level first. All
+51 entries stay `verified: false`; no flag moved. The same fixes are live in
+the companion PDF on fsotools.ai (fsotools-website PR 77). The redeploy of
+the Worker from `main` follows this merge, approved with the fix; the live
+`get_release` should then report this merge or a later commit. Not done: the
+other state links (courts and `state-records-sources.yaml`) are still agency
+front doors and have not been narrowed.
+
 DEPLOYED with the owner's approval: Worker `adverse-information-assistant` at
 `https://fsotools.ai/adverse/mcp`, from `main` 814e644 (PR 3, reviewed with ten
 findings all fixed in 893e51f, merged by the owner). Two sessions deployed the
@@ -180,8 +195,9 @@ not copied into this document. See `HANDOFF-archive.md` for prior decisions.
    live. Still open: the maintainer verifies the restatements against the
    live pages (`document_lookup.py --check-links`) before any
    `maintainer_verified` flip. The saved DCSA guide and its annotated
-   companion (a PDF and a Word copy of each) live outside the repo, still in
-   a session scratch folder awaiting a permanent home; the PDF hashes are in
+   companion (a PDF and a Word copy of each) live outside the repo, in the
+   owner's Documents folder since 2026-11-12 (both PDFs re-hashed after the
+   move and still matching); the PDF hashes are in
    `_ADJUDICATIVE_READINESS.yaml` under `saved_copy`.
 1. Done 2026-11-03 (PR 6, redeployed as version 8f9a759b): MCP tool annotations.
    D2's default keeps the reporting tables unlinked until they are verified.
@@ -199,6 +215,11 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-12 Claude (fork f01dd4a3) — Replaced ten dead `statewide_portal`
+addresses in the court recognition aid with direct working ones and added a
+county-first note for Illinois. Decision: fix the corpus as well as the
+published PDF, because the corpus is the source both the Worker and any
+future companion are built from. Verified flags untouched.
 2026-11-12 Claude (fork f01dd4a3) — The owner said to push the readiness work
 live. Pushed the branch, merged PR 11, deployed the Worker from `main` as
 version 985c6565 and returned the checkout to `main`. Decisions: merge before
