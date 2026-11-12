@@ -7,14 +7,18 @@
 - `start` creates a new validated checkpoint and refuses to overwrite an
   existing session unless the exact target is explicitly forced.
 - `resume` and `status` show compact progress without printing narrative text.
-- `answer` records one intake fact and validates immediately.
+- `answer` records one intake fact and validates it before saving. An answer
+  the gate refuses — for example a narrative containing a Social Security
+  number, a date of birth or a classification marking — is not saved, and the
+  same question stays open.
 - `validate`, `assemble`, and `verify` invoke the existing deterministic gates.
 - `mcp` starts an optional narrow stdio MCP server; no arbitrary file tool is
-  exposed.
+  exposed. It needs the MCP Python SDK (`pip install mcp`); nothing else does.
 
-Run `python tests/run_product_tests.py` to exercise the product shell. The
-existing `python tests/run_tests.py` remains the full deterministic safety
-suite.
+`python tests/run_tests.py` is the full deterministic safety suite, and it
+runs the two companion runners too: `tests/run_product_tests.py` (the product
+shell, its CLI and the local MCP allowlist) and `tests/run_gate_tests.py`
+(edge cases for the session, assembly and output gates).
 
 Works with any AI coding assistant that can read files in a folder and run
 scripts. No account, no server, no signup — you clone the folder and point

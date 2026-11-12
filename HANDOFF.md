@@ -3,6 +3,21 @@
 Last updated: 2026-11-12 by Claude
 
 ## Current State
+November 12 (branch `claude/adverse-test-coverage-750ee2`, committed, not
+pushed or merged): test coverage raised and eight gate bugs fixed, each with
+its test. `tests/run_tests.py` now also runs `tests/run_gate_tests.py` (new:
+every validator branch, malformed input, the privacy floor) and
+`tests/run_product_tests.py` (engine, CLI, local MCP allowlist via a stub
+FastMCP, since the SDK is optional and usually absent), and node picks up
+`tests/mcp/edges.test.mjs` (tests only; Worker code untouched because the
+MCP security-review session owns it). New `scripts/privacy_floor.py` is the
+single SSN / date-of-birth / classification-marking definition shared by
+the session gate and the output gate. Fixed: intake phrase matching
+(Top-Secret read as Secret), the unreachable `in_process` route, the floor
+at intake (an SSN narrative was saved and stamped), the verifier's floor
+gaps, re-stamping that laundered an edited narrative, empty packages that
+verified, malformed or missing session files, and the MCP SDK install hint.
+
 November 9 (committed b6145ff, merged as PR 11 and deployed 2026-11-12,
 see below): DCSA's Adjudicatively Ready Product
 Reference Guide (dcsa.mil, read in the app's browser pane at the owner's
@@ -199,6 +214,20 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-12 Claude — Test-coverage pass on its own branch (owner's parallel
+improvement sessions). Decisions: the privacy floor refuses at intake rather
+than warning, because the conductor promises the session file holds no
+SSN/DOB/classified text and a stamped narrative can never be corrected;
+markings are matched only in copied-text forms (`//` banners, opening
+portion marks, classification-authority lines) so a Guideline K report that
+says "a Secret document" still passes; floor messages name the kind, never
+the value. Intake writes a candidate and gates it before replacing the
+checkpoint. Stamping is once. A named-but-missing session fails verify
+instead of silently skipping session checks. The local MCP allowlist is
+tested through a stub because `import mcp` from the repo root resolves the
+Worker's `mcp/` folder as a namespace package when the SDK is absent.
+Worker hardening notes (body cap counts characters, 503 lacks CORS) went to
+the shared notes folder for the security session rather than into `mcp/`.
 2026-11-12 Claude (fork f01dd4a3) — The owner said to push the readiness work
 live. Pushed the branch, merged PR 11, deployed the Worker from `main` as
 version 985c6565 and returned the checkout to `main`. Decisions: merge before
