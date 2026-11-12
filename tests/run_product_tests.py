@@ -470,6 +470,9 @@ def main() -> int:
             r = adverse("--session", str(ms), "mcp")
             check("without the SDK, mcp exits 1 with a clear message rather than a traceback",
                   r.returncode == 1 and "MCP SDK is not installed" in r.stderr and "Traceback" not in r.stderr, r.stderr)
+            # The repo has no pyproject.toml, so "the project's MCP extra" named
+            # nothing a user could install.
+            check("and it names the package to install", "pip install mcp" in r.stderr, r.stderr)
 
         design = (ROOT / "docs" / "HOSTED-MCP-DESIGN.md").read_text(encoding="utf-8")
         check("the design document names the same six local tools",

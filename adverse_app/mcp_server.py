@@ -10,7 +10,10 @@ def create_server(session_path: Path):
     try:
         from mcp.server.fastmcp import FastMCP
     except ImportError as exc:
-        raise core.SessionError("The optional MCP SDK is not installed. Install the project's MCP extra before using this command.") from exc
+        raise core.SessionError(
+            "The optional MCP SDK is not installed. Install the MCP Python SDK "
+            "(pip install mcp) to use this command; nothing else in the tool needs it."
+        ) from exc
 
     mcp = FastMCP("Adverse Information Assistant", instructions="Local-only tools over a validated adverse-information session. Never request classified information, SSNs, dates of birth, or the user's real name.")
 
