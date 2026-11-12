@@ -105,7 +105,7 @@ states:
     unit_label: County
     lower_courts: ["Justice Court", "Municipal (City) Court"]
     records_custodian: "Clerk of the Superior Court"
-    statewide_portal: "https://apps.supremecourt.az.gov/publicaccess/"
+    statewide_portal: "https://apps.azcourts.gov/publicaccess/caselookup.aspx"
     judiciary_url: "https://www.azcourts.gov/"
     dui_note: "Misdemeanor DUI is usually Justice or Municipal Court; aggravated DUI is Superior Court."
     verified: false
@@ -197,7 +197,7 @@ states:
     unit_label: District
     lower_courts: []
     records_custodian: "Clerk of the Superior Court"
-    statewide_portal: "https://eaccess.dccourts.gov/"
+    statewide_portal: "https://portal-dc.tylertech.cloud/Portal"
     judiciary_url: "https://www.dccourts.gov/"
     notes: "A single unified trial court for the whole District."
     verified: false
@@ -275,9 +275,9 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Circuit Clerk"
-    statewide_portal: "https://www.illinoiscourts.gov/rosters/public-access-to-court-records/"
+    statewide_portal: "https://researchil.tylerhost.net/CourtRecordsSearch/"
     judiciary_url: "https://www.illinoiscourts.gov/"
-    notes: "Unified Circuit Court by county, grouped into judicial circuits. Cook County is its own circuit and by far the largest."
+    notes: "Unified Circuit Court by county, grouped into judicial circuits. Cook County is its own circuit and by far the largest. There is no single public case search: check the county Circuit Clerk first (directory: https://www.illinoiscourts.gov/courts/circuit-court/circuit-court-clerks/). The statewide portal is the re:SearchIL repository, which asks for a sign-in."
     verified: false
     source_url: null
     verified_date: null
@@ -305,7 +305,7 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Clerk of Court"
-    statewide_portal: "https://www.iowacourts.state.ia.us/ESAWebApp/SelectFrameCriteriaPub"
+    statewide_portal: "https://www.iowacourts.state.ia.us/ESAWebApp/DefaultFrame"
     judiciary_url: "https://www.iowacourts.gov/"
     dui_note: "OWI is heard in the District Court for the county of arrest."
     notes: "Fully unified — one District Court, sitting in each county. There are no city or municipal courts."
@@ -321,7 +321,7 @@ states:
     unit_label: County
     lower_courts: ["Municipal Court"]
     records_custodian: "Clerk of the District Court"
-    statewide_portal: "https://www.kansas.gov/countyCourts/"
+    statewide_portal: "https://casesearch.kscourts.gov/"
     judiciary_url: "https://www.kscourts.gov/"
     dui_note: "DUI may be Municipal Court if charged under a city ordinance."
     verified: false
@@ -431,7 +431,7 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Court Administrator"
-    statewide_portal: "https://mcro.courts.state.mn.us/"
+    statewide_portal: "https://publicaccess.courts.state.mn.us/CaseSearch"
     judiciary_url: "https://www.mncourts.gov/"
     dui_note: "DWI is District Court in the county of arrest."
     notes: "Records custodian is the Court Administrator, not a 'clerk'."
@@ -493,7 +493,7 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Clerk of the District Court / Clerk Magistrate"
-    statewide_portal: "https://www.nebraska.gov/apps-courts-epad/"
+    statewide_portal: "https://www.nebraska.gov/justicecc/ccname.cgi"
     judiciary_url: "https://supremecourt.nebraska.gov/"
     dui_note: "DUI is typically County Court."
     verified: false
@@ -709,7 +709,7 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Clerk of Courts"
-    statewide_portal: "https://ujs.sd.gov/Public/"
+    statewide_portal: "https://ujspars.sd.gov/"
     judiciary_url: "https://ujs.sd.gov/"
     dui_note: "DUI is Circuit Court, often before a magistrate judge."
     verified: false
@@ -756,7 +756,7 @@ states:
     unit_label: County
     lower_courts: ["Justice Court"]
     records_custodian: "Clerk of Court"
-    statewide_portal: "https://www.utcourts.gov/en/about/courts/xchange.html"
+    statewide_portal: "https://www.utcourts.gov/en/court-records-publications/records/xchange.html"
     judiciary_url: "https://www.utcourts.gov/"
     dui_note: "Misdemeanor DUI is frequently a city or county JUSTICE COURT, not the District Court — people commonly look in the wrong one."
     verified: false
@@ -771,7 +771,7 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Clerk of Court"
-    statewide_portal: "https://www.vermontjudiciary.org/court-records-online"
+    statewide_portal: "https://portal.vtcourts.gov/Portal"
     judiciary_url: "https://www.vermontjudiciary.org/"
     dui_note: "DUI is the Criminal Division of Superior Court for the county."
     verified: false
