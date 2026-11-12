@@ -466,6 +466,31 @@ def main() -> int:
               "**court-disposition** — SF-86 §22" in req and "Ask the clerk." in req and "Do not delay" in req)
         check("no outstanding items renders nothing", assemble_package.outstanding_required([]) == "")
 
+        print("\nstage 0 and provenance scripts")
+        # check_corpus.py runs first in every session (conductor stage 0); a
+        # wrong folder must read as wrong, never as an empty corpus.
+        remembered = ROOT / ".corpus-location.json"
+        remembered_before = remembered.read_bytes() if remembered.exists() else None
+        c, o = run(SCRIPTS / "check_corpus.py", str(ROOT / "corpus"))
+        check("check_corpus.py accepts the shipped corpus", c == 0 and "Structure: OK" in o, o[-300:])
+        c, o = run(SCRIPTS / "check_corpus.py", str(tmp / "nothing-here"))
+        check("check_corpus.py reports a missing folder as not found", c == 1 and "NOT FOUND" in o, o[-300:])
+        c, o = run(SCRIPTS / "check_corpus.py", str(ROOT / "README.md"))
+        check("check_corpus.py refuses a file", c == 1 and "NOT A FOLDER" in o, o[-300:])
+        c, o = run(SCRIPTS / "check_corpus.py", str(empty))
+        check("check_corpus.py says a wrong folder is not the corpus", c == 1 and "DOES NOT LOOK LIKE THE CORPUS" in o, o[-300:])
+        check("and without --remember none of those runs changed the remembered location",
+              (remembered.read_bytes() if remembered.exists() else None) == remembered_before)
+        src = tmp / "source.pdf"
+        src.write_bytes(b"%PDF-1.4 synthetic source document\n")
+        c, o = run(SCRIPTS / "hash_source.py", str(src), f'"{tmp / "absent.pdf"}"')
+        import hashlib
+        check("hash_source.py prints the real SHA-256 in frontmatter form",
+              f"source_sha256: {hashlib.sha256(src.read_bytes()).hexdigest()}" in o, o)
+        check("and a quoted missing path is an error with exit 1", c == 1 and "is not a file" in o, o)
+        c, o = run(SCRIPTS / "hash_source.py")
+        check("hash_source.py with no file prints usage", c == 1 and "usage" in o, o)
+
     print(f"\n{passed} passed, {failed} failed")
     return 1 if failed else 0
 
