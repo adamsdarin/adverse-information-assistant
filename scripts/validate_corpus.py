@@ -977,6 +977,8 @@ def check_state_records_sources() -> None:
                 continue
             if not str(agency.get("url", "")).startswith("https://"):
                 errors.append(f"{path}: {code} {key} url must be https")
+            if agency.get("direct_url") and not str(agency["direct_url"]).startswith("https://"):
+                errors.append(f"{path}: {code} {key} direct_url must be https")
         if st.get("verified"):
             missing = [k for k in ("source_url", "verified_date") if not st.get(k)]
             if missing:

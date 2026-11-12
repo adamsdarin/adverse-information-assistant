@@ -113,6 +113,8 @@ def describe(entry: dict, state_sources: dict | None = None, state: str | None =
                 "state_name": st.get("name"),
                 "agency": st[key].get("name"),
                 "url": st[key].get("url"),
+                "direct_url": st[key].get("direct_url"),
+                "note": st[key].get("note"),
                 "verified": bool(st.get("verified")),
             }
         elif state:

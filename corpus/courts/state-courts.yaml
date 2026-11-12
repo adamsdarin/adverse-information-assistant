@@ -40,6 +40,8 @@
 #                         this is the fork that most often confuses people
 #   records_custodian     the title to ask for. Wrong title = transferred twice
 #   statewide_portal      online case search, if the state has one
+#   county_directory      where to find the county court or clerk, when the
+#                         lowest level is the place to start
 #   judiciary_url         the official source of truth
 #   dui_note              where OWI/DUI specifically lands, when it differs
 #   notes                 anything that trips people up
@@ -136,8 +138,9 @@ states:
     lower_courts: []
     records_custodian: "Clerk of the Superior Court"
     statewide_portal: null
+    county_directory: "https://courts.ca.gov/find-my-court"
     judiciary_url: "https://www.courts.ca.gov/"
-    notes: "Unified — one Superior Court per county hears everything. There is no statewide case search; each county's Superior Court runs its own."
+    notes: "Unified — one Superior Court per county hears everything. There is no statewide case search; each county's Superior Court runs its own. Use the county directory link to reach that county's Superior Court."
     verified: false
     source_url: null
     verified_date: null
@@ -181,10 +184,10 @@ states:
     unit_label: County
     lower_courts: ["Justice of the Peace Court", "Municipal Court (Wilmington)"]
     records_custodian: "Prothonotary (Superior Court)"
-    statewide_portal: null
+    statewide_portal: "https://courts.delaware.gov/docket.aspx"
     judiciary_url: "https://courts.delaware.gov/"
     dui_note: "First-offense DUI is typically Court of Common Pleas."
-    notes: "Only three counties. The Superior Court records custodian is the Prothonotary — an unusual title people rarely know to ask for."
+    notes: "Only three counties. The Superior Court records custodian is the Prothonotary — an unusual title people rarely know to ask for. The online search covers civil cases only; for a criminal case ask the court that heard it."
     verified: false
     source_url: null
     verified_date: null
@@ -231,7 +234,7 @@ states:
     statewide_portal: null
     judiciary_url: "https://georgiacourts.gov/"
     dui_note: "DUI is usually State Court, or Municipal/Probate Court in counties without a State Court."
-    notes: "Not every county has a State Court — where there isn't one, Superior Court hears misdemeanors."
+    notes: "Not every county has a State Court — where there isn't one, Superior Court hears misdemeanors. There is no statewide case search to rely on: start with the Clerk of Superior Court in the county where the case was heard."
     verified: false
     source_url: null
     verified_date: null
@@ -276,6 +279,7 @@ states:
     lower_courts: []
     records_custodian: "Circuit Clerk"
     statewide_portal: "https://researchil.tylerhost.net/CourtRecordsSearch/"
+    county_directory: "https://www.illinoiscourts.gov/courts/circuit-court/circuit-court-clerks/"
     judiciary_url: "https://www.illinoiscourts.gov/"
     notes: "Unified Circuit Court by county, grouped into judicial circuits. Cook County is its own circuit and by far the largest. There is no single public case search: check the county Circuit Clerk first (directory: https://www.illinoiscourts.gov/courts/circuit-court/circuit-court-clerks/). The statewide portal is the re:SearchIL repository, which asks for a sign-in."
     verified: false
@@ -336,10 +340,11 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Circuit Clerk"
-    statewide_portal: null
+    statewide_portal: "https://www.kycourts.gov/Pages/Request-Court-Records.aspx"
+    county_directory: "https://www.kycourts.gov/Courts/County-Information/Pages/default.aspx"
     judiciary_url: "https://www.kycourts.gov/"
     dui_note: "DUI is District Court unless it is a felony-level offense."
-    notes: "The Circuit Clerk holds records for both Circuit and District Court."
+    notes: "The Circuit Clerk holds records for both Circuit and District Court. Start with the county: the county directory link finds the court or clerk for the place the case was heard. The statewide page explains how to request court records; the county clerk is the direct source."
     verified: false
     source_url: null
     verified_date: null
@@ -355,7 +360,7 @@ states:
     statewide_portal: null
     judiciary_url: "https://www.lasc.org/"
     dui_note: "DWI is often City Court where one exists."
-    notes: "Louisiana has PARISHES, not counties. Orleans Parish has its own criminal district court."
+    notes: "Louisiana has PARISHES, not counties. Orleans Parish has its own criminal district court. There is no statewide case search to rely on: start with the Clerk of Court in the parish where the case was heard."
     verified: false
     source_url: null
     verified_date: null
@@ -368,9 +373,11 @@ states:
     unit_label: County
     lower_courts: []
     records_custodian: "Clerk of Court"
-    statewide_portal: null
+    statewide_portal: "https://www.courts.maine.gov/help/records.html"
+    county_directory: "https://www.courts.maine.gov/courts/find-a-court.html"
     judiciary_url: "https://www.courts.maine.gov/"
     dui_note: "OUI is typically District Court."
+    notes: "Start with the county: the county directory link finds the court for the place the case was heard. The statewide page explains how court records are requested."
     verified: false
     source_url: null
     verified_date: null
@@ -415,10 +422,10 @@ states:
     unit_label: County
     lower_courts: ["Municipal Court (a few cities)"]
     records_custodian: "County Clerk (Circuit) / Court Clerk (District)"
-    statewide_portal: null
+    statewide_portal: "https://micourt.courts.michigan.gov/case-search/"
     judiciary_url: "https://www.courts.michigan.gov/"
     dui_note: "OWI is typically District Court; felony OWI moves to Circuit Court."
-    notes: "District Courts are numbered by district, not named for counties."
+    notes: "District Courts are numbered by district, not named for counties. If a case does not appear in the statewide search, ask the clerk of the court that heard it."
     verified: false
     source_url: null
     verified_date: null
@@ -447,9 +454,10 @@ states:
     unit_label: County
     lower_courts: ["County Court", "Justice Court", "Municipal Court"]
     records_custodian: "Circuit Clerk"
-    statewide_portal: null
+    statewide_portal: "https://www.courts.ms.gov/mec/mec.php"
     judiciary_url: "https://courts.ms.gov/"
     dui_note: "First-offense DUI is usually Justice or Municipal Court."
+    notes: "The online system (Mississippi Electronic Courts) requires registration; the Circuit Clerk in the county where the case was heard is the direct source."
     verified: false
     source_url: null
     verified_date: null
@@ -481,6 +489,7 @@ states:
     statewide_portal: null
     judiciary_url: "https://courts.mt.gov/"
     dui_note: "Misdemeanor DUI is usually Justice or City Court."
+    notes: "There is no statewide case search to rely on: start with the clerk of court in the county where the case was heard."
     verified: false
     source_url: null
     verified_date: null
@@ -509,8 +518,10 @@ states:
     lower_courts: ["Justice Court", "Municipal Court"]
     records_custodian: "Clerk of the Court"
     statewide_portal: null
+    county_directory: "https://nvcourts.gov/supreme/how_do_i/find_a_court"
     judiciary_url: "https://nvcourts.gov/"
     dui_note: "Misdemeanor DUI is Justice or Municipal Court."
+    notes: "There is no statewide case search: start with the county. The county directory link finds the court for the place the case was heard."
     verified: false
     source_url: null
     verified_date: null
@@ -619,7 +630,7 @@ states:
     statewide_portal: null
     judiciary_url: "https://www.supremecourt.ohio.gov/"
     dui_note: "OVI is Municipal or County Court. Some villages run Mayor's Courts, which are not courts of record."
-    notes: "Municipal Court boundaries do not follow county lines — ask which city."
+    notes: "Municipal Court boundaries do not follow county lines — ask which city. There is no statewide case search to rely on: start with the Clerk of Courts in the county where the case was heard."
     verified: false
     source_url: null
     verified_date: null
@@ -725,9 +736,10 @@ states:
     lower_courts: ["General Sessions Court", "Municipal Court"]
     records_custodian: "Circuit Court Clerk / Criminal Court Clerk"
     statewide_portal: null
+    county_directory: "https://www.tncourts.gov/courts/court-clerks/clerks-list"
     judiciary_url: "https://www.tncourts.gov/"
     dui_note: "DUI usually starts in General Sessions Court and may move up on appeal or indictment."
-    notes: "Larger counties have a separate Criminal Court; smaller ones use Circuit Court for criminal matters."
+    notes: "Larger counties have a separate Criminal Court; smaller ones use Circuit Court for criminal matters. Start with the county: the county directory link finds the court or clerk for the place the case was heard."
     verified: false
     source_url: null
     verified_date: null
@@ -740,10 +752,10 @@ states:
     unit_label: County
     lower_courts: ["Justice of the Peace Court", "Municipal Court"]
     records_custodian: "District Clerk (felony) / County Clerk (misdemeanor)"
-    statewide_portal: null
+    statewide_portal: "https://research.txcourts.gov/CourtRecordsSearch/"
     judiciary_url: "https://www.txcourts.gov/"
     dui_note: "First and second DWI are misdemeanors heard in a County Court at Law. Felony DWI goes to District Court."
-    notes: "TWO different clerks depending on offense level — District Clerk for felonies, County Clerk for misdemeanors. Getting this wrong is the most common Texas mistake. Justice and Municipal Courts handle fine-only offenses."
+    notes: "TWO different clerks depending on offense level — District Clerk for felonies, County Clerk for misdemeanors. Getting this wrong is the most common Texas mistake. Justice and Municipal Courts handle fine-only offenses. The statewide search (re:SearchTX) asks for a sign-in; the clerk in the county where the case was heard is the direct source."
     verified: false
     source_url: null
     verified_date: null
@@ -820,6 +832,7 @@ states:
     statewide_portal: null
     judiciary_url: "https://www.courtswv.gov/"
     dui_note: "DUI is typically Magistrate Court."
+    notes: "There is no statewide case search to rely on: start with the clerk of court in the county where the case was heard."
     verified: false
     source_url: null
     verified_date: null
@@ -849,9 +862,10 @@ states:
     lower_courts: ["Municipal Court"]
     records_custodian: "Clerk of District Court"
     statewide_portal: null
+    county_directory: "https://www.wyocourts.gov/find-a-court/"
     judiciary_url: "https://www.courts.state.wy.us/"
     dui_note: "DWUI is typically Circuit Court, or Municipal Court if charged by a city."
-    notes: "Wyoming's Circuit Court is the LOWER court — the opposite of most states, where 'circuit' means the higher trial court."
+    notes: "Wyoming's Circuit Court is the LOWER court — the opposite of most states, where 'circuit' means the higher trial court. Start with the county: the county directory link finds the court or clerk for the place the case was heard."
     verified: false
     source_url: null
     verified_date: null

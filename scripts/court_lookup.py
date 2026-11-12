@@ -79,6 +79,7 @@ def describe(st: dict, code: str, county: str | None, offense: str | None) -> di
         "ask_first": "What court did your case go through?",
         "records_custodian": st.get("records_custodian"),
         "statewide_portal": st.get("statewide_portal"),
+        "county_directory": st.get("county_directory"),
         "judiciary_url": st.get("judiciary_url"),
         "lower_courts": st.get("lower_courts", []),
         "notes": st.get("notes"),
@@ -97,7 +98,7 @@ def check_links(data: dict) -> int:
     this tool makes no network calls, by architecture."""
     rows = []
     for code, st in sorted(data.get("states", {}).items()):
-        for field in ("judiciary_url", "statewide_portal"):
+        for field in ("judiciary_url", "statewide_portal", "county_directory"):
             if st.get(field):
                 rows.append((code, field, st[field]))
     print(f"{len(rows)} URLs to check by hand (this script makes no network calls):\n")
