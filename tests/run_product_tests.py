@@ -340,6 +340,12 @@ def main() -> int:
         check("a package edited after assembly fails the hard gate", msg is not None and "DO NOT DELIVER" in msg, str(msg)[-200:])
         check("verify with no package is refused", raises(core.verify, full, tmp / "absent.md") is not None)
 
+        intake_only = tmp / "intake-only" / "session.json"
+        intake(intake_only)
+        msg = raises(core.assemble, intake_only)
+        check("an intake-only session is not assembled into an empty package",
+              msg is not None and "no incident" in msg and not (intake_only.parent / "package.md").exists(), str(msg))
+
         bad = tmp / "bad" / "session.json"
         complete_session(bad)
         d = core.read_session(bad)

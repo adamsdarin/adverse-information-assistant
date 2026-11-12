@@ -411,6 +411,17 @@ def main() -> int:
         c, o = run(ASSEMBLE, str(sp), "-o", str(tmp / "p.md"), "--corpus", str(empty))
         check("a folder that is not a corpus is refused, never treated as an empty one",
               c != 0 and "does not look like the corpus" in o and not (tmp / "p.md").exists(), o)
+        # An intake-only session validates. Before this refusal it assembled
+        # into a package of disclaimers with no matter in it, and the verifier
+        # passed and hashed it.
+        s = session(); s["events"] = []; s["final_analysis_complete"] = False
+        sp0 = tmp / "zero.json"
+        sp0.write_text(json.dumps(s), encoding="utf-8")
+        c, o = run(ASSEMBLE, str(sp0), "-o", str(tmp / "zero.md"))
+        check("a session with no incident is not assembled", c == 1 and "no incident" in o and not (tmp / "zero.md").exists(), o)
+        (tmp / "zero.md").write_text(vpkg.read_text(encoding="utf-8"), encoding="utf-8")
+        c, o = run(VERIFY, str(tmp / "zero.md"), str(sp0))
+        check("and no package verifies against a session with no incident", c == 1 and "no incident" in o, o[-300:])
         c, o = run(ASSEMBLE, str(sp))
         check("without -o the package goes to stdout with the UTF-16 warning",
               c == 0 and "WARNING: no -o" in o and "John Doe" in o, o[-300:])

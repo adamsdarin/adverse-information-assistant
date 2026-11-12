@@ -493,6 +493,11 @@ def main() -> int:
             notes.append(f"session: {w}")
         for e in session_errors:
             failures.append(f"session: {e}")
+        if not session.get("events"):
+            failures.append(
+                "session records no incident — a package with no matter in it "
+                "must never pass as a verified report"
+            )
     else:
         notes.append(
             "No session.json provided — tier-aware and outstanding-field checks "

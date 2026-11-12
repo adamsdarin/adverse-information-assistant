@@ -471,7 +471,18 @@ def main() -> int:
 
     session = json.loads(Path(args.session).read_text(encoding="utf-8"))
     events = session.get("events", [])
-    if events and session.get("final_analysis_complete") is not True:
+    if not events:
+        # Intake alone produces a session that validates. Assembling it would
+        # yield a package with every disclaimer and no matter in it, and the
+        # verifier would hash it as finished.
+        print(
+            "ERROR: the session records no incident, so there is nothing to "
+            "report yet. Finish the interview and the final combined reporting "
+            "analysis before assembly.",
+            file=sys.stderr,
+        )
+        return 1
+    if session.get("final_analysis_complete") is not True:
         print(
             "ERROR: final_analysis_complete is not true. Finish every queued "
             "incident and run the final combined reporting analysis before assembly.",
