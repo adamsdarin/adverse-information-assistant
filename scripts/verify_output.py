@@ -28,12 +28,14 @@ from pathlib import Path
 
 import corpus_paths
 import library_paths
+import privacy_floor
 import validate_session as session_gate
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# PII rules are TIER-AWARE, with two absolutes that no tier can relax:
-#   - SSN and date of birth: never, anywhere, at any tier.
+# PII rules are TIER-AWARE, with absolutes that no tier can relax:
+#   - SSN, date of birth and classification markings: never, anywhere, at any
+#     tier (privacy_floor.py — the same definition the session gate uses).
 #   - Organizations (bar, court, agency, employer, clinic) are exempt at every
 #     tier, but an address may only appear if it traces to a CONFIRMED entity
 #     record in the session. That is what distinguishes an allowed business
@@ -43,19 +45,9 @@ TEMPLATE_HEADING = "Knowledgeable Parties"
 ENTITIES_HEADING = "Entities Referenced"
 
 CASE_RE = re.compile(r"ISCR\s+Case\s+No\.?\s*[\d-]+", re.I)
-SSN_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
-# A DOB LABEL FOLLOWED BY AN ACTUAL DATE. The label alone appears in the
-# package's own privacy boilerplate ("no date of birth appears in this
-# document"), so matching the phrase would fail every clean package.
-DOB_RE = re.compile(
-    r"\b(?:date of birth|d\.?o\.?b\.?|born on|born)\b"
-    r"(?:\s+(?:is|was|of|on))?\s*[:\-]?\s*"
-    r"(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}"
-    r"|\d{4}-\d{1,2}-\d{1,2}"
-    r"|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s+\d{4}"
-    r"|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4})",
-    re.I,
-)
+SSN_RE = privacy_floor.SSN_RE
+DOB_RE = privacy_floor.DOB_RE
+CLASSIFICATION_RE = privacy_floor.CLASSIFICATION_RE
 PHONE_RE = re.compile(r"\b(?:\+?1[-. ])?\(?\d{3}\)?[-. ]\d{3}[-. ]\d{4}\b")
 EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]+\b")
 # Street-address shape: number + words + street-type token.
@@ -366,17 +358,25 @@ def _entity_allowed(value: str, entities: list[dict]) -> bool:
 
 
 def check_pii(text: str, tier: str, entities: list[dict]) -> None:
-    """Tier-aware. Two things no tier relaxes: SSN and date of birth."""
+    """Tier-aware. Three things no tier relaxes: SSN, date of birth and
+    classification markings. Their failures name the kind, never the value —
+    this output reaches a terminal and, through an assistant, a model."""
     forbids = TIER_FORBIDS.get(tier, TIER_FORBIDS["high"])
 
     # --- absolutes ---------------------------------------------------------
     if SSN_RE.search(text):
         failures.append("SSN pattern in package — never permitted at any privacy tier")
-    m = DOB_RE.search(text)
-    if m:
+    if DOB_RE.search(text):
         failures.append(
-            f"Date-of-birth field in package ({m.group(0)[:40]!r}) — never permitted at "
-            "any privacy tier; DOB goes directly on the form"
+            "Date-of-birth field in package — never permitted at any privacy "
+            "tier; DOB goes directly on the form"
+        )
+    if CLASSIFICATION_RE.search(text):
+        failures.append(
+            "Classification marking in package (a banner, portion mark or "
+            "classification authority line) — classified information never "
+            "enters this tool at any privacy tier. Describe the level in plain "
+            "words instead, for example 'a Secret document'."
         )
 
     # --- tier-dependent, entity-exempt -------------------------------------

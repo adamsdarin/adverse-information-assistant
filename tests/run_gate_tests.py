@@ -278,6 +278,25 @@ def main() -> int:
         for tier in ("low", "medium", "high"):
             check(f"a hyphenated SSN fails at tier {tier}", any("SSN" in f for f in pii_failures("Mine is 000-12-3456.", tier)))
             check(f"a labeled date of birth fails at tier {tier}", any("Date-of-birth" in f for f in pii_failures("DOB: 01/02/1980", tier)))
+        # The floor's other shapes. Before privacy_floor.py the verifier knew
+        # only the hyphenated SSN and three DOB labels, and no markings at all.
+        for label, text in (("a spaced SSN", "Number 000 12 3456."), ("a dotted SSN", "Number 000.12.3456."),
+                            ("a labeled nine-digit SSN", "SSN: 000123456"),
+                            ("a Social Security No. label", "Social Security No. 000123456")):
+            check(f"{label} fails at tier low", any("SSN" in f for f in pii_failures(text, "low")), label)
+        for label, text in (("D.O.B.", "D.O.B. 01/02/1980"), ("birthdate", "birthdate: 01/02/1980"),
+                            ("birth date in words", "birth date January 2, 1980")):
+            check(f"a DOB labeled {label} fails", any("Date-of-birth" in f for f in pii_failures(text, "low")), label)
+        for label, text in (("a banner", "The page read TOP SECRET//SCI."), ("a short portion banner", "Marked S//NF."),
+                            ("a portion mark", "Quoted:\n(S) The fictional office moved."),
+                            ("a classification authority line", "Declassify On: 20450101")):
+            for tier in ("low", "high"):
+                check(f"{label} fails at tier {tier}", any("Classification marking" in f for f in pii_failures(text, tier)), label)
+        check("a plain description of a classified document passes",
+              pii_failures("I left a Secret document and a TS/SCI badge on my desk.", "high") == [])
+        msgs = " ".join(pii_failures("SSN 000-12-3456, DOB: 01/02/1980, SECRET//NOFORN", "low"))
+        check("absolute failures never echo the value",
+              msgs and not any(v in msgs for v in ("000-12-3456", "01/02/1980", "NOFORN")), msgs)
         check("the package's own privacy boilerplate is not a date of birth",
               pii_failures(assemble_package.privacy_header("high"), "high") == [])
         check("an incident date is not a date of birth", pii_failures("I was arrested on 3 March 2026.", "high") == [])
@@ -338,6 +357,18 @@ def main() -> int:
         u16.write_bytes("# John Doe\n".encode("utf-16"))
         c, o = run(VERIFY, str(u16))
         check("a UTF-16 package (PowerShell redirection) is refused with the fix", c == 1 and "-o" in o and "UTF-8" in o, o)
+        vs_path, vpkg = tmp / "v.json", tmp / "v.md"
+        vs_path.write_text(json.dumps(session()), encoding="utf-8")
+        c, o = run(ASSEMBLE, str(vs_path), "-o", str(vpkg))
+        c, o = run(VERIFY, str(vpkg), str(vs_path))
+        check("an assembled reference package verifies", c == 0 and "PASS" in o, o[-300:])
+        clean = vpkg.read_text(encoding="utf-8")
+        for label, planted in (("a portion-marked paragraph", "\n(S) The fictional program office moved.\n"),
+                               ("a spaced SSN", "\nThe form number was 000 12 3456.\n")):
+            vpkg.write_text(clean + planted, encoding="utf-8")
+            c, o = run(VERIFY, str(vpkg), str(vs_path))
+            check(f"a package with {label} does not ship", c == 1 and "DO NOT DELIVER" in o, o[-300:])
+        vpkg.write_text(clean, encoding="utf-8")
 
         print("\nassemble_package.py — refusals")
         sp = tmp / "asm.json"
