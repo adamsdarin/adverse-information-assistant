@@ -135,7 +135,14 @@ def floor_errors(session: dict) -> list[str]:
     return errors
 
 
+def json_kind(value) -> str:
+    return {list: "an array", str: "a string", bool: "a boolean", int: "a number",
+            float: "a number", type(None): "null"}.get(type(value), type(value).__name__)
+
+
 def validate(session: dict) -> tuple[list[str], list[str]]:
+    if not isinstance(session, dict):
+        return [f"the session file must hold a JSON object, not {json_kind(session)}"], []
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -472,6 +479,13 @@ def main() -> int:
         session = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         print(f"FAIL  session file is not valid JSON: {e}")
+        return 1
+    except UnicodeDecodeError:
+        print("FAIL  session file is not UTF-8 (shell redirection on Windows "
+              "PowerShell writes UTF-16)")
+        return 1
+    if not isinstance(session, dict):
+        print(f"FAIL  the session file must hold a JSON object, not {json_kind(session)}")
         return 1
 
     if "--stamp-narrative" in sys.argv:

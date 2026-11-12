@@ -469,7 +469,19 @@ def main() -> int:
         return 1
     version = version_file.read_text(encoding="utf-8").split()[0]
 
-    session = json.loads(Path(args.session).read_text(encoding="utf-8"))
+    try:
+        session = json.loads(Path(args.session).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        print(f"ERROR: no session file at {args.session}", file=sys.stderr)
+        return 1
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        print("ERROR: the session file is not valid UTF-8 JSON. Run "
+              "scripts/validate_session.py on it first.", file=sys.stderr)
+        return 1
+    if not isinstance(session, dict):
+        print("ERROR: the session file must hold a JSON object. Run "
+              "scripts/validate_session.py on it first.", file=sys.stderr)
+        return 1
     events = session.get("events", [])
     if not events:
         # Intake alone produces a session that validates. Assembling it would

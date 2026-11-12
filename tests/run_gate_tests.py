@@ -242,6 +242,30 @@ def main() -> int:
         check("a shrunken log is refused",
               has(errors_for(lambda s: s.__setitem__("stage_log_length_at_last_validate", 5)), "SHRANK"))
 
+        print("\nmalformed session files: a clear refusal, never a traceback")
+        for value in ([], "session", 7, None):
+            errs, _ = vs.validate(value)
+            check(f"validate() on {json.dumps(value)} is an error, not a crash", has(errs, "must hold a JSON object"), str(errs))
+        named_missing = tmp / "named-but-missing.json"
+        for label, content in (("an array", "[]"), ("null", "null"), ("invalid JSON", "{oops"), ("UTF-16", None)):
+            mp = tmp / f"malformed-{label.replace(' ', '-')}.json"
+            if content is None:
+                mp.write_bytes('{"privacy_tier": "high"}'.encode("utf-16"))
+            else:
+                mp.write_text(content, encoding="utf-8")
+            c, o = run(VALSESS, str(mp))
+            check(f"validate_session.py on {label} exits 1 cleanly", c == 1 and "FAIL" in o and "Traceback" not in o, o[-300:])
+            c, o = run(ASSEMBLE, str(mp), "-o", str(tmp / "m.md"))
+            check(f"assemble_package.py on {label} exits 1 cleanly",
+                  c == 1 and "ERROR" in o and "Traceback" not in o and not (tmp / "m.md").exists(), o[-300:])
+            mpkg = tmp / "mpkg.md"
+            mpkg.write_text("# John Doe\nnot affiliated · adjudicative determination\n", encoding="utf-8")
+            c, o = run(VERIFY, str(mpkg), str(mp))
+            check(f"verify_output.py with a session that is {label} fails cleanly",
+                  c == 1 and "session:" in o and "Traceback" not in o, o[-300:])
+        c, o = run(ASSEMBLE, str(named_missing), "-o", str(tmp / "m.md"))
+        check("assemble_package.py with no session file exits 1 cleanly", c == 1 and "no session file" in o and "Traceback" not in o, o[-300:])
+
         print("\nvalidate_session.py — command line")
         c, o = run(VALSESS)
         check("no arguments prints usage and exits 1", c == 1 and "usage" in o.lower(), o)
@@ -382,6 +406,12 @@ def main() -> int:
         c, o = run(ASSEMBLE, str(vs_path), "-o", str(vpkg))
         c, o = run(VERIFY, str(vpkg), str(vs_path))
         check("an assembled reference package verifies", c == 0 and "PASS" in o, o[-300:])
+        c, o = run(VERIFY, str(vpkg), str(tmp / "sesion-typo.json"))
+        check("a session path that is named but missing fails, rather than verifying without it",
+              c == 1 and "named but not found" in o, o[-300:])
+        c, o = run(VERIFY, str(vpkg))
+        check("leaving the session out entirely still verifies at the strictest defaults",
+              c == 0 and "No session.json provided" in o, o[-300:])
         clean = vpkg.read_text(encoding="utf-8")
         for label, planted in (("a portion-marked paragraph", "\n(S) The fictional program office moved.\n"),
                                ("a spaced SSN", "\nThe form number was 000 12 3456.\n")):

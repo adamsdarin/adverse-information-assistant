@@ -485,8 +485,24 @@ def main() -> int:
 
     session_path = Path(args.session) if args.session else None
     session = None
-    if session_path and session_path.exists():
-        session = json.loads(session_path.read_text(encoding="utf-8"))
+    if session_path and not session_path.is_file():
+        # A session the user named but that is not there must not silently
+        # become "no session": that skips the outstanding-field check and the
+        # session gate, and still ends in PASS.
+        failures.append(f"session: {session_path} was named but not found")
+        session_path = None
+    elif session_path:
+        try:
+            loaded = json.loads(session_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                session = loaded
+            else:
+                failures.append(f"session: the file must hold a JSON object, not {session_gate.json_kind(loaded)}")
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            failures.append("session: the file is not valid UTF-8 JSON")
+        if session is None:
+            session_path = None  # nothing below may re-read an unreadable file
+    if session is not None:
         # Gate the state file itself before trusting anything read from it.
         session_errors, session_warnings = session_gate.validate(session)
         for w in session_warnings:
@@ -498,7 +514,7 @@ def main() -> int:
                 "session records no incident — a package with no matter in it "
                 "must never pass as a verified report"
             )
-    else:
+    elif not args.session:
         notes.append(
             "No session.json provided — tier-aware and outstanding-field checks "
             "run at their strictest defaults, and the session file itself was "
