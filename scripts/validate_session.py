@@ -15,7 +15,9 @@ What it enforces:
   - Narrative integrity: `--stamp-narrative` computes and records the SHA-256
     of the verbatim intake narrative (deterministic code sets the field, not
     the model). Validation recomputes it; a mismatch means the candor
-    baseline was altered after capture, and that is a hard failure.
+    baseline was altered after capture, and that is a hard failure. Stamping
+    is once: re-stamping a narrative that no longer matches its stamp is
+    refused, so the stamp command cannot launder an edit.
   - Stage log sanity: only known stage names, append-only.
   - The privacy floor (privacy_floor.py): the user's verbatim words — the
     intake narrative and recorded confirmations — never hold a Social
@@ -476,6 +478,15 @@ def main() -> int:
         narrative = session.get("narrative")
         if not isinstance(narrative, str) or not narrative.strip():
             print("FAIL  cannot stamp: 'narrative' is missing or empty")
+            return 1
+        prior = session.get("narrative_sha256")
+        if prior and prior != narrative_hash(narrative):
+            # Stamping is once. Re-stamping a changed narrative would turn the
+            # alteration this hash exists to detect into a silent pass.
+            print("FAIL  cannot re-stamp: the narrative was changed after it was "
+                  "stamped. The verbatim intake account is the candor baseline and "
+                  "must never be rewritten; restore the original text. Re-running "
+                  "--stamp-narrative does not bless an edit.")
             return 1
         floor = privacy_floor.violations(narrative)
         if floor:

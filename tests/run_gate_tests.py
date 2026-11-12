@@ -274,6 +274,26 @@ def main() -> int:
               c == 1 and "cannot stamp" in o and "narrative_sha256" not in on_disk, o)
         check("and the refusal does not print the value", "000-12-3456" not in o, o)
 
+        # Stamping is once. Before this check, re-running --stamp-narrative on
+        # an edited narrative re-hashed it and validation passed: the one
+        # command the conductor tells the model to run laundered the edit.
+        s = session(); s["narrative"] = "I was arrested in June."
+        p.write_text(json.dumps(s), encoding="utf-8")
+        c, o = run(VALSESS, str(p), "--stamp-narrative")
+        stamp = json.loads(p.read_text(encoding="utf-8")).get("narrative_sha256")
+        check("a first stamp succeeds", c == 0 and stamp == vs.narrative_hash("I was arrested in June."), o)
+        c, o = run(VALSESS, str(p), "--stamp-narrative")
+        check("re-stamping an unchanged narrative is a harmless no-op",
+              c == 0 and json.loads(p.read_text(encoding="utf-8"))["narrative_sha256"] == stamp, o)
+        edited = json.loads(p.read_text(encoding="utf-8"))
+        edited["narrative"] = "I was briefly stopped in June."
+        p.write_text(json.dumps(edited), encoding="utf-8")
+        c, o = run(VALSESS, str(p), "--stamp-narrative")
+        check("re-stamping an edited narrative is refused", c == 1 and "cannot re-stamp" in o, o)
+        check("and the original stamp survives", json.loads(p.read_text(encoding="utf-8"))["narrative_sha256"] == stamp)
+        c, o = run(VALSESS, str(p))
+        check("so validation still reports the alteration", c == 1 and "NARRATIVE ALTERED" in o, o)
+
         print("\nverify_output — privacy absolutes hold at every tier")
         for tier in ("low", "medium", "high"):
             check(f"a hyphenated SSN fails at tier {tier}", any("SSN" in f for f in pii_failures("Mine is 000-12-3456.", tier)))
