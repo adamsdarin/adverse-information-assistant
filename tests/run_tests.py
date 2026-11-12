@@ -1981,6 +1981,20 @@ def main() -> int:
               and (fixture_release / "agents" / "conductor.md").read_bytes()
               == (ROOT / "agents" / "conductor.md").read_bytes())
 
+        # Two companion runners are part of this gate, not optional extras:
+        # the gate edge cases (malformed input, every validator branch, the
+        # privacy floor), and the product shell (adverse_app/: engine, CLI,
+        # local MCP allowlist), which writes the session file every other
+        # check here consumes.
+        for runner, label in (("run_gate_tests.py", "gate edge-case tests"),
+                              ("run_product_tests.py", "product shell tests")):
+            print(f"\n{label} (tests/{runner})")
+            r = subprocess.run([sys.executable, str(ROOT / "tests" / runner)], cwd=ROOT,
+                               capture_output=True, text=True, encoding="utf-8", errors="replace")
+            tail = (r.stdout.strip().splitlines() or ["no output"])[-1]
+            check(f"{label} pass ({tail})", r.returncode == 0,
+                  "\n".join(l for l in r.stdout.splitlines() if "FAIL" in l)[-600:] or (r.stdout + r.stderr)[-600:])
+
         # The node tests use node:sqlite (Node >= 22.13, declared in package.json
         # engines). An older node skips them with a visible message instead of a
         # module-not-found trace that would also make hosted_release.py refuse.
