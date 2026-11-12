@@ -1,9 +1,10 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-11-09 by Claude
+Last updated: 2026-11-12 by Claude
 
 ## Current State
-November 9 (UNCOMMITTED, working tree): DCSA's Adjudicatively Ready Product
+November 9 (committed b6145ff, merged as PR 11 and deployed 2026-11-12,
+see below): DCSA's Adjudicatively Ready Product
 Reference Guide (dcsa.mil, read in the app's browser pane at the owner's
 request; no page text copied into the repo) is restated as
 `corpus/checklists/_ADJUDICATIVE_READINESS.yaml` — `maintainer_verified:
@@ -69,9 +70,20 @@ MAINTAINER_FILES carries `_ADJUDICATIVE_READINESS.yaml`,
 as `adverse://corpus/<file>` resources rather than a new tool, so the design's
 seventeen-tool count and every pinned test hold; `court_lookup` returns the
 same state's `records_sources` beside the court record; the documents-advisor
-prompt preamble names all three. Not deployed: a redeploy is the owner's
-call. NOT DONE: both restatements are unverified against the live pages
+prompt preamble names all three. NOT DONE: both restatements are unverified against the live pages
 (`document_lookup.py --check-links` lists the URLs to open).
+
+REDEPLOYED 2026-11-12 at the owner's instruction ("push it to the live
+page"): PR 11 merged to `main` (aa29b1b), then `hosted_release.py --deploy`
+from `main` — corpus validation and the full suite passed, 101 files built,
+12 assets uploaded, Worker version 985c6565-2a09-4244-9f27-df583f850110, and
+the builder's live `get_release` confirmed the new ids (library
+doha-new-20261103, corpus 0.1.1-scaffold, commit aa29b1b). The three new
+corpus files were not called one by one on the live endpoint (an ad-hoc
+network check was refused in the session); the node tests cover them against
+the same hash-checked release folder. The checkout is back on `main`: the
+daily release sync had deferred on 11-09, 11-10 and 11-11 because this
+checkout sat on `claude/dcsa-adjudicative-readiness`.
 
 DEPLOYED with the owner's approval: Worker `adverse-information-assistant` at
 `https://fsotools.ai/adverse/mcp`, from `main` 814e644 (PR 3, reviewed with ten
@@ -163,13 +175,13 @@ Branch, commit, dirty files and last-fetched upstream comparison are generated,
 not copied into this document. See `HANDOFF-archive.md` for prior decisions.
 
 ## Next
-0. Commit the November 9 readiness, retrieval, state-directory and Worker
-   work once the owner has looked at it; redeploy the Worker
-   (`hosted_release.py --library … --deploy`) so the three new corpus files
-   are served; and have the maintainer verify the restatements against the
+0. Done 2026-11-12 (PR 11, redeployed as version 985c6565): the November 9
+   readiness, retrieval, state-directory and Worker work is on `main` and
+   live. Still open: the maintainer verifies the restatements against the
    live pages (`document_lookup.py --check-links`) before any
-   `maintainer_verified` flip. The saved DCSA guide PDF and its annotated
-   companion live outside the repo; their hashes are in
+   `maintainer_verified` flip. The saved DCSA guide and its annotated
+   companion (a PDF and a Word copy of each) live outside the repo, still in
+   a session scratch folder awaiting a permanent home; the PDF hashes are in
    `_ADJUDICATIVE_READINESS.yaml` under `saved_copy`.
 1. Done 2026-11-03 (PR 6, redeployed as version 8f9a759b): MCP tool annotations.
    D2's default keeps the reporting tables unlinked until they are verified.
@@ -187,6 +199,13 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-12 Claude (fork f01dd4a3) — The owner said to push the readiness work
+live. Pushed the branch, merged PR 11, deployed the Worker from `main` as
+version 985c6565 and returned the checkout to `main`. Decisions: merge before
+deploying so the live `REPO_COMMIT` is a commit on `main` and the daily
+release sync, which had deferred three days on this checkout's branch, can
+run again; the saved guide and companion were also produced as Word
+documents, kept outside the repo like the PDFs.
 2026-11-09 Claude (fork f01dd4a3) — Saved the DCSA readiness guide as a PDF
 whose content text hashes identically to the live page (dcsa.mil refuses
 automated browsers, so the content came through the app's browser pane and
