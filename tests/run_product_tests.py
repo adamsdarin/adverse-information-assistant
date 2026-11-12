@@ -274,6 +274,43 @@ def main() -> int:
         check("an unrecognizable answer is refused with examples, never guessed",
               "could not confidently understand" in (raises(core.normalize, "population", "purple") or ""))
 
+        print("\nPhase 1 — the privacy floor at intake (fake values only)")
+        # The session file is promised to hold no SSN, no date of birth and
+        # nothing classified "by construction". A refused answer must leave
+        # the checkpoint exactly as it was and the question still open.
+        floor = tmp / "floor.json"
+        core.start(floor, "medium")
+        for a in INTAKE[:-1]:
+            core.answer_intake(a, floor)
+        before = floor.read_bytes()
+        for label, narrative in (
+            ("an SSN", "A fictional matter. My SSN is 000-12-3456."),
+            ("a spaced SSN", "A fictional matter. Number 000 12 3456 was on the form."),
+            ("a date of birth", "A fictional matter. My date of birth is 01/02/1980."),
+            ("a child's date of birth", "A fictional matter. My son was born on 03/04/2020."),
+            ("a banner marking", "A fictional matter. The page said SECRET//NOFORN at the top."),
+            ("a portion mark", "A fictional matter. I copied this:\n(S) The fictional program office moved."),
+            ("a classification authority block", "A fictional matter. Classified By: a fictional official"),
+        ):
+            msg = raises(core.answer_intake, narrative, floor)
+            check(f"a narrative with {label} is refused", msg is not None and "contains what looks like" in msg, str(msg)[-200:])
+            check(f"the refusal for {label} does not echo the value",
+                  msg is not None and not any(v in msg for v in ("000-12-3456", "000 12 3456", "01/02/1980", "03/04/2020", "NOFORN", "fictional program", "fictional official")))
+        check("a refused narrative leaves the checkpoint byte-for-byte unchanged", floor.read_bytes() == before)
+        check("and no candidate file is left behind", not any(p.name.endswith(".candidate") for p in floor.parent.iterdir()))
+        d = core.read_session(floor)
+        check("the narrative question is still the one being asked",
+              core.next_question(d).key == "narrative" and "narrative_sha256" not in d)
+        core.answer_intake("A fictional matter. I left a Secret document on my desk overnight.", floor)
+        d = core.read_session(floor)
+        check("a plain description of a classified document's level is accepted and stamped",
+              d.get("narrative_sha256") and core.validate(floor)[0])
+        hp2 = tmp / "high-floor.json"
+        core.start(hp2)
+        msg = raises(core.answer_intake, "highest, and my SSN is 000-12-3456", hp2)
+        check("the recorded privacy confirmation is held to the floor too", msg is not None and "user_confirmations" in msg, str(msg)[-200:])
+        check("and the privacy question stays open", core.next_question(core.read_session(hp2)).key == "privacy_tier")
+
         st = core.status(fresh)
         check("status reports a complete intake with no next question",
               st["intake_complete"] is True and st["next_question"] is None and st["narrative_stamped"] is True)

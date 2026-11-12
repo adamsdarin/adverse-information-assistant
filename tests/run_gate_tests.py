@@ -162,6 +162,18 @@ def main() -> int:
         s["narrative"] = "I was arrested. "
         check("one trailing space is an alteration", has(vs.validate(s)[0], "NARRATIVE ALTERED"))
 
+        print("\nvalidate_session.validate — the privacy floor (fake values only)")
+        for label, text in (("SSN", "I gave them 000-12-3456."), ("DOB", "DOB: 01/02/1980"),
+                            ("marking", "It read TOP SECRET//SCI.")):
+            errs = errors_for(lambda s, t=text: s.__setitem__("narrative", t))
+            check(f"a narrative holding a {label} is an error", has(errs, "contains what looks like"), str(errs))
+            check(f"the {label} error names the kind, never the value", not any(text.split()[-1].rstrip(".") in e for e in errs), str(errs))
+        errs = errors_for(lambda s: s.__setitem__("user_confirmations", {"mapping_notice": "yes 000-12-3456"}))
+        check("a recorded confirmation holding an SSN is an error", has(errs, "user_confirmations.mapping_notice"), str(errs))
+        check("a narrative that describes a Secret document is fine",
+              errors_for(lambda s: s.__setitem__("narrative", "I left a Secret document on my desk.")) == [])
+        check("non-dict user_confirmations are not crawled", errors_for(lambda s: s.__setitem__("user_confirmations", "000-12-3456")) == [])
+
         print("\nvalidate_session.validate — events")
         check("events must be a list", has(errors_for(lambda s: s.__setitem__("events", {"0": {}})), "'events' must be a list"))
         check("events need a route", has(errors_for(lambda s: s.pop("role")), "'role' is missing"))
@@ -254,6 +266,13 @@ def main() -> int:
         p.write_text(json.dumps(s), encoding="utf-8")
         c, o = run(VALSESS, str(p), "--stamp-narrative")
         check("stamping with no narrative is refused", c == 1 and "cannot stamp" in o, o)
+        s = session(); s["narrative"] = "I was arrested. My SSN is 000-12-3456."
+        p.write_text(json.dumps(s), encoding="utf-8")
+        c, o = run(VALSESS, str(p), "--stamp-narrative")
+        on_disk = json.loads(p.read_text(encoding="utf-8"))
+        check("a narrative breaching the floor is never stamped",
+              c == 1 and "cannot stamp" in o and "narrative_sha256" not in on_disk, o)
+        check("and the refusal does not print the value", "000-12-3456" not in o, o)
 
         print("\nverify_output — privacy absolutes hold at every tier")
         for tier in ("low", "medium", "high"):

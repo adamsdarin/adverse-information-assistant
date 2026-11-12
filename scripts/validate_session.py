@@ -17,6 +17,11 @@ What it enforces:
     the model). Validation recomputes it; a mismatch means the candor
     baseline was altered after capture, and that is a hard failure.
   - Stage log sanity: only known stage names, append-only.
+  - The privacy floor (privacy_floor.py): the user's verbatim words — the
+    intake narrative and recorded confirmations — never hold a Social
+    Security number, a date of birth or a classification marking. The
+    conductor tells the user this file holds none "by construction"; this is
+    the construction. `--stamp-narrative` refuses to stamp one.
 
 What it cannot enforce, stated rather than hidden: it cannot prove the
 narrative was really what the user typed, or that a confirmation string was
@@ -35,6 +40,8 @@ import json
 import re
 import sys
 from pathlib import Path
+
+import privacy_floor
 
 # Namespaced reportable-event id, e.g. aci.travel.unofficial, adv.crypto.foreign,
 # tsq.finance.anomalies. Format only — existence is validate_corpus.py's job.
@@ -98,6 +105,32 @@ KNOWN_STAGES = {
 
 def narrative_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+FLOOR_REMEDY = (
+    "The session file never holds one, at any privacy tier: an SSN or a date "
+    "of birth goes directly on the form, and classified information never "
+    "enters this tool. Ask the user to say it again without that. A narrative "
+    "that is already stamped cannot be edited — delete this session file and "
+    "start again."
+)
+
+
+def floor_errors(session: dict) -> list[str]:
+    """The user's verbatim words that this file stores, held to the floor.
+
+    Labels only. An error that quoted the match would copy an SSN into a
+    terminal or a model's context — the leak this check exists to prevent.
+    """
+    errors: list[str] = []
+    for _, label in privacy_floor.violations(session.get("narrative")):
+        errors.append(f"the intake narrative contains what looks like {label}. {FLOOR_REMEDY}")
+    confirmations = session.get("user_confirmations")
+    if isinstance(confirmations, dict):
+        for key, value in confirmations.items():
+            for _, label in privacy_floor.violations(value):
+                errors.append(f"user_confirmations.{key} contains what looks like {label}. {FLOOR_REMEDY}")
+    return errors
 
 
 def validate(session: dict) -> tuple[list[str], list[str]]:
@@ -168,6 +201,7 @@ def validate(session: dict) -> tuple[list[str], list[str]]:
             "narrative is present but unstamped — run "
             "'validate_session.py session.json --stamp-narrative' right after capture"
         )
+    errors.extend(floor_errors(session))
 
     # --- events --------------------------------------------------------------
     events = session.get("events", [])
@@ -442,6 +476,13 @@ def main() -> int:
         narrative = session.get("narrative")
         if not isinstance(narrative, str) or not narrative.strip():
             print("FAIL  cannot stamp: 'narrative' is missing or empty")
+            return 1
+        floor = privacy_floor.violations(narrative)
+        if floor:
+            # Refuse BEFORE stamping: once stamped, the narrative can never be
+            # edited, so stamping it would make the floor breach permanent.
+            print("FAIL  cannot stamp: the narrative contains what looks like "
+                  + " and ".join(label for _, label in floor) + ". " + FLOOR_REMEDY)
             return 1
         session["narrative_sha256"] = narrative_hash(narrative)
         path.write_text(json.dumps(session, indent=2, ensure_ascii=False) + "\n",

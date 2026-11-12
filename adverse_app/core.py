@@ -205,10 +205,19 @@ def answer_intake(answer: str, path: Path = DEFAULT_SESSION) -> dict[str, Any]:
     if question.key == "narrative":
         data.setdefault("stage_log", []).append({"stage": "intake", "note": "Narrative captured and stamped by the local runner."})
         data.setdefault("_runner", {})["intake_complete"] = True
-    write_session(data, path)
-    ok, detail = validate(path, stamp_narrative=question.key == "narrative")
-    if not ok:
-        raise SessionError(detail)
+    # Gate a candidate, never the checkpoint itself. An answer the gate
+    # refuses (an SSN in the narrative, say) must not reach the session file:
+    # written first, it would sit on disk, count the question as answered,
+    # and — for the narrative — be stamped and impossible to correct.
+    candidate = path.with_name(path.name + ".candidate")
+    try:
+        write_session(data, candidate)
+        ok, detail = validate(candidate, stamp_narrative=question.key == "narrative")
+        if not ok:
+            raise SessionError(detail)
+        candidate.replace(path)
+    finally:
+        candidate.unlink(missing_ok=True)
     return read_session(path)
 
 
