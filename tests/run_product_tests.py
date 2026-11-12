@@ -463,6 +463,27 @@ def main() -> int:
         check("SF-86 with punctuation inside a sentence is still the SF-86",
               core.normalize("form", "the SF-86 form") == "sf86")
 
+        print("\nPhase 2 — the three-way status route")
+        # intake.md §5: applicant, in_process and holder are three routes, and
+        # in_process notifies the sponsoring office rather than preparing a
+        # form. Folding it into applicant sends the package the wrong way.
+        for said in ("in process", "in_process", "In-process", "I'm in process for a clearance",
+                     "I applied and my investigation is pending", "awaiting adjudication"):
+            got = core.normalize("role", said)
+            check(f"role {said!r} is in_process", got == "in_process", got)
+        for said in ("applicant", "I am applying", "I haven't submitted my SF-86 yet", "not yet submitted"):
+            got = core.normalize("role", said)
+            check(f"role {said!r} is applicant", got == "applicant", got)
+        check("a holder is still a holder", core.normalize("role", "I already hold a clearance") == "holder")
+        check("the role question names all three routes",
+              all(w in core.QUESTIONS[2].prompt for w in ("holder", "in process", "applicant")))
+        ip = tmp / "inprocess.json"
+        core.start(ip, "medium")
+        for a in ("industry", "in process", "sf-86", "secret", "A fictional matter happened."):
+            core.answer_intake(a, ip)
+        check("an in-process intake records in_process and validates",
+              core.read_session(ip)["role"] == "in_process" and core.validate(ip)[0])
+
     print(f"\n{passed} passed, {failed} failed")
     return 1 if failed else 0
 

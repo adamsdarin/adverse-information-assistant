@@ -28,7 +28,7 @@ class IntakeQuestion:
 QUESTIONS = (
     IntakeQuestion("privacy_tier", "Choose high, medium, or low privacy for information about other people. High uses Person-N placeholders, and you must keep the identity mapping separately off this system."),
     IntakeQuestion("population", "Are you in cleared industry, or are you a federal or military user?"),
-    IntakeQuestion("role", "Are you currently a clearance holder or an applicant?"),
+    IntakeQuestion("role", "Are you currently a clearance holder, in process for one (your form is submitted and the decision is still pending), or an applicant who has not yet submitted the SF-86 or PVQ?"),
     IntakeQuestion("form", "Are you preparing for the SF-86, the PVQ, or an incident report?"),
     IntakeQuestion("access_tier", "Is your access Secret, Top Secret, Q, or not applicable?"),
     IntakeQuestion("narrative", "In your own words, what happened? Do not include classified information, Social Security numbers, or dates of birth."),
@@ -36,7 +36,7 @@ QUESTIONS = (
 
 NORMALIZE = {
     "population": {"contractor": "industry", "industry": "industry", "federal": "federal", "military": "federal"},
-    "role": {"holder": "holder", "applicant": "applicant"},
+    "role": {"holder": "holder", "applicant": "applicant", "in process": "in_process", "in_process": "in_process", "in-process": "in_process"},
     "form": {"sf86": "sf86", "sf-86": "sf86", "pvq": "pvq", "incident": "incident_report", "incident report": "incident_report"},
     "access_tier": {"baseline": "baseline", "secret": "baseline", "ts": "ts_q", "top secret": "ts_q", "q": "ts_q", "not applicable": "not_applicable", "n/a": "not_applicable"},
     "privacy_tier": {"high": "high", "medium": "medium", "low": "low"},
@@ -49,7 +49,13 @@ PHRASE_ALIASES = {
     },
     "role": {
         "holder": ("clearance holder", "currently cleared", "i have a clearance", "already hold"),
-        "applicant": ("clearance applicant", "applying", "in process", "candidate"),
+        # in_process is its own route (agents/core/intake.md §5): it notifies
+        # the sponsoring security office instead of preparing an initial form.
+        "in_process": ("in process", "investigation pending", "investigation is pending",
+                       "pending investigation", "decision pending", "decision is pending",
+                       "awaiting adjudication", "awaiting a decision", "pending adjudication"),
+        "applicant": ("clearance applicant", "applying", "candidate", "not yet submitted",
+                      "have not submitted", "haven t submitted"),
     },
     "form": {
         "sf86": ("sf 86", "standard form 86", "eapp"),
