@@ -1,0 +1,508 @@
+# Where a person obtains their OWN records — official custodians, by state.
+#
+# PURPOSE
+# -------
+# The DCSA Adjudicatively Ready Product Reference Guide (see
+# checklists/_ADJUDICATIVE_READINESS.yaml) lists the documents an adjudicator
+# expects behind an incident report. Several of them are held by STATE
+# agencies, and which agency depends on where the matter happened:
+#
+#   court records              the state judiciary       -> state-courts.yaml
+#   driver record              the motor-vehicle agency  -> dmv
+#   state tax transcripts      the state revenue agency  -> tax
+#   state criminal history     the state identification  -> criminal_history
+#                              bureau (usually the state police or the
+#                              attorney general's investigation bureau)
+#   child-welfare records      the state child-protection agency -> child_welfare
+#
+# This file is the directory for the last four. state-courts.yaml remains the
+# directory for courts. The documents advisor reads both and hands the user
+# the right agency for their state instead of "contact the state."
+#
+# Everything else the guide names is either FEDERAL (IRS transcripts, PACER,
+# USCIS, the State Department, military records, the FBI) -> `national`, or
+# held by a specific private party (the creditor, the clinic, the employer) or
+# by the user's own security office -> no directory entry is possible, and
+# the agent says who holds it instead.
+#
+# WHAT A LINK HERE IS, AND IS NOT
+# -------------------------------
+# A link is the agency's own front door, deliberately shallow: deep links to
+# a particular form rot within a year; an agency root does not. Each entry is
+# a pointer the user follows and reads for themselves. It is NOT an assertion
+# of what the agency will provide, how long it takes, or what it costs, and it
+# is NOT legal advice. Every state ships `verified: false` — until a human
+# confirms the agency and URL, agents offer it as "the agency that usually
+# holds this" and nothing stronger.
+#
+# No link here has been checked by machine or by a human as of `retrieved`.
+# Check them by hand, the way court_lookup.py --check-links lists the court
+# URLs: this tool makes no network calls of its own. When a human confirms a
+# state, set its `verified: true` with source_url and verified_date, as
+# state-courts.yaml requires.
+#
+# THE RULE THAT DOES NOT CHANGE
+# -----------------------------
+# A user retrieves records about THEMSELVES. Nothing here is ever used to look
+# up another person, and the agent never asks the user to obtain a record about
+# anyone else.
+schema_version: "1.0"
+maintainer_verified: false
+retrieved: "2026-11-09"
+authoritative_source: "each agency's own website"
+companion_to: "checklists/_ADJUDICATIVE_READINESS.yaml"
+
+# ---------------------------------------------------------------------------
+# NATIONAL — federal custodians and national services, same for every state
+# ---------------------------------------------------------------------------
+national:
+  - id: irs-transcript
+    label: "IRS — Get Transcript (account and return transcripts)"
+    url: "https://www.irs.gov/individuals/get-transcript"
+    for: "Guideline F: proof of federal filing and payment; installment agreement status"
+  - id: irs-lien
+    label: "IRS — Understanding a federal tax lien (release and payoff)"
+    url: "https://www.irs.gov/businesses/small-businesses-self-employed/understanding-a-federal-tax-lien"
+    for: "Guideline F: federal lien release documents"
+  - id: credit-report
+    label: "AnnualCreditReport.com — free reports from all three bureaus"
+    url: "https://www.annualcreditreport.com/"
+    for: "Guideline F: the updated credit bureau report, all pages"
+  - id: dispute-equifax
+    label: "Equifax — file a dispute"
+    url: "https://www.equifax.com/personal/credit-report-services/credit-dispute/"
+    for: "Guideline F: disputed accounts"
+  - id: dispute-experian
+    label: "Experian — file a dispute"
+    url: "https://www.experian.com/disputes/main.html"
+    for: "Guideline F: disputed accounts"
+  - id: dispute-transunion
+    label: "TransUnion — file a dispute"
+    url: "https://www.transunion.com/credit-disputes/dispute-your-credit"
+    for: "Guideline F: disputed accounts"
+  - id: pacer
+    label: "PACER — federal court records, including every bankruptcy court"
+    url: "https://pacer.uscourts.gov/"
+    for: "Guideline F: bankruptcy petition schedules and the discharge order; federal criminal dockets"
+  - id: bankruptcy-basics
+    label: "U.S. Courts — bankruptcy basics and court locator"
+    url: "https://www.uscourts.gov/court-programs/bankruptcy"
+    for: "Guideline F: which bankruptcy court holds the case"
+  - id: credit-counseling
+    label: "U.S. Trustee Program — approved credit counseling agencies"
+    url: "https://www.justice.gov/ust/list-credit-counseling-agencies-approved-pursuant-11-usc-111"
+    for: "Guideline F: accredited financial counseling"
+  - id: fbi-identity-history
+    label: "FBI — Identity History Summary Check (your own national criminal history)"
+    url: "https://www.fbi.gov/how-we-can-help-you/more-fbi-services-and-information/identity-history-summary-checks"
+    for: "Guidelines D, G, H, J: a national record of arrests and dispositions, useful when the state or agency is uncertain"
+  - id: uscis-i90
+    label: "USCIS — Form I-90, replace a Permanent Resident Card"
+    url: "https://www.uscis.gov/i-90"
+    for: "Guideline B: a family member's own card, if they have lost it"
+  - id: uscis-n565
+    label: "USCIS — Form N-565, replace a Naturalization or Citizenship Certificate"
+    url: "https://www.uscis.gov/n-565"
+    for: "Guidelines B, C: certificate copies"
+  - id: uscis-i765
+    label: "USCIS — Form I-765, Employment Authorization Document"
+    url: "https://www.uscis.gov/i-765"
+    for: "Guideline B: a family member's own EAD"
+  - id: uscis-records
+    label: "USCIS — request your own immigration records (FOIA / Privacy Act)"
+    url: "https://www.uscis.gov/records/request-records-through-the-freedom-of-information-act-or-privacy-act"
+    for: "Guidelines B, C: the naturalization date, when the certificate is unavailable"
+  - id: cbp-i94
+    label: "CBP — retrieve a Form I-94 arrival/departure record"
+    url: "https://i94.cbp.dhs.gov/"
+    for: "Guideline B: a family member's own I-94"
+  - id: state-passport-records
+    label: "State Department — passport records"
+    url: "https://travel.state.gov/content/travel/en/passports/have-passport/passport-records.html"
+    for: "Guideline C: record of U.S. passports issued"
+  - id: state-crba
+    label: "State Department — Consular Report of Birth Abroad (replacement copies)"
+    url: "https://travel.state.gov/content/travel/en/international-travel/while-abroad/birth-abroad.html"
+    for: "Guidelines B, C: FS-240 / DS-1350 replacement"
+  - id: foreign-embassies
+    label: "State Department — country information pages (foreign embassy and consulate contacts)"
+    url: "https://travel.state.gov/content/travel/en/international-travel/International-Travel-Country-Information-Pages.html"
+    for: "Guideline C: the foreign government's consulate, for passport surrender receipts and renunciation certificates"
+  - id: nprc-military-records
+    label: "National Archives — request military service records (DD Form 214 and personnel file)"
+    url: "https://www.archives.gov/veterans/military-service-records"
+    for: "Guideline E: discharge paperwork; court-martial and separation records in the personnel file"
+  - id: milconnect
+    label: "milConnect — current and recent service members' records"
+    url: "https://milconnect.dmdc.osd.mil/"
+    for: "Guideline E: DD Form 214 for recent separations"
+  - id: hhs-medical-records
+    label: "HHS — your right to access your medical records (HIPAA)"
+    url: "https://www.hhs.gov/hipaa/for-individuals/medical-records/index.html"
+    for: "Guidelines D, G, H, I: how to request complete records from any provider or facility"
+  - id: sead-3
+    label: "ODNI — Security Executive Agent Directive 3 (reporting requirements)"
+    url: "https://www.dni.gov/files/NCSC/documents/Regulations/SEAD-3-Reporting-U.pdf"
+    for: "The reporting obligation the guide's timeline rule rests on"
+
+# ---------------------------------------------------------------------------
+# STATES — the four state-held custodians. Courts are in state-courts.yaml.
+# ---------------------------------------------------------------------------
+states:
+  AL:
+    name: Alabama
+    dmv: {name: "Alabama Law Enforcement Agency — Driver License Division", url: "https://www.alea.gov/dps/driver-license"}
+    tax: {name: "Alabama Department of Revenue", url: "https://www.revenue.alabama.gov/"}
+    criminal_history: {name: "Alabama Law Enforcement Agency (State Bureau of Investigation)", url: "https://www.alea.gov/"}
+    child_welfare: {name: "Alabama Department of Human Resources", url: "https://dhr.alabama.gov/"}
+    verified: false
+  AK:
+    name: Alaska
+    dmv: {name: "Alaska Division of Motor Vehicles", url: "https://doa.alaska.gov/dmv/"}
+    tax: {name: "Alaska Department of Revenue — Tax Division (no personal income tax)", url: "https://tax.alaska.gov/"}
+    criminal_history: {name: "Alaska Department of Public Safety — Criminal Records and Identification", url: "https://dps.alaska.gov/"}
+    child_welfare: {name: "Alaska Office of Children's Services", url: "https://dfcs.alaska.gov/ocs/"}
+    verified: false
+  AZ:
+    name: Arizona
+    dmv: {name: "Arizona Department of Transportation — Motor Vehicle Division", url: "https://azdot.gov/mvd"}
+    tax: {name: "Arizona Department of Revenue", url: "https://azdor.gov/"}
+    criminal_history: {name: "Arizona Department of Public Safety — Public Records", url: "https://www.azdps.gov/"}
+    child_welfare: {name: "Arizona Department of Child Safety", url: "https://dcs.az.gov/"}
+    verified: false
+  AR:
+    name: Arkansas
+    dmv: {name: "Arkansas Department of Finance and Administration — Driver Services", url: "https://www.dfa.arkansas.gov/driver-services/"}
+    tax: {name: "Arkansas Department of Finance and Administration — Income Tax", url: "https://www.dfa.arkansas.gov/income-tax/"}
+    criminal_history: {name: "Arkansas State Police (Department of Public Safety)", url: "https://www.dps.arkansas.gov/"}
+    child_welfare: {name: "Arkansas Division of Children and Family Services", url: "https://humanservices.arkansas.gov/"}
+    verified: false
+  CA:
+    name: California
+    dmv: {name: "California Department of Motor Vehicles", url: "https://www.dmv.ca.gov/"}
+    tax: {name: "California Franchise Tax Board", url: "https://www.ftb.ca.gov/"}
+    criminal_history: {name: "California Department of Justice — your own criminal record", url: "https://oag.ca.gov/fingerprints/security"}
+    child_welfare: {name: "California Department of Social Services", url: "https://www.cdss.ca.gov/"}
+    verified: false
+  CO:
+    name: Colorado
+    dmv: {name: "Colorado Division of Motor Vehicles", url: "https://dmv.colorado.gov/"}
+    tax: {name: "Colorado Department of Revenue — Taxation Division", url: "https://tax.colorado.gov/"}
+    criminal_history: {name: "Colorado Bureau of Investigation", url: "https://cbi.colorado.gov/"}
+    child_welfare: {name: "Colorado Department of Human Services", url: "https://cdhs.colorado.gov/"}
+    verified: false
+  CT:
+    name: Connecticut
+    dmv: {name: "Connecticut Department of Motor Vehicles", url: "https://portal.ct.gov/dmv"}
+    tax: {name: "Connecticut Department of Revenue Services", url: "https://portal.ct.gov/drs"}
+    criminal_history: {name: "Connecticut Department of Emergency Services and Public Protection (State Police)", url: "https://portal.ct.gov/despp"}
+    child_welfare: {name: "Connecticut Department of Children and Families", url: "https://portal.ct.gov/dcf"}
+    verified: false
+  DE:
+    name: Delaware
+    dmv: {name: "Delaware Division of Motor Vehicles", url: "https://www.dmv.de.gov/"}
+    tax: {name: "Delaware Division of Revenue", url: "https://revenue.delaware.gov/"}
+    criminal_history: {name: "Delaware State Police — State Bureau of Identification", url: "https://dsp.delaware.gov/"}
+    child_welfare: {name: "Delaware Department of Services for Children, Youth and Their Families", url: "https://kids.delaware.gov/"}
+    verified: false
+  DC:
+    name: District of Columbia
+    dmv: {name: "DC Department of Motor Vehicles", url: "https://dmv.dc.gov/"}
+    tax: {name: "DC Office of Tax and Revenue", url: "https://otr.cfo.dc.gov/"}
+    criminal_history: {name: "Metropolitan Police Department — police clearance", url: "https://mpdc.dc.gov/"}
+    child_welfare: {name: "DC Child and Family Services Agency", url: "https://cfsa.dc.gov/"}
+    verified: false
+  FL:
+    name: Florida
+    dmv: {name: "Florida Department of Highway Safety and Motor Vehicles", url: "https://www.flhsmv.gov/"}
+    tax: {name: "Florida Department of Revenue (no personal income tax)", url: "https://floridarevenue.com/"}
+    criminal_history: {name: "Florida Department of Law Enforcement", url: "https://www.fdle.state.fl.us/"}
+    child_welfare: {name: "Florida Department of Children and Families", url: "https://www.myflfamilies.com/"}
+    verified: false
+  GA:
+    name: Georgia
+    dmv: {name: "Georgia Department of Driver Services", url: "https://dds.georgia.gov/"}
+    tax: {name: "Georgia Department of Revenue", url: "https://dor.georgia.gov/"}
+    criminal_history: {name: "Georgia Bureau of Investigation", url: "https://gbi.georgia.gov/"}
+    child_welfare: {name: "Georgia Division of Family and Children Services", url: "https://dfcs.georgia.gov/"}
+    verified: false
+  HI:
+    name: Hawaii
+    dmv: {name: "Hawaii Department of Transportation (driver licensing is by county)", url: "https://hidot.hawaii.gov/"}
+    tax: {name: "Hawaii Department of Taxation", url: "https://tax.hawaii.gov/"}
+    criminal_history: {name: "Hawaii Criminal Justice Data Center", url: "https://ag.hawaii.gov/hcjdc/"}
+    child_welfare: {name: "Hawaii Department of Human Services", url: "https://humanservices.hawaii.gov/"}
+    verified: false
+  ID:
+    name: Idaho
+    dmv: {name: "Idaho Transportation Department — DMV", url: "https://itd.idaho.gov/itddmv/"}
+    tax: {name: "Idaho State Tax Commission", url: "https://tax.idaho.gov/"}
+    criminal_history: {name: "Idaho State Police — Bureau of Criminal Identification", url: "https://isp.idaho.gov/bci/"}
+    child_welfare: {name: "Idaho Department of Health and Welfare", url: "https://healthandwelfare.idaho.gov/"}
+    verified: false
+  IL:
+    name: Illinois
+    dmv: {name: "Illinois Secretary of State — Driver Services", url: "https://www.ilsos.gov/"}
+    tax: {name: "Illinois Department of Revenue", url: "https://tax.illinois.gov/"}
+    criminal_history: {name: "Illinois State Police", url: "https://isp.illinois.gov/"}
+    child_welfare: {name: "Illinois Department of Children and Family Services", url: "https://dcfs.illinois.gov/"}
+    verified: false
+  IN:
+    name: Indiana
+    dmv: {name: "Indiana Bureau of Motor Vehicles", url: "https://www.in.gov/bmv/"}
+    tax: {name: "Indiana Department of Revenue", url: "https://www.in.gov/dor/"}
+    criminal_history: {name: "Indiana State Police", url: "https://www.in.gov/isp/"}
+    child_welfare: {name: "Indiana Department of Child Services", url: "https://www.in.gov/dcs/"}
+    verified: false
+  IA:
+    name: Iowa
+    dmv: {name: "Iowa Department of Transportation — Motor Vehicle Division", url: "https://iowadot.gov/mvd"}
+    tax: {name: "Iowa Department of Revenue", url: "https://tax.iowa.gov/"}
+    criminal_history: {name: "Iowa Department of Public Safety — Division of Criminal Investigation", url: "https://dps.iowa.gov/"}
+    child_welfare: {name: "Iowa Department of Health and Human Services", url: "https://hhs.iowa.gov/"}
+    verified: false
+  KS:
+    name: Kansas
+    dmv: {name: "Kansas Department of Revenue — Division of Vehicles", url: "https://www.ksrevenue.gov/dovindex.html"}
+    tax: {name: "Kansas Department of Revenue", url: "https://www.ksrevenue.gov/"}
+    criminal_history: {name: "Kansas Bureau of Investigation", url: "https://www.kansas.gov/kbi/"}
+    child_welfare: {name: "Kansas Department for Children and Families", url: "https://www.dcf.ks.gov/"}
+    verified: false
+  KY:
+    name: Kentucky
+    dmv: {name: "Kentucky Transportation Cabinet — Driver Licensing", url: "https://drive.ky.gov/"}
+    tax: {name: "Kentucky Department of Revenue", url: "https://revenue.ky.gov/"}
+    criminal_history: {name: "Kentucky State Police", url: "https://kentuckystatepolice.org/"}
+    child_welfare: {name: "Kentucky Cabinet for Health and Family Services", url: "https://www.chfs.ky.gov/"}
+    verified: false
+  LA:
+    name: Louisiana
+    dmv: {name: "Louisiana Office of Motor Vehicles", url: "https://www.expresslane.org/"}
+    tax: {name: "Louisiana Department of Revenue", url: "https://revenue.louisiana.gov/"}
+    criminal_history: {name: "Louisiana State Police", url: "https://lsp.org/"}
+    child_welfare: {name: "Louisiana Department of Children and Family Services", url: "https://www.dcfs.louisiana.gov/"}
+    verified: false
+  ME:
+    name: Maine
+    dmv: {name: "Maine Bureau of Motor Vehicles", url: "https://www.maine.gov/sos/bmv/"}
+    tax: {name: "Maine Revenue Services", url: "https://www.maine.gov/revenue/"}
+    criminal_history: {name: "Maine State Police — State Bureau of Identification", url: "https://www.maine.gov/dps/msp/"}
+    child_welfare: {name: "Maine Office of Child and Family Services", url: "https://www.maine.gov/dhhs/ocfs/"}
+    verified: false
+  MD:
+    name: Maryland
+    dmv: {name: "Maryland Motor Vehicle Administration", url: "https://mva.maryland.gov/"}
+    tax: {name: "Comptroller of Maryland", url: "https://www.marylandtaxes.gov/"}
+    criminal_history: {name: "Maryland Department of Public Safety and Correctional Services — CJIS", url: "https://www.dpscs.state.md.us/"}
+    child_welfare: {name: "Maryland Department of Human Services", url: "https://dhs.maryland.gov/"}
+    verified: false
+  MA:
+    name: Massachusetts
+    dmv: {name: "Massachusetts Registry of Motor Vehicles", url: "https://www.mass.gov/orgs/massachusetts-registry-of-motor-vehicles"}
+    tax: {name: "Massachusetts Department of Revenue", url: "https://www.mass.gov/orgs/massachusetts-department-of-revenue"}
+    criminal_history: {name: "Massachusetts Department of Criminal Justice Information Services (iCORI)", url: "https://www.mass.gov/orgs/department-of-criminal-justice-information-services"}
+    child_welfare: {name: "Massachusetts Department of Children and Families", url: "https://www.mass.gov/orgs/massachusetts-department-of-children-families"}
+    verified: false
+  MI:
+    name: Michigan
+    dmv: {name: "Michigan Secretary of State", url: "https://www.michigan.gov/sos"}
+    tax: {name: "Michigan Department of Treasury — Taxes", url: "https://www.michigan.gov/taxes"}
+    criminal_history: {name: "Michigan State Police (ICHAT)", url: "https://www.michigan.gov/msp"}
+    child_welfare: {name: "Michigan Department of Health and Human Services", url: "https://www.michigan.gov/mdhhs"}
+    verified: false
+  MN:
+    name: Minnesota
+    dmv: {name: "Minnesota Driver and Vehicle Services", url: "https://dps.mn.gov/divisions/dvs/"}
+    tax: {name: "Minnesota Department of Revenue", url: "https://www.revenue.state.mn.us/"}
+    criminal_history: {name: "Minnesota Bureau of Criminal Apprehension", url: "https://dps.mn.gov/divisions/bca/"}
+    child_welfare: {name: "Minnesota Department of Children, Youth, and Families", url: "https://dcyf.mn.gov/"}
+    verified: false
+  MS:
+    name: Mississippi
+    dmv: {name: "Mississippi Department of Public Safety — Driver Service Bureau", url: "https://www.dps.ms.gov/"}
+    tax: {name: "Mississippi Department of Revenue", url: "https://www.dor.ms.gov/"}
+    criminal_history: {name: "Mississippi Department of Public Safety — Criminal Information Center", url: "https://www.dps.ms.gov/"}
+    child_welfare: {name: "Mississippi Department of Child Protection Services", url: "https://www.mdcps.ms.gov/"}
+    verified: false
+  MO:
+    name: Missouri
+    dmv: {name: "Missouri Department of Revenue — Driver License", url: "https://dor.mo.gov/driver-license/"}
+    tax: {name: "Missouri Department of Revenue", url: "https://dor.mo.gov/"}
+    criminal_history: {name: "Missouri State Highway Patrol — Criminal Justice Information Services", url: "https://www.mshp.dps.missouri.gov/"}
+    child_welfare: {name: "Missouri Children's Division", url: "https://dss.mo.gov/cd/"}
+    verified: false
+  MT:
+    name: Montana
+    dmv: {name: "Montana Motor Vehicle Division", url: "https://dojmt.gov/driving/"}
+    tax: {name: "Montana Department of Revenue", url: "https://mtrevenue.gov/"}
+    criminal_history: {name: "Montana Department of Justice — criminal record background checks", url: "https://dojmt.gov/"}
+    child_welfare: {name: "Montana Department of Public Health and Human Services", url: "https://dphhs.mt.gov/"}
+    verified: false
+  NE:
+    name: Nebraska
+    dmv: {name: "Nebraska Department of Motor Vehicles", url: "https://dmv.nebraska.gov/"}
+    tax: {name: "Nebraska Department of Revenue", url: "https://revenue.nebraska.gov/"}
+    criminal_history: {name: "Nebraska State Patrol", url: "https://statepatrol.nebraska.gov/"}
+    child_welfare: {name: "Nebraska Department of Health and Human Services", url: "https://dhhs.ne.gov/"}
+    verified: false
+  NV:
+    name: Nevada
+    dmv: {name: "Nevada Department of Motor Vehicles", url: "https://dmv.nv.gov/"}
+    tax: {name: "Nevada Department of Taxation (no personal income tax)", url: "https://tax.nv.gov/"}
+    criminal_history: {name: "Nevada Department of Public Safety — Records, Communications and Compliance Division", url: "https://rccd.nv.gov/"}
+    child_welfare: {name: "Nevada Division of Child and Family Services", url: "https://dcfs.nv.gov/"}
+    verified: false
+  NH:
+    name: New Hampshire
+    dmv: {name: "New Hampshire Division of Motor Vehicles", url: "https://www.dmv.nh.gov/"}
+    tax: {name: "New Hampshire Department of Revenue Administration", url: "https://www.revenue.nh.gov/"}
+    criminal_history: {name: "New Hampshire State Police", url: "https://www.nh.gov/safety/divisions/nhsp/"}
+    child_welfare: {name: "New Hampshire Department of Health and Human Services", url: "https://www.dhhs.nh.gov/"}
+    verified: false
+  NJ:
+    name: New Jersey
+    dmv: {name: "New Jersey Motor Vehicle Commission", url: "https://www.nj.gov/mvc/"}
+    tax: {name: "New Jersey Division of Taxation", url: "https://www.nj.gov/treasury/taxation/"}
+    criminal_history: {name: "New Jersey State Police", url: "https://www.njsp.org/"}
+    child_welfare: {name: "New Jersey Department of Children and Families", url: "https://www.nj.gov/dcf/"}
+    verified: false
+  NM:
+    name: New Mexico
+    dmv: {name: "New Mexico Motor Vehicle Division", url: "https://www.mvd.newmexico.gov/"}
+    tax: {name: "New Mexico Taxation and Revenue Department", url: "https://www.tax.newmexico.gov/"}
+    criminal_history: {name: "New Mexico Department of Public Safety", url: "https://www.dps.nm.gov/"}
+    child_welfare: {name: "New Mexico Children, Youth and Families Department", url: "https://www.cyfd.nm.gov/"}
+    verified: false
+  NY:
+    name: New York
+    dmv: {name: "New York Department of Motor Vehicles", url: "https://dmv.ny.gov/"}
+    tax: {name: "New York Department of Taxation and Finance", url: "https://www.tax.ny.gov/"}
+    criminal_history: {name: "New York Division of Criminal Justice Services", url: "https://www.criminaljustice.ny.gov/"}
+    child_welfare: {name: "New York Office of Children and Family Services", url: "https://ocfs.ny.gov/"}
+    verified: false
+  NC:
+    name: North Carolina
+    dmv: {name: "North Carolina Division of Motor Vehicles", url: "https://www.ncdot.gov/dmv/"}
+    tax: {name: "North Carolina Department of Revenue", url: "https://www.ncdor.gov/"}
+    criminal_history: {name: "North Carolina State Bureau of Investigation", url: "https://ncsbi.gov/"}
+    child_welfare: {name: "North Carolina Department of Health and Human Services", url: "https://www.ncdhhs.gov/"}
+    verified: false
+  ND:
+    name: North Dakota
+    dmv: {name: "North Dakota Department of Transportation — Driver License", url: "https://www.dot.nd.gov/"}
+    tax: {name: "North Dakota Office of State Tax Commissioner", url: "https://www.tax.nd.gov/"}
+    criminal_history: {name: "North Dakota Attorney General — Bureau of Criminal Investigation", url: "https://attorneygeneral.nd.gov/"}
+    child_welfare: {name: "North Dakota Health and Human Services", url: "https://www.hhs.nd.gov/"}
+    verified: false
+  OH:
+    name: Ohio
+    dmv: {name: "Ohio Bureau of Motor Vehicles", url: "https://www.bmv.ohio.gov/"}
+    tax: {name: "Ohio Department of Taxation", url: "https://tax.ohio.gov/"}
+    criminal_history: {name: "Ohio Attorney General — Bureau of Criminal Investigation", url: "https://www.ohioattorneygeneral.gov/"}
+    child_welfare: {name: "Ohio Department of Children and Youth", url: "https://childrenandyouth.ohio.gov/"}
+    verified: false
+  OK:
+    name: Oklahoma
+    dmv: {name: "Service Oklahoma (driver licensing)", url: "https://oklahoma.gov/service.html"}
+    tax: {name: "Oklahoma Tax Commission", url: "https://oklahoma.gov/tax.html"}
+    criminal_history: {name: "Oklahoma State Bureau of Investigation", url: "https://osbi.ok.gov/"}
+    child_welfare: {name: "Oklahoma Human Services", url: "https://oklahoma.gov/okdhs.html"}
+    verified: false
+  OR:
+    name: Oregon
+    dmv: {name: "Oregon Driver and Motor Vehicle Services", url: "https://www.oregon.gov/odot/dmv/"}
+    tax: {name: "Oregon Department of Revenue", url: "https://www.oregon.gov/dor/"}
+    criminal_history: {name: "Oregon State Police", url: "https://www.oregon.gov/osp/"}
+    child_welfare: {name: "Oregon Department of Human Services", url: "https://www.oregon.gov/odhs/"}
+    verified: false
+  PA:
+    name: Pennsylvania
+    dmv: {name: "PennDOT Driver and Vehicle Services", url: "https://www.dmv.pa.gov/"}
+    tax: {name: "Pennsylvania Department of Revenue", url: "https://www.revenue.pa.gov/"}
+    criminal_history: {name: "Pennsylvania State Police — PATCH (your own record check)", url: "https://epatch.pa.gov/"}
+    child_welfare: {name: "Pennsylvania Department of Human Services", url: "https://www.dhs.pa.gov/"}
+    verified: false
+  RI:
+    name: Rhode Island
+    dmv: {name: "Rhode Island Division of Motor Vehicles", url: "https://dmv.ri.gov/"}
+    tax: {name: "Rhode Island Division of Taxation", url: "https://tax.ri.gov/"}
+    criminal_history: {name: "Rhode Island Attorney General — Bureau of Criminal Identification", url: "https://riag.ri.gov/"}
+    child_welfare: {name: "Rhode Island Department of Children, Youth and Families", url: "https://dcyf.ri.gov/"}
+    verified: false
+  SC:
+    name: South Carolina
+    dmv: {name: "South Carolina Department of Motor Vehicles", url: "https://www.scdmvonline.com/"}
+    tax: {name: "South Carolina Department of Revenue", url: "https://dor.sc.gov/"}
+    criminal_history: {name: "South Carolina Law Enforcement Division", url: "https://www.sled.sc.gov/"}
+    child_welfare: {name: "South Carolina Department of Social Services", url: "https://dss.sc.gov/"}
+    verified: false
+  SD:
+    name: South Dakota
+    dmv: {name: "South Dakota Department of Public Safety — Driver Licensing", url: "https://dps.sd.gov/driver-licensing"}
+    tax: {name: "South Dakota Department of Revenue (no personal income tax)", url: "https://dor.sd.gov/"}
+    criminal_history: {name: "South Dakota Attorney General — Division of Criminal Investigation", url: "https://atg.sd.gov/"}
+    child_welfare: {name: "South Dakota Department of Social Services", url: "https://dss.sd.gov/"}
+    verified: false
+  TN:
+    name: Tennessee
+    dmv: {name: "Tennessee Department of Safety — Driver Services", url: "https://www.tn.gov/safety/driver-services.html"}
+    tax: {name: "Tennessee Department of Revenue (no wage income tax)", url: "https://www.tn.gov/revenue.html"}
+    criminal_history: {name: "Tennessee Bureau of Investigation", url: "https://www.tn.gov/tbi.html"}
+    child_welfare: {name: "Tennessee Department of Children's Services", url: "https://www.tn.gov/dcs.html"}
+    verified: false
+  TX:
+    name: Texas
+    dmv: {name: "Texas Department of Public Safety — Driver License Division", url: "https://www.dps.texas.gov/section/driver-license"}
+    tax: {name: "Texas Comptroller of Public Accounts (no personal income tax)", url: "https://comptroller.texas.gov/"}
+    criminal_history: {name: "Texas Department of Public Safety — Crime Records Division", url: "https://www.dps.texas.gov/section/crime-records"}
+    child_welfare: {name: "Texas Department of Family and Protective Services", url: "https://www.dfps.texas.gov/"}
+    verified: false
+  UT:
+    name: Utah
+    dmv: {name: "Utah Driver License Division", url: "https://dld.utah.gov/"}
+    tax: {name: "Utah State Tax Commission", url: "https://tax.utah.gov/"}
+    criminal_history: {name: "Utah Bureau of Criminal Identification", url: "https://bci.utah.gov/"}
+    child_welfare: {name: "Utah Division of Child and Family Services", url: "https://dcfs.utah.gov/"}
+    verified: false
+  VT:
+    name: Vermont
+    dmv: {name: "Vermont Department of Motor Vehicles", url: "https://dmv.vermont.gov/"}
+    tax: {name: "Vermont Department of Taxes", url: "https://tax.vermont.gov/"}
+    criminal_history: {name: "Vermont Crime Information Center", url: "https://vcic.vermont.gov/"}
+    child_welfare: {name: "Vermont Department for Children and Families", url: "https://dcf.vermont.gov/"}
+    verified: false
+  VA:
+    name: Virginia
+    dmv: {name: "Virginia Department of Motor Vehicles", url: "https://www.dmv.virginia.gov/"}
+    tax: {name: "Virginia Department of Taxation", url: "https://www.tax.virginia.gov/"}
+    criminal_history: {name: "Virginia State Police", url: "https://vsp.virginia.gov/"}
+    child_welfare: {name: "Virginia Department of Social Services", url: "https://www.dss.virginia.gov/"}
+    verified: false
+  WA:
+    name: Washington
+    dmv: {name: "Washington Department of Licensing", url: "https://dol.wa.gov/"}
+    tax: {name: "Washington Department of Revenue (no personal income tax)", url: "https://dor.wa.gov/"}
+    criminal_history: {name: "Washington State Patrol (WATCH)", url: "https://www.wsp.wa.gov/"}
+    child_welfare: {name: "Washington Department of Children, Youth, and Families", url: "https://www.dcyf.wa.gov/"}
+    verified: false
+  WV:
+    name: West Virginia
+    dmv: {name: "West Virginia Division of Motor Vehicles", url: "https://transportation.wv.gov/dmv/"}
+    tax: {name: "West Virginia Tax Division", url: "https://tax.wv.gov/"}
+    criminal_history: {name: "West Virginia State Police", url: "https://wvsp.gov/"}
+    child_welfare: {name: "West Virginia Department of Human Services", url: "https://dhhr.wv.gov/"}
+    verified: false
+  WI:
+    name: Wisconsin
+    dmv: {name: "Wisconsin Department of Transportation — DMV", url: "https://wisconsindot.gov/"}
+    tax: {name: "Wisconsin Department of Revenue", url: "https://www.revenue.wi.gov/"}
+    criminal_history: {name: "Wisconsin Department of Justice — Crime Information Bureau", url: "https://www.doj.state.wi.us/"}
+    child_welfare: {name: "Wisconsin Department of Children and Families", url: "https://dcf.wisconsin.gov/"}
+    verified: false
+  WY:
+    name: Wyoming
+    dmv: {name: "Wyoming Department of Transportation — Driver Services", url: "https://www.dot.state.wy.us/"}
+    tax: {name: "Wyoming Department of Revenue (no personal income tax)", url: "https://revenue.wyo.gov/"}
+    criminal_history: {name: "Wyoming Division of Criminal Investigation", url: "https://wyomingdci.wyo.gov/"}
+    child_welfare: {name: "Wyoming Department of Family Services", url: "https://dfs.wyo.gov/"}
+    verified: false

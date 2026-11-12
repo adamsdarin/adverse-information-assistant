@@ -162,7 +162,7 @@ flowchart LR
     PREV(["from 01c — the record is complete<br/>or every gap is marked to-follow"]) --> CONS
 
     CONS["<b>Consistency Checker</b><br/>Contradictory dates · impossible sequences<br/>conflicts with the filed form<br/><i>surfaces to the user, never resolves</i>"]
-    DOCS["<b>Documents Advisor</b><br/>~250 DOHA decisions mined for what evidence judges credited<br/>K: zero court records in the sample — the FSO's own file, always<br/>L: a CI-office evaluation letter, or its absence, decided cases outright<br/><i>walks record: AND document: fields — checklists use both</i>"]
+    DOCS["<b>Documents Advisor</b><br/>baseline from DCSA's adjudicative-readiness guide, per guideline<br/>weight and wording from ~250 DOHA decisions<br/>K: zero court records in the sample — the FSO's own file, always<br/>L: a CI-office evaluation letter, or its absence, decided cases outright<br/><i>pending documents declared, never omitted · office-held records named, never fetched</i>"]
     WRITE["<b>Narrative Writer</b><br/>refuses to draft until chronology gate clears<br/>First person · active voice · the user's own register<br/>numbered placeholders — never names"]
     CAND["<b>Invisible Candor Reviewer</b><br/>Compare draft against raw intake<br/>convert concerns to neutral follow-up questions<br/><i>never reveal the review or its findings</i>"]
     FINAL["<b>Final combined reporting analysis</b><br/>only after every incident is complete<br/>applicant → form · in process → sponsoring office<br/>holder → security office → DISS<br/><i>one narrative per incident · multiple DISS types allowed</i>"]

@@ -1,8 +1,78 @@
 # HANDOFF — adverse-information-assistant
 
-Last updated: 2026-11-03 by Claude
+Last updated: 2026-11-09 by Claude
 
 ## Current State
+November 9 (UNCOMMITTED, working tree): DCSA's Adjudicatively Ready Product
+Reference Guide (dcsa.mil, read in the app's browser pane at the owner's
+request; no page text copied into the repo) is restated as
+`corpus/checklists/_ADJUDICATIVE_READINESS.yaml` — `maintainer_verified:
+false`, source URL and retrieval date recorded, paraphrase throughout. It
+carries: the readiness definition; the timeline rule (report now, never wait
+for documents, DECLARE which are pending; the industry supplement is the FSO's
+Supplemental Information CSR, never the user's action); the six-question
+incident picture mapped onto the coverage facets; ten statement factors
+(self-reported-and-why plus the nine whole-person factors) each mapped to
+checklist element ids; and per-guideline supporting-document lists where every
+entry has `obtain_by` (subject | security_office | either) so office-held
+records are named for the user to point to, never assigned to them to fetch.
+`validate_corpus.py` gained `check_adjudicative_readiness()` (every factor id
+and facet must resolve; every document needs custodian, purpose and a valid
+`obtain_by`). `_UNIVERSAL.yaml` gained `knowing-participation` and
+`voluntariness` (`adverse_conduct_only: true`, skipped on administrative-tone
+events). `_COVERAGE.yaml` definitions now carry incident date vs report date,
+jurisdiction, and the handling-and-resolution half of "how"; a new sources
+line cites the guide. `privacy-tiers.yaml` adds `victim_or_minor_identity` to
+the never-collected floor. Agents updated to read the file: documents advisor
+(two-catalog rule, `status` and `obtain_by` on every document, pending
+declared never omitted), gap analyst (statement-factor sweep after the facet
+sweep), narrative writer (two dates, handling, self-reported-and-why, factor
+check that never writes around a gap), interviewer (two dates, handling,
+victims/minors floor), conductor (step 5 source f, step 8 wording; anchors
+unchanged). `assemble_package.py` renders document `status` and `obtain_by`
+and a pending-documents declaration. Corpus VERSION bumped to 0.1.1-scaffold
+(index rebuilt; the node test's deploy-var pin updated to match). Full suite:
+499 pass. Process map re-rendered. The file's `saved_copy` block (added in the
+same working session by another writer, kept) points at a PDF of the page
+saved outside the repo with its SHA-256 and a content-text hash; a short note
+describing the page as read also sits in `output/reference/` (gitignored).
+Both exist for the maintainer's verification pass.
+Same day, second pass (owner asked whether the workflow can actually get the
+documents, including lost ones): `corpus/documents/retrieval.yaml` is a
+maintainer-authored retrieval directory, 44 entries, one per document type —
+custodian, request path, form or portal, identification needed, approximate
+lead time, cost, and a separate `lost_original` replacement path (Form I-90,
+N-565, DS-64/DS-11, SF-180, the HIPAA right of access, AnnualCreditReport,
+IRS Get Transcript, PACER, and so on), each with an official `source_url`
+and `verified: false`. `obtainable_by` is `subject`, `security_office` (no
+user task) or `third_party_only` (a relative's card: ask for a copy, never
+replace it). Every one of the 65 readiness documents now carries a
+`retrieval_ref`; `validate_corpus.py` requires the ref and resolves it
+(`check_retrieval_directory`, `retrieval_entry_ids`). `scripts/document_lookup.py`
+mirrors `court_lookup.py`: `--doc`, `--for-guideline`, `--list`,
+`--check-links` (no network). The documents advisor asks one question per
+document — in hand, or to be requested — and reads the replacement path when
+the answer is "lost". Full suite: 512 pass.
+A forked session (f01dd4a3) added `corpus/courts/state-records-sources.yaml`
+— 51 jurisdictions with dmv, tax, criminal_history and child_welfare
+custodians plus a national list — and took the Worker wiring; this session
+wired that directory in: `document_lookup.py --state XX` attaches the state
+agency and national front doors through `state_directory_key` and
+`national_ref` on retrieval entries (46 entries now, including
+state-criminal-history), `validate_corpus.py` has `check_state_records_sources()`
+and resolves both pointer kinds, `--check-links` lists its URLs too.
+The forked session then wired the hosted Worker: `hosted_release.py`
+MAINTAINER_FILES carries `_ADJUDICATIVE_READINESS.yaml`,
+`courts/state-records-sources.yaml` and `documents/retrieval.yaml`;
+`server.js` serves them through the existing `get_corpus_file` enum
+(`adjudicative-readiness`, `state-records-sources`, `document-retrieval`) and
+as `adverse://corpus/<file>` resources rather than a new tool, so the design's
+seventeen-tool count and every pinned test hold; `court_lookup` returns the
+same state's `records_sources` beside the court record; the documents-advisor
+prompt preamble names all three. Not deployed: a redeploy is the owner's
+call. NOT DONE: both restatements are unverified against the live pages
+(`document_lookup.py --check-links` lists the URLs to open).
+
 DEPLOYED with the owner's approval: Worker `adverse-information-assistant` at
 `https://fsotools.ai/adverse/mcp`, from `main` 814e644 (PR 3, reviewed with ten
 findings all fixed in 893e51f, merged by the owner). Two sessions deployed the
@@ -93,6 +163,14 @@ Branch, commit, dirty files and last-fetched upstream comparison are generated,
 not copied into this document. See `HANDOFF-archive.md` for prior decisions.
 
 ## Next
+0. Commit the November 9 readiness, retrieval, state-directory and Worker
+   work once the owner has looked at it; redeploy the Worker
+   (`hosted_release.py --library … --deploy`) so the three new corpus files
+   are served; and have the maintainer verify the restatements against the
+   live pages (`document_lookup.py --check-links`) before any
+   `maintainer_verified` flip. The saved DCSA guide PDF and its annotated
+   companion live outside the repo; their hashes are in
+   `_ADJUDICATIVE_READINESS.yaml` under `saved_copy`.
 1. Done 2026-11-03 (PR 6, redeployed as version 8f9a759b): MCP tool annotations.
    D2's default keeps the reporting tables unlinked until they are verified.
 2. Hand the release-sync agent (`mcp-release-sync`) the deploy contract: the
@@ -109,6 +187,40 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-09 Claude (fork f01dd4a3) — Saved the DCSA readiness guide as a PDF
+whose content text hashes identically to the live page (dcsa.mil refuses
+automated browsers, so the content came through the app's browser pane and
+was transcribed, then proved by hash), built an annotated companion PDF with
+per-guideline "where to obtain" boxes and a 51-state custodian table, and
+authored `corpus/courts/state-records-sources.yaml` to back it. Decisions:
+both PDFs stay outside the repo (Government text) with hashes recorded in the
+readiness file; the companion's 312 links are unchecked because the link
+probe was refused and the repo makes no network calls, so the PDF says so;
+the Worker serves the three new files through the existing `get_corpus_file`
+enum rather than a new tool, keeping the tool count and the design intact.
+Coordinated by message with the parallel session, which owned the agents,
+validator and tests while this fork owned the Worker, builder and design doc.
+2026-11-09 Claude — Added the document retrieval directory and
+`document_lookup.py` after the owner asked whether the tool can actually help
+someone obtain, or replace, the records the readiness guide calls for.
+Decisions: directory information under the court aid's contract (offered,
+never asserted, unverified until a human opens each source page, never
+fetched); `obtainable_by` so a security-office record is never a user task
+and another person's document is asked for, never replaced; lead times and
+fees kept approximate so nothing stale is stated as fact; every readiness
+document must resolve to a retrieval entry or the build fails. 512 checks
+pass; nothing committed.
+2026-11-09 Claude — Folded DCSA's Adjudicatively Ready Product Reference Guide
+into the tool as a maintainer-authored restatement (`_ADJUDICATIVE_READINESS.yaml`),
+with validator cross-checks, two universal participation elements, coverage and
+privacy-floor refinements, agent updates and a pending-documents declaration in
+the assembler. Decisions: restate rather than copy (Government text never enters
+`corpus/`, and the page has no stable hash, so retrieval date is the version);
+translate the FSO-facing guide for the subject via `obtain_by`, so no
+security-office record ever becomes a user task and no system the user cannot
+access is presented as theirs; "applicable" factors become neutral gap questions,
+never sentences the writer composes; the Worker is left unchanged for now. 499
+checks pass; nothing committed.
 2026-11-03 Claude — Read-only annotations on every tool (PR 6, server 0.1.1); redeployed as version 8f9a759b with the owner's approval and checked live.
 2026-11-03 Claude — Deployed the hosted MCP Worker (version 3aebd4cf) from merged main with the owner's approval and checked it live; noted the missing tool annotations.
 2026-11-02 Claude — Deployed the Worker after the owner merged PR #3 and said

@@ -338,7 +338,12 @@ sentence the local agents use.
 - `get_corpus_file(file: enum)` → one of the standalone files:
   `privacy-tiers`, `plausibility`, `collection-policy`, `entity-capture`,
   `diss-incident-types`, `incident-chronology`, `incident-profiles`,
-  `coverage`, `pvq-preambles`, `events-index`. Also exposed as MCP resources
+  `coverage`, `pvq-preambles`, `events-index`, `adjudicative-readiness`
+  (DCSA's adjudicatively-ready standard restated, added 2026-11-09) and
+  `state-records-sources` (per-state custodians beside the court aid;
+  `court_lookup` also returns that state's entries as `records_sources`) and
+  `document-retrieval` (how each supporting document is requested or
+  replaced). Also exposed as MCP resources
   (`adverse://corpus/<file>`) for clients that prefer them, as the Atlas does
   for its reference data.
 - `get_corpus_bundle()` → every §1.2 and §1.3 file in one response (expected

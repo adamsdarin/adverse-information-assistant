@@ -1,0 +1,1029 @@
+# Document retrieval directory — HOW TO ACTUALLY GET EACH RECORD, and what to
+# do when the original is lost.
+#
+# ===========================================================================
+# WHY THIS FILE EXISTS
+# ===========================================================================
+# The two document catalogs (_ADJUDICATIVE_READINESS.yaml, what DCSA's
+# adjudicators want in the file; _DOCUMENT_EVIDENCE.yaml, what DOHA judges
+# weighed) name a custodian for every record. Naming the custodian is half the
+# job. The other half is the request itself: which office, which form or
+# portal, what identification, how long it takes, what it costs — and, for a
+# card or certificate the user no longer has, how a replacement is obtained
+# and how long THAT takes. This file holds that half, one entry per document
+# type, and every readiness document carries a `retrieval_ref` into it.
+#
+# It is read by agents/optional/documents-advisor.md through
+# scripts/document_lookup.py, which prints an entry as directory information
+# the advisor OFFERS to the user. The same contract as the court recognition
+# aid (corpus/courts/state-courts.yaml): offered, never asserted; unverified
+# entries say so; the user's security office remains the authority on what it
+# will accept.
+#
+# ===========================================================================
+# WHAT THIS FILE IS NOT
+# ===========================================================================
+# Not legal advice, not immigration advice, and not a promise about any
+# agency's process. Forms are renumbered, fees change, portals move. Every
+# entry therefore ships `verified: false`, carries the official page it was
+# drawn from as `source_url`, and may only be flipped to verified with a
+# `verified_date` after a human has checked the live page. The tool never
+# fetches these pages — `scripts/document_lookup.py --check-links` lists them
+# for a human to open by hand, and makes no network call.
+#
+# Lead times and costs are deliberately approximate ("weeks", "a fee applies")
+# so the advisor never states a figure that has quietly changed. The one rule
+# that does not change: NOTHING HERE DELAYS THE REPORT. A replacement that
+# takes months is declared pending in the package and follows as a supplement.
+#
+# ===========================================================================
+# ANOTHER PERSON'S DOCUMENTS
+# ===========================================================================
+# Several entries are documents that belong to someone else — a family
+# member's permanent resident card, a cohabitant's visa. `obtainable_by:
+# third_party_only` marks them. The user may ASK that person for a copy and
+# attach what they are given. The tool never collects the contents, never
+# directs the user to apply for a replacement of someone else's document, and
+# notes a refusal as a refusal. The entry exists so the user can tell their
+# relative what the replacement path is, if the relative asks.
+schema_version: "1.0"
+maintainer_verified: false
+sources:
+  - "Official agency pages named per entry as source_url (USCIS, State Department, National Archives, HHS, IRS, CFPB, PACER)"
+  - "Maintainer (FSO) judgment on custodians and typical lead times"
+  - "DCSA Adjudicatively Ready Product Reference Guide for which documents are needed (see _ADJUDICATIVE_READINESS.yaml)"
+
+usage_rule: |
+  Offer, never assert. Read the request path to the user as the way people
+  usually obtain this record, name the lead time as approximate, and say the
+  entry is unverified when it is. Record what the user says they will do;
+  never record this file's suggestion as a fact about their case. Never fetch
+  any URL here — hand it to the user to open.
+
+fallback_if_no_entry: |
+  Name the custodian from the document catalog and say: ask that office how
+  to request a copy, what identification they need, and how long it takes.
+  Your security office can also tell you what form of the record it accepts.
+
+# Two optional pointers connect an entry to corpus/courts/state-records-sources.yaml,
+# the per-state custodian directory kept beside state-courts.yaml:
+#   state_directory_key   dmv | tax | criminal_history | child_welfare — the
+#                         agency differs by state, and document_lookup.py
+#                         --state XX attaches that state's agency and link
+#   national_ref          ids from that file's `national` list — the federal
+#                         or national front door for this record
+state_directory_keys: [dmv, tax, criminal_history, child_welfare]
+obtainable_by_values: [subject, security_office, third_party_only]
+categories: [law_enforcement, court, corrections, military_personnel, medical,
+             treatment, financial, tax, immigration, citizenship, travel_document,
+             employer, security_office, self, foreign_government, organization,
+             motor_vehicle]
+
+entries:
+
+  # ======================================================= law enforcement ===
+  - id: police-report
+    label: "Police report — arrest, incident or investigation report, complaint"
+    category: law_enforcement
+    custodian: "The records division of the agency that wrote the report"
+    obtainable_by: subject
+    request_path: >
+      Ask the agency's records unit for a copy of the report about you,
+      giving the date, the location and the report or case number if known.
+      Most agencies take a public-records or records request in person, by
+      mail or through a web form; some require a signed release because the
+      report names you. Ask for the complete report, not the public blotter
+      summary.
+    form_or_portal: "The agency's own records request process"
+    identity_needed: "Photo identification; date and location of the incident; report number if known"
+    typical_lead_time: "Days to a few weeks"
+    cost: "Usually a small per-page or flat copy fee"
+    lost_original: "Same request again — the agency keeps the record."
+    verified: false
+    source_url: null
+    notes: >
+      A municipal officer often makes the stop while the county sheriff runs
+      the jail; the arrest report and the booking record are two records at
+      two agencies. A report still under active investigation may be withheld
+      until the case closes; say so as pending rather than pressing.
+
+  - id: ems-report
+    national_ref: [hhs-medical-records]
+    label: "Ambulance or emergency medical services run report"
+    category: medical
+    custodian: "The ambulance service or fire department that responded"
+    obtainable_by: subject
+    request_path: >
+      Ask the responding service's records or billing office for the patient
+      care report from that date. It is a medical record about you, so the
+      request is made as a patient under the federal right of access, with a
+      signed release.
+    form_or_portal: "The service's patient records release form"
+    identity_needed: "Photo identification; date and location; signed release"
+    typical_lead_time: "Up to 30 days under the federal rule"
+    cost: "Reasonable copy cost at most"
+    lost_original: "Same request again."
+    verified: false
+    source_url: "https://www.hhs.gov/hipaa/for-individuals/medical-records/index.html"
+
+  - id: investigation-report
+    label: "Report of investigation from a law-enforcement or military investigative agency"
+    category: law_enforcement
+    custodian: "The investigating agency (local police detective bureau; military criminal investigators such as NCIS, CID or OSI)"
+    obtainable_by: subject
+    request_path: >
+      For a local agency, a records request as for any police report. For a
+      federal or military investigative agency, a Privacy Act request for
+      records about yourself, in writing, to that agency's FOIA and Privacy
+      Act office. Give the case or report number if you have it. An open
+      investigation is usually withheld until it closes; report the case
+      number and the agency and mark the report pending.
+    form_or_portal: "The agency's FOIA / Privacy Act request process"
+    identity_needed: "Proof of identity (often a signed and notarized declaration); case number if known"
+    typical_lead_time: "Weeks to months; longer while the case is open"
+    cost: "Usually none for a personal Privacy Act request"
+    lost_original: "Same request again."
+    verified: false
+    source_url: "https://www.foia.gov/"
+
+  - id: state-criminal-history
+    label: "State criminal history record (identification-bureau record, sometimes called a rap sheet)"
+    category: law_enforcement
+    custodian: "The state identification bureau — usually the state police or the attorney general's investigation division; the FBI for the national identity history summary"
+    obtainable_by: subject
+    state_directory_key: criminal_history
+    national_ref: [fbi-identity-history]
+    request_path: >
+      Request your own record from the state identification bureau, usually
+      with a fingerprint card or an in-person appointment and a fee; many
+      states also offer a name-based personal-review copy online. It shows
+      arrests and dispositions reported to the state and is a useful cross-check
+      when you cannot remember every charge or date. The FBI's identity
+      history summary is the national equivalent, requested with fingerprints.
+    form_or_portal: "The state bureau's personal record review; the FBI identity history summary request"
+    identity_needed: "Fingerprints or photo identification; a fee"
+    typical_lead_time: "Days to a few weeks; longer for the FBI summary"
+    cost: "A fee, set by the state; the FBI charges a fee"
+    lost_original: "Request it again; it is a fresh extract each time."
+    verified: false
+    source_url: null
+    notes: >
+      A personal-review record is for your own use; some states mark it so.
+      It supplements, never replaces, the arresting agency's report and the
+      court's disposition.
+
+  # ================================================================= court ===
+  - id: court-record
+    label: "Court record — docket, charging document, plea, disposition, sentencing order, probation order"
+    category: court
+    custodian: "The clerk of the court that heard the case"
+    obtainable_by: subject
+    request_path: >
+      Ask the clerk's office for a certified copy of the disposition (and any
+      other document you need: the docket sheet, the plea, the sentencing
+      order). Give the case number; if you do not have it, the clerk can
+      usually find the case from your name and the approximate date. Many
+      states have an online case portal where the docket can be read for
+      free, but a certified copy still comes from the clerk.
+    form_or_portal: "The clerk of court; statewide portal where one exists (scripts/court_lookup.py names it)"
+    identity_needed: "Case number, or your name and the approximate date; photo identification for a certified copy"
+    typical_lead_time: "Same day to a few weeks; longer for an archived case"
+    cost: "A certification fee plus per-page copy fees"
+    lost_original: "Same request again — the court keeps the record."
+    verified: false
+    source_url: null
+    notes: >
+      If the user cannot name the court, run scripts/court_lookup.py and offer
+      the nudge; record their answer. A pending case has no disposition yet;
+      the docket is the record that exists today.
+
+  - id: sentence-completion-proof
+    label: "Proof of sentence completion — probation completion letter, community-service log, fine and restitution receipts, program certificate"
+    category: court
+    custodian: "The probation office for probation; the clerk of court for fines and fees; the service site or program for logs and certificates"
+    obtainable_by: subject
+    request_path: >
+      Ask the probation office for a letter confirming the dates of
+      supervision and its completion. Ask the clerk of court for a
+      zero-balance ledger or receipt showing fines, fees and restitution paid
+      in full. Ask the community-service site or the program provider to
+      reissue the completion letter or certificate.
+    form_or_portal: "Each office's own request; none standard"
+    identity_needed: "Case or probation number; photo identification"
+    typical_lead_time: "Days to a few weeks"
+    cost: "Usually none, or a small copy fee"
+    lost_original: "Each issuer can reissue its own document; ask the same office again."
+    verified: false
+    source_url: null
+
+  - id: custody-release-record
+    label: "Certificate of release from custody or jail and prison custody records"
+    category: corrections
+    custodian: "The records office of the jail or correctional facility"
+    obtainable_by: subject
+    request_path: >
+      Ask the facility's records office for your custody record or a
+      certificate of release, giving your name and the dates of custody.
+      State correctional departments often have an inmate records request
+      form; a county jail is asked directly.
+    form_or_portal: "The facility's or department's records request form"
+    identity_needed: "Photo identification; dates of custody; inmate or booking number if known"
+    typical_lead_time: "Days to a few weeks"
+    cost: "Usually none, or a small copy fee"
+    lost_original: "Same request again."
+    verified: false
+    source_url: null
+
+  - id: family-court-or-cps-record
+    state_directory_key: child_welfare
+    label: "Family court order, custody order, or child protective services record"
+    category: court
+    custodian: "The clerk of the family or juvenile court; the child protective services agency for its own records"
+    obtainable_by: subject
+    request_path: >
+      Court orders are requested from the clerk of the family or juvenile
+      court as certified copies, by case number. Child protective services
+      records are confidential and released only to the parties, by written
+      request to the agency's records unit; expect redactions protecting the
+      child and other parties. Nothing identifying a minor goes into this
+      session at any tier — the package names the document, not its contents.
+    form_or_portal: "The clerk of court; the agency's records request"
+    identity_needed: "Case number; photo identification; proof you are a party to the case"
+    typical_lead_time: "Weeks"
+    cost: "Court certification and copy fees; agency records are usually free"
+    lost_original: "Same request again."
+    verified: false
+    source_url: null
+
+  - id: court-ordered-evaluation
+    national_ref: [hhs-medical-records]
+    label: "Court-ordered psychological or psychosexual evaluation"
+    category: medical
+    custodian: "The evaluator who performed it, and the court file where it was filed"
+    obtainable_by: subject
+    request_path: >
+      Ask the evaluator's office for a copy of your evaluation under the
+      federal right of access, with a signed release. If it was filed with the
+      court, the clerk may hold a copy, but a sealed evaluation is released
+      only by court order; in that case report that it exists and mark it
+      pending.
+    form_or_portal: "The evaluator's records release; the clerk of court"
+    identity_needed: "Signed release; photo identification; case number"
+    typical_lead_time: "Up to 30 days from the evaluator; longer through the court"
+    cost: "Reasonable copy cost"
+    lost_original: "Same request again; the evaluator keeps the record."
+    verified: false
+    source_url: "https://www.hhs.gov/hipaa/for-individuals/medical-records/index.html"
+
+  # ================================================ military personnel ===
+  - id: command-personnel-record
+    national_ref: [nprc-military-records, milconnect]
+    label: "Command and personnel actions — letter of reprimand, counselling or admonishment, memorandum for record, non-judicial punishment record, court-martial order, separation-board record"
+    category: military_personnel
+    custodian: "Your unit personnel office (S-1, orderly room, military personnel flight) for current members; your official military personnel file; the National Personnel Records Center for separated members"
+    obtainable_by: subject
+    request_path: >
+      A serving member asks the unit personnel office for copies of actions
+      in their own record and can view the official military personnel file
+      through the service's personnel portal. A separated member or veteran
+      requests the record from the National Personnel Records Center with
+      Standard Form 180 or the online request. Locally filed actions (a letter
+      of counselling kept at the unit) may exist only in the unit's file; ask
+      the first sergeant or personnel office. Your security office may hold
+      copies as well, and the package names them either way.
+    form_or_portal: "Service personnel portal; milConnect; Standard Form 180 or the eVetRecs online request to the National Personnel Records Center"
+    identity_needed: "Identifiers entered on the form by you, never here; dates of service; signature"
+    typical_lead_time: "Days through the unit; weeks to months from the National Personnel Records Center"
+    cost: "None"
+    lost_original: "The record is the government's; request it again from the unit or the records center."
+    verified: false
+    source_url: "https://www.archives.gov/veterans/military-service-records"
+    notes: >
+      A record that no action was taken is a command memorandum the user asks
+      their leadership to write, not a document to retrieve.
+
+  - id: dd214
+    national_ref: [nprc-military-records, milconnect]
+    label: "Discharge paperwork (DD Form 214 or 215)"
+    category: military_personnel
+    custodian: "The National Personnel Records Center; the member's own copy; the service personnel portal for recent separations"
+    obtainable_by: subject
+    request_path: >
+      Recent separations can download the form from the service portal.
+      Otherwise request it from the National Personnel Records Center with
+      Standard Form 180 or the online request. Many county recorders also
+      hold a copy if the veteran recorded it locally.
+    form_or_portal: "milConnect; Standard Form 180 or eVetRecs"
+    identity_needed: "Identifiers on the form; signature"
+    typical_lead_time: "Immediate from the portal; weeks to months from the records center"
+    cost: "None"
+    lost_original: "Request a replacement copy from the National Personnel Records Center; the original is not reissued, a certified copy is."
+    verified: false
+    source_url: "https://www.archives.gov/veterans/military-service-records"
+
+  - id: cooperation-proof
+    label: "Proof of cooperation with a security or investigative process — signed releases, completed questionnaires, an investigator's confirmation"
+    category: security_office
+    custodian: "The investigator or agency that received them; your own copies; your security office"
+    obtainable_by: subject
+    request_path: >
+      Keep your own copies of anything you sign or submit. If you have none,
+      ask your security office to confirm in writing what you have provided,
+      or ask the investigator for a confirmation of completion. The security
+      office may already hold this on file.
+    form_or_portal: "None"
+    identity_needed: "None beyond your identity to the security office"
+    typical_lead_time: "Days to weeks"
+    cost: "None"
+    lost_original: "Ask the receiving office for a copy or a written confirmation."
+    verified: false
+    source_url: null
+
+  # ============================================================== medical ===
+  - id: medical-records
+    national_ref: [hhs-medical-records]
+    label: "Medical records — intake and discharge records, emergency-room and inpatient records, clinical progress notes, hospitalisation records"
+    category: medical
+    custodian: "The treating facility's health information management (medical records) or release-of-information office"
+    obtainable_by: subject
+    request_path: >
+      Under the federal right of access you may request a copy of your own
+      records from any provider, in writing, usually on the provider's
+      release form. Ask for the complete record for the dates involved, and
+      say the copy is for you (not a third party), which limits what you can
+      be charged. For military treatment facilities, request through the
+      facility's patient administration office or download from the Military
+      Health System patient portal. Ask for every page; a partial record is a
+      request for the rest.
+    form_or_portal: "The provider's authorization-for-release form; the MHS GENESIS patient portal for military care"
+    identity_needed: "Photo identification; dates of treatment; signed release"
+    typical_lead_time: "Up to 30 days under the federal rule, with one 30-day extension allowed"
+    cost: "A reasonable, cost-based fee at most; often free electronically"
+    lost_original: "Same request again — the provider keeps the record for years by law."
+    all_pages: true
+    verified: false
+    source_url: "https://www.hhs.gov/hipaa/for-individuals/medical-records/index.html"
+    notes: >
+      Psychotherapy notes kept separately by a therapist are excluded from the
+      right of access; a progress note in the ordinary record is not. Ask for
+      the treatment record, not the therapist's private notes.
+
+  - id: provider-letter
+    label: "Letter or progress report from a treating clinician or counsellor — diagnosis, treatment progress, prognosis"
+    category: treatment
+    custodian: "The treating clinician, counsellor or program"
+    obtainable_by: subject
+    request_path: >
+      Ask the clinician directly, in writing, for a letter on the practice's
+      letterhead stating the diagnosis if any, the dates and nature of
+      treatment, your participation, and the clinician's current prognosis.
+      Tell them it is for a security clearance matter so they write to that
+      purpose; do not tell them what to conclude.
+    form_or_portal: "None — a direct request to the clinician"
+    identity_needed: "You are their patient; some practices want a signed release to write about you"
+    typical_lead_time: "One to four weeks"
+    cost: "Some practices charge for letters"
+    lost_original: "Ask the clinician for a reissued or updated letter; an updated one is usually more useful."
+    on_letterhead: true
+    verified: false
+    source_url: null
+
+  - id: treatment-completion-certificate
+    label: "Certificate of completion or enrolment letter from a treatment, counselling or education program"
+    category: treatment
+    custodian: "The program that ran it"
+    obtainable_by: subject
+    request_path: >
+      Ask the program's office to reissue the completion certificate or write
+      an enrolment or completion letter on its letterhead, with the dates.
+      Court-ordered programs usually also sent a completion notice to the
+      court or probation office, which can confirm it.
+    form_or_portal: "None — a direct request to the program"
+    identity_needed: "Your name and the dates of attendance"
+    typical_lead_time: "Days to two weeks"
+    cost: "Usually none"
+    lost_original: "Reissued by the program on request."
+    on_letterhead: true
+    verified: false
+    source_url: null
+
+  - id: pharmacy-fill-history
+    label: "Pharmacy records showing prescription fills"
+    category: medical
+    custodian: "The dispensing pharmacy"
+    obtainable_by: subject
+    request_path: >
+      Ask the pharmacy counter for a printout of your prescription fill
+      history for the period; chain pharmacies also offer it through their
+      app or website. Military pharmacies show it in the patient portal.
+    form_or_portal: "The pharmacy's own printout or portal"
+    identity_needed: "Photo identification"
+    typical_lead_time: "Same day"
+    cost: "None"
+    lost_original: "Print it again."
+    verified: false
+    source_url: null
+
+  - id: drug-screen-results
+    label: "Drug or alcohol screening results, positive or negative"
+    category: medical
+    custodian: "The testing laboratory or the program that ordered the test — employer testing program, probation office, treatment program"
+    obtainable_by: subject
+    request_path: >
+      Ask whoever ordered the test for a copy of the result; the laboratory
+      releases to the ordering party, and the ordering party releases to you.
+      An employer's medical review officer holds employer-program results.
+      For a voluntary test, order it yourself from a laboratory and keep the
+      report.
+    form_or_portal: "The ordering program's request"
+    identity_needed: "Photo identification; date of the test"
+    typical_lead_time: "Days to two weeks"
+    cost: "None for a copy; a voluntary test is paid for"
+    lost_original: "Same request to the ordering party; laboratories retain results for a limited period."
+    verified: false
+    source_url: null
+
+  - id: bac-test-results
+    label: "Breath or blood alcohol test result"
+    category: law_enforcement
+    custodian: "The arresting agency (the result is part of the arrest report); the laboratory for a blood test; the motor-vehicle agency's administrative hearing file"
+    obtainable_by: subject
+    request_path: >
+      Request the complete arrest report, which carries the breath result
+      and the officer's narrative. A blood test result comes from the state
+      laboratory through the agency or the prosecutor's discovery file. The
+      state motor-vehicle agency's administrative suspension file also
+      records it.
+    form_or_portal: "The agency's records request"
+    identity_needed: "Photo identification; date; report number if known"
+    typical_lead_time: "Days to a few weeks"
+    cost: "Copy fee"
+    lost_original: "Same request again."
+    verified: false
+    source_url: null
+
+  # ============================================================ financial ===
+  - id: credit-report
+    national_ref: [credit-report]
+    label: "Credit report from a national credit bureau"
+    category: financial
+    custodian: "Equifax, Experian and TransUnion"
+    obtainable_by: subject
+    request_path: >
+      Order your own reports from all three bureaus free of charge through
+      the official site the bureaus operate jointly; weekly free access is
+      available. Save or print every page, including blank ones. Order
+      directly from each bureau if one is needed with a dispute note.
+    form_or_portal: "AnnualCreditReport.com"
+    identity_needed: "Identity verification questions on the site (personal identifiers are entered there, never here)"
+    typical_lead_time: "Immediate online; a few weeks by mail"
+    cost: "Free"
+    lost_original: "Order it again."
+    all_pages: true
+    verified: false
+    source_url: "https://www.annualcreditreport.com/"
+
+  - id: creditor-letter
+    label: "Creditor documentation — payment receipt, zero-balance or paid-in-full letter, settlement or release letter, signed payment-plan agreement"
+    category: financial
+    custodian: "The creditor, collection agency or loan servicer holding the account"
+    obtainable_by: subject
+    request_path: >
+      Ask the creditor's customer-service or collections department, in
+      writing, for a letter confirming the account's status — paid in full,
+      settled, or current under an agreement — and for a copy of any signed
+      agreement. Give the account number. A collection agency that bought the
+      debt is asked, not the original creditor.
+    form_or_portal: "Written request to the creditor; many servicers provide payoff and status letters online"
+    identity_needed: "Account number; identity verification with the creditor"
+    typical_lead_time: "One to three weeks"
+    cost: "None"
+    lost_original: "Ask the creditor to reissue the letter or a copy of the agreement."
+    verified: false
+    source_url: null
+
+  - id: bank-statements
+    label: "Bank statements, cancelled cheques, wire-transfer records, electronic payment ledgers"
+    category: financial
+    custodian: "Your own bank or payment provider"
+    obtainable_by: subject
+    request_path: >
+      Download statements for the months involved from online banking, or
+      ask a branch for printed copies. Wire confirmations and cheque images
+      are available through the same channels; older records may need a
+      branch request.
+    form_or_portal: "Online banking; a branch request for archived months"
+    identity_needed: "Your own account access"
+    typical_lead_time: "Immediate online; days to weeks for archived records"
+    cost: "Usually free online; some banks charge for printed or archived copies"
+    lost_original: "Download or request again."
+    verified: false
+    source_url: null
+
+  - id: dispute-letter
+    national_ref: [dispute-equifax, dispute-experian, dispute-transunion]
+    label: "Formal dispute of a credit-report entry, and the bureau's response"
+    category: financial
+    custodian: "Your own copy of the dispute; the bureau's written result"
+    obtainable_by: subject
+    request_path: >
+      Disputes are filed with each bureau online, by mail or by phone; keep a
+      copy of what you submit and the bureau's written result, and order an
+      updated report once the dispute is resolved so the entry shows its
+      disputed or corrected status.
+    form_or_portal: "Each bureau's dispute process"
+    identity_needed: "Identity verification with the bureau"
+    typical_lead_time: "The bureau answers within about 30 days"
+    cost: "Free"
+    lost_original: "Ask the bureau for a copy of the dispute result; file again if needed."
+    verified: false
+    source_url: "https://www.consumerfinance.gov/ask-cfpb/how-do-i-dispute-an-error-on-my-credit-report-en-314/"
+
+  - id: bankruptcy-records
+    national_ref: [pacer, bankruptcy-basics]
+    label: "Bankruptcy petition, schedules and discharge order"
+    category: court
+    custodian: "The clerk of the United States Bankruptcy Court where the case was filed"
+    obtainable_by: subject
+    request_path: >
+      Case documents can be viewed and downloaded through the federal
+      courts' electronic records system for a small per-page charge, or
+      requested from the bankruptcy clerk; the discharge order is the
+      document that matters most, and a certified copy comes from the clerk.
+      Your bankruptcy attorney, if you had one, also keeps the file.
+    form_or_portal: "PACER; the bankruptcy clerk's office"
+    identity_needed: "Case number; a PACER account for online access"
+    typical_lead_time: "Immediate online; days to weeks from the clerk"
+    cost: "Per-page fees online; certification fee from the clerk"
+    lost_original: "Same request again — the court keeps the record."
+    verified: false
+    source_url: "https://pacer.uscourts.gov/"
+
+  # ================================================================== tax ===
+  - id: irs-transcript
+    state_directory_key: tax
+    national_ref: [irs-transcript]
+    label: "Tax account or return transcript, payment history, instalment-agreement record"
+    category: tax
+    custodian: "The Internal Revenue Service; the state revenue agency for state taxes"
+    obtainable_by: subject
+    request_path: >
+      Use the IRS online transcript service to view and download account and
+      return transcripts for each year, or request them by mail with Form
+      4506-T. The account transcript shows filing, balance and payments; ask
+      for the years involved. State transcripts come from the state revenue
+      agency's own portal or request form.
+    form_or_portal: "IRS Get Transcript online; Form 4506-T by mail"
+    identity_needed: "Identity verification with the IRS online account (personal identifiers are entered there, never here)"
+    typical_lead_time: "Immediate online; five to ten days by mail"
+    cost: "Free"
+    lost_original: "Download it again."
+    verified: false
+    source_url: "https://www.irs.gov/individuals/get-transcript"
+
+  - id: lien-release
+    national_ref: [irs-lien]
+    label: "Release of a tax lien"
+    category: tax
+    custodian: "The IRS for a federal lien (certificate of release); the state agency for a state lien; the county recorder where the lien was filed"
+    obtainable_by: subject
+    request_path: >
+      When a federal lien is satisfied the IRS issues a certificate of
+      release and files it where the lien was recorded; ask the IRS lien
+      unit for a copy if you did not receive one, and the county recorder for
+      a copy of the recorded release. State liens follow the state agency's
+      process.
+    form_or_portal: "IRS Centralized Lien Operation; the county recorder"
+    identity_needed: "Identity verification; lien number if known"
+    typical_lead_time: "Weeks"
+    cost: "Usually none from the IRS; recorder copy fees"
+    lost_original: "Request a copy from the IRS lien unit or the recorder."
+    verified: false
+    source_url: "https://www.irs.gov/businesses/small-businesses-self-employed/understanding-a-federal-tax-lien"
+
+  - id: pay-stubs
+    label: "Pay stubs showing an active wage garnishment"
+    category: employer
+    custodian: "Your employer's payroll office"
+    obtainable_by: subject
+    request_path: >
+      Download recent pay statements from the payroll portal or ask the
+      payroll office for copies covering the garnishment period.
+    form_or_portal: "Employer payroll portal"
+    identity_needed: "Your own payroll login"
+    typical_lead_time: "Immediate"
+    cost: "None"
+    lost_original: "Download again."
+    verified: false
+    source_url: null
+
+  - id: budget-plan
+    label: "Written personal monthly budget"
+    category: self
+    custodian: "You — it is a document you prepare"
+    obtainable_by: subject
+    request_path: >
+      Prepare it yourself: monthly income, each fixed and variable expense,
+      each debt payment, and what remains. A counselling agency can help
+      prepare one. Date it and sign it.
+    form_or_portal: "None"
+    identity_needed: "None"
+    typical_lead_time: "Hours"
+    cost: "None"
+    lost_original: "Prepare it again."
+    verified: false
+    source_url: null
+
+  - id: financial-counseling-certificate
+    national_ref: [credit-counseling]
+    label: "Certificate of completion from an accredited financial counselling or debt-management program"
+    category: financial
+    custodian: "The counselling agency"
+    obtainable_by: subject
+    request_path: >
+      Ask the agency to reissue the certificate or write a completion letter
+      with the dates of the program.
+    form_or_portal: "None — a direct request to the agency"
+    identity_needed: "Your name and the dates of the program"
+    typical_lead_time: "Days to two weeks"
+    cost: "Usually none"
+    lost_original: "Reissued by the agency on request."
+    verified: false
+    source_url: null
+
+  # ========================================================= immigration ===
+  - id: permanent-resident-card
+    national_ref: [uscis-i90, uscis-records]
+    label: "Permanent resident card (Form I-551, the 'green card'), front and back"
+    category: immigration
+    custodian: "The card holder"
+    obtainable_by: third_party_only
+    request_path: >
+      This is another person's document. The user may ask the family member
+      for a photocopy of the front and back and attach what they are given.
+      Nothing about the card is typed into this session.
+    form_or_portal: "None — the holder photocopies their own card"
+    identity_needed: "None from the user"
+    typical_lead_time: "Whenever the holder provides it"
+    cost: "None"
+    lost_original: >
+      The holder replaces a lost, stolen or damaged card by filing Form I-90
+      with USCIS, online or by mail, with a fee; processing commonly takes
+      months. While waiting, the holder can request proof of status at a
+      USCIS field office appointment. The user reports the card as pending
+      and does not wait for it.
+    replacement_lead_time: "Months"
+    verified: false
+    source_url: "https://www.uscis.gov/i-90"
+
+  - id: employment-authorization-document
+    national_ref: [uscis-i765]
+    label: "Employment authorization document (work permit card)"
+    category: immigration
+    custodian: "The card holder"
+    obtainable_by: third_party_only
+    request_path: >
+      Another person's document; the user may ask the holder for a copy of
+      the front and back and attach what they are given.
+    form_or_portal: "None — the holder photocopies their own card"
+    identity_needed: "None from the user"
+    typical_lead_time: "Whenever the holder provides it"
+    cost: "None"
+    lost_original: >
+      The holder replaces a lost card by filing Form I-765 with USCIS as a
+      replacement application, with a fee; processing takes months.
+    replacement_lead_time: "Months"
+    verified: false
+    source_url: "https://www.uscis.gov/i-765"
+
+  - id: i94-record
+    national_ref: [cbp-i94]
+    label: "Arrival/departure record (Form I-94) with the current foreign passport and visa"
+    category: immigration
+    custodian: "The traveller; U.S. Customs and Border Protection issues the record"
+    obtainable_by: third_party_only
+    request_path: >
+      Another person's document. The user may ask the holder to print their
+      most recent I-94 from the Customs and Border Protection website at no
+      cost and to photocopy the passport's identity page and visa, and
+      attaches what they are given.
+    form_or_portal: "CBP's I-94 website"
+    identity_needed: "None from the user; the holder uses their own passport details"
+    typical_lead_time: "Immediate for the holder"
+    cost: "Free"
+    lost_original: >
+      The I-94 is reprinted from the CBP site. A lost foreign passport is
+      replaced by the holder through their own country's embassy or
+      consulate; a lost visa requires a new visa application at a U.S.
+      consulate abroad. Both can take weeks to months.
+    replacement_lead_time: "Immediate for the I-94; weeks to months for a passport or visa"
+    verified: false
+    source_url: "https://i94.cbp.dhs.gov/"
+
+  # ========================================================= citizenship ===
+  - id: naturalization-or-citizenship-certificate
+    national_ref: [uscis-n565, uscis-records]
+    label: "Certificate of naturalization (Form N-550 or N-570) or certificate of citizenship (Form N-560 or N-561)"
+    category: citizenship
+    custodian: "The certificate holder — the user for their own; a family member for theirs"
+    obtainable_by: subject
+    request_path: >
+      Photocopy your own certificate. For a family member's certificate, ask
+      them for a copy and attach what you are given; nothing from it is typed
+      here. Photocopying a naturalization certificate for a lawful purpose
+      such as this is permitted.
+    form_or_portal: "None — photocopy the original"
+    identity_needed: "None"
+    typical_lead_time: "Immediate"
+    cost: "None"
+    lost_original: >
+      A lost, stolen or destroyed certificate is replaced by filing Form
+      N-565 with USCIS, with a fee and a sworn statement of the loss;
+      processing commonly takes many months. A U.S. passport proves
+      citizenship in the meantime and is itself on the readiness list.
+    replacement_lead_time: "Many months"
+    verified: false
+    source_url: "https://www.uscis.gov/n-565"
+
+  - id: consular-report-of-birth-abroad
+    national_ref: [state-crba]
+    label: "Consular report of birth abroad (Form FS-240, or the older DS-1350 or FS-545)"
+    category: citizenship
+    custodian: "The person it was issued to; the Department of State holds the record"
+    obtainable_by: subject
+    request_path: >
+      Photocopy your own. For a family member's, ask them for a copy and
+      attach what you are given.
+    form_or_portal: "None — photocopy the original"
+    identity_needed: "None"
+    typical_lead_time: "Immediate"
+    cost: "None"
+    lost_original: >
+      A replacement is requested from the Department of State's Passport
+      Services vital records office by a signed, notarized written request
+      with identification and a fee; the DS-1350 and FS-545 are no longer
+      issued and are replaced with a Form FS-240. Allow weeks to a few months.
+    replacement_lead_time: "Weeks to a few months"
+    verified: false
+    source_url: "https://travel.state.gov/content/travel/en/international-travel/while-abroad/birth-abroad.html"
+
+  # ===================================================== travel document ===
+  - id: us-passport
+    national_ref: [state-passport-records]
+    label: "U.S. passport book (every page, blank pages included) and passport card"
+    category: travel_document
+    custodian: "The passport holder"
+    obtainable_by: subject
+    request_path: >
+      Photocopy or scan every page of the book, including blank pages, and
+      both sides of the card. The stamps are the travel record, which is why
+      blank pages are included — they show there is nothing more.
+    form_or_portal: "None — copy the original"
+    identity_needed: "None"
+    typical_lead_time: "Immediate"
+    cost: "None"
+    lost_original: >
+      Report the loss to the Department of State (Form DS-64, online or by
+      mail) so the old passport is invalidated, then apply for a replacement
+      in person with Form DS-11 and proof of citizenship; routine processing
+      takes weeks and expedited service is available for a fee. A lost
+      passport is also a reportable fact in its own right for some holders —
+      mention it to the security office rather than deciding that here.
+    replacement_lead_time: "Weeks; faster expedited"
+    all_pages: true
+    verified: false
+    source_url: "https://travel.state.gov/content/travel/en/passports/have-passport/lost-stolen.html"
+
+  # ================================================== foreign government ===
+  - id: foreign-passport-surrender-proof
+    national_ref: [foreign-embassies]
+    label: "Proof a foreign passport was surrendered, destroyed or cancelled"
+    category: foreign_government
+    custodian: "The issuing country's embassy or consulate for a surrender receipt; your own security office for a witnessed destruction statement"
+    obtainable_by: subject
+    request_path: >
+      The simplest path runs through your security office: hand the passport
+      to the FSO or security manager, who holds or destroys it and gives you
+      a signed, dated statement saying so. If you surrendered it to the
+      issuing country, ask that consulate for a written receipt or
+      cancellation confirmation. Do not destroy a foreign passport yourself
+      without a witness; an unwitnessed destruction cannot be proven.
+    form_or_portal: "None — the security office's statement, or the consulate's receipt"
+    identity_needed: "Your identity to your security office; the consulate's own requirements"
+    typical_lead_time: "Same day through the security office; weeks from a consulate"
+    cost: "None through the security office; consular fees vary"
+    lost_original: >
+      If the statement or receipt is lost, the security office reissues its
+      statement from its own record; a consulate may reissue a receipt from
+      its file.
+    verified: false
+    source_url: null
+
+  - id: renunciation-certificate
+    national_ref: [foreign-embassies]
+    label: "Formal renunciation of foreign citizenship — certificate of loss of nationality or correspondence with the foreign government"
+    category: foreign_government
+    custodian: "The foreign government's consular or interior authority"
+    obtainable_by: subject
+    request_path: >
+      Renunciation is a procedure of the foreign country, usually through
+      its embassy or consulate, and produces a certificate or official
+      letter; ask that mission for the document and keep every piece of
+      correspondence, because the correspondence itself shows the steps
+      taken while the certificate is pending. The tool does not advise on
+      whether to renounce; it records what you have done.
+    form_or_portal: "The foreign mission's own process"
+    identity_needed: "The foreign government's own requirements"
+    typical_lead_time: "Months to years, depending on the country"
+    cost: "Varies by country"
+    lost_original: "Ask the issuing mission for a certified copy from its records."
+    verified: false
+    source_url: null
+
+  - id: foreign-work-authorization
+    label: "Foreign work visa, permit, or registration with a foreign authority"
+    category: foreign_government
+    custodian: "You; the issuing foreign authority"
+    obtainable_by: subject
+    request_path: >
+      Photocopy the permit, visa or registration document, and any
+      correspondence that shows its terms and dates. If you no longer hold
+      it, the issuing authority or the foreign employer's human-resources
+      office may provide a copy or a letter stating its terms.
+    form_or_portal: "None — copy the original"
+    identity_needed: "None"
+    typical_lead_time: "Immediate; weeks from a foreign authority"
+    cost: "None; foreign fees vary"
+    lost_original: "Ask the issuing authority or the foreign employer for a copy or a written confirmation of the terms and dates."
+    verified: false
+    source_url: null
+
+  # ======================================================= motor vehicle ===
+  - id: driving-record
+    state_directory_key: dmv
+    label: "Certified driver record showing licence actions and dates"
+    category: motor_vehicle
+    custodian: "The state motor-vehicle agency that issued the licence"
+    obtainable_by: subject
+    request_path: >
+      Order your own certified driver record from the state motor-vehicle
+      agency, usually online the same day. It records the incident date and
+      any suspension, which is the fastest way to recover a date you cannot
+      remember.
+    form_or_portal: "The state agency's online record request"
+    identity_needed: "Licence number; identity verification"
+    typical_lead_time: "Same day online; a week by mail"
+    cost: "A small fee"
+    lost_original: "Order it again."
+    verified: false
+    source_url: null
+
+  # ============================================================ employer ===
+  - id: employer-hr-record
+    label: "Employer records — administrative investigation report, disciplinary, counselling, suspension or termination paperwork, policy acknowledgement, training completion"
+    category: employer
+    custodian: "The employer's human-resources department; the security office for security-related actions"
+    obtainable_by: subject
+    request_path: >
+      Ask human resources, in writing, for copies of the actions in your
+      personnel file. Many states give employees a right to inspect and copy
+      their own personnel file; where there is no such right, the employer
+      may still provide copies on request. Investigation reports are often
+      withheld; if so, ask for the written outcome you were given and report
+      the investigation as a record the employer holds.
+    form_or_portal: "Written request to human resources"
+    identity_needed: "Your identity to the employer"
+    typical_lead_time: "Days to a few weeks"
+    cost: "Usually none"
+    lost_original: "Same request again; the employer keeps the file."
+    verified: false
+    source_url: null
+
+  - id: employer-reference-letter
+    label: "Letter from a current employer or supervisor attesting to present honesty, reliability and work ethic"
+    category: employer
+    custodian: "The supervisor or manager who writes it"
+    obtainable_by: subject
+    request_path: >
+      Ask directly. Say what the letter is for so the writer can speak to
+      what they actually know of you — a letter from someone who does not
+      know the facts at issue carries little weight. Request it on company
+      letterhead, signed and dated, with the writer's title and how long they
+      have supervised you.
+    form_or_portal: "None"
+    identity_needed: "None"
+    typical_lead_time: "One to two weeks"
+    cost: "None"
+    lost_original: "Ask for another; a current one is better anyway."
+    on_letterhead: true
+    verified: false
+    source_url: null
+
+  # ================================================================ self ===
+  - id: own-correspondence
+    label: "Your own records of a prompt correction — messages to an investigator, agency or security office"
+    category: self
+    custodian: "Your own email, messages and files"
+    obtainable_by: subject
+    request_path: >
+      Search your own sent mail and messages for the date range and print
+      what shows when you raised the matter and with whom. If the message
+      went to the security office, that office's log is the other copy.
+    form_or_portal: "None"
+    identity_needed: "None"
+    typical_lead_time: "Immediate"
+    cost: "None"
+    lost_original: "Ask the recipient — the investigator or the security office — for their copy or a written confirmation of the date."
+    verified: false
+    source_url: null
+
+  - id: organization-disassociation-proof
+    label: "Proof of resignation, termination of membership, or end of support to an organisation"
+    category: organization
+    custodian: "The organisation; your own copy of the resignation"
+    obtainable_by: subject
+    request_path: >
+      Keep your own dated resignation letter or message and any
+      acknowledgement. If you have none, write to the organisation asking it
+      to confirm in writing the date your membership or support ended;
+      bank or card statements showing the last payment corroborate the date
+      of ended financial support.
+    form_or_portal: "None"
+    identity_needed: "None"
+    typical_lead_time: "Days to weeks"
+    cost: "None"
+    lost_original: "Ask the organisation for written confirmation; your bank statements show the last payment."
+    verified: false
+    source_url: null
+
+  - id: self-authored-disclosure
+    label: "Written disclosure you prepare — accounts, assets or property connected to an activity"
+    category: self
+    custodian: "You"
+    obtainable_by: subject
+    request_path: >
+      Prepare it yourself: each account, asset or property, where it is held,
+      its approximate value, and its connection to the activity. Date and
+      sign it. Supporting statements from the institutions corroborate it.
+    form_or_portal: "None"
+    identity_needed: "None"
+    typical_lead_time: "Hours"
+    cost: "None"
+    lost_original: "Prepare it again."
+    verified: false
+    source_url: null
+
+  - id: command-approval-memo
+    label: "Memorandum from the chain of command or employer acknowledging and approving an outside activity"
+    category: military_personnel
+    custodian: "The commander or supervisor who signed it; your own copy; the security office's file"
+    obtainable_by: subject
+    request_path: >
+      Keep your own copy. If you have none, ask the signing office or your
+      security office for a copy from its file; if approval was never given
+      in writing, ask for it now and report that it is being requested.
+    form_or_portal: "None"
+    identity_needed: "None"
+    typical_lead_time: "Days to weeks"
+    cost: "None"
+    lost_original: "Ask the signing office or the security office for a copy."
+    verified: false
+    source_url: null
+
+  - id: remedial-training-certificate
+    label: "Completion certificate for remedial security, classification-handling or cybersecurity training"
+    category: security_office
+    custodian: "The training system that recorded it; your security office"
+    obtainable_by: subject
+    request_path: >
+      Download the certificate from the training system you used, or ask
+      your security office for the completion record it holds. Either copy
+      serves.
+    form_or_portal: "The training system's certificate download"
+    identity_needed: "Your training account"
+    typical_lead_time: "Immediate; days through the security office"
+    cost: "None"
+    lost_original: "Download it again, or ask the security office for its record."
+    verified: false
+    source_url: null
+
+  # ===================================================== security office ===
+  - id: security-office-record
+    label: "Records that exist only in the security office's own files — preliminary inquiry, violation or infraction notice, access suspension or local mitigation record, user activity monitoring report, IT incident report and audit logs, command-directed investigation findings, disciplinary records routed through security"
+    category: security_office
+    custodian: "Your facility security officer, security manager or servicing security office"
+    obtainable_by: security_office
+    request_path: >
+      This is not a record the user requests. Tell the user: this record is
+      held by your security office and belongs with the report; mention to
+      them that it exists when you report. The package names it so the
+      office knows to include it. The user may ask the office for a copy of
+      any notice issued to them personally, but the inquiry, logs and
+      monitoring reports are the office's own.
+    form_or_portal: "None — the security office attaches its own record"
+    identity_needed: "None"
+    typical_lead_time: "The office's own"
+    cost: "None"
+    lost_original: "Not applicable — the office keeps it."
+    verified: false
+    source_url: null

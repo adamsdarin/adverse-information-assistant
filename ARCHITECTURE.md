@@ -13,7 +13,7 @@ Runs in Claude Code/Cowork, OpenAI Codex, Cursor, Google Antigravity, or any ass
 ### Purpose
 
 - **Primary user: the covered individual**, running the tool privately before approaching their FSO/SSO. (An FSO-facing mode with DISS-field-structured output is a roadmap item, not v1.)
-- **Reduce round-trips with federal agencies.** The design goal is first-time-right submissions: a report complete enough that DCSA/CAF follow-up requests (missing dispositions, vague dates, absent supporting documents) are the exception, not the norm.
+- **Reduce round-trips with federal agencies.** The design goal is first-time-right submissions: a report complete enough that DCSA/CAF follow-up requests (missing dispositions, vague dates, absent supporting documents) are the exception, not the norm. DCSA names this standard itself — an "adjudicatively ready" product is one the adjudicator can act on without asking for more — and publishes what it contains; `corpus/checklists/_ADJUDICATIVE_READINESS.yaml` restates that guide so the gap analyst, narrative writer and documents advisor measure the package against it.
 - Reduce the anxiety and guesswork of self-reporting adverse information (e.g., an OWI/DUI, a delinquent debt, unauthorized foreign contact).
 - Ensure the user's written narrative contains the elements adjudicators actually look for under the applicable SEAD 4 guideline(s), including the mitigating conditions the user may be able to speak to truthfully.
 - Ground every reference to policy or precedent in files on disk — the repo's authored corpus or the downloaded DCSA Library — never in model memory.

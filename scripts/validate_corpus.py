@@ -712,6 +712,292 @@ def check_document_evidence() -> None:
                                "finding or case_ref")
 
 
+def check_adjudicative_readiness() -> None:
+    """DCSA's own statement of what an adjudicator needs in the file, restated
+    per guideline — what documents-advisor.md reads for its baseline list, and
+    what the gap analyst and narrative writer sweep for statement factors.
+
+    The cross-checks are what make the file load-bearing: every statement
+    factor must point at real element ids or real coverage facets, or the
+    sweep silently satisfies nothing; every document must say who holds it
+    and whether the user can obtain it, or the advisor sends the user to
+    fetch a record that lives in the security office's own files.
+    """
+    path = CORPUS / "checklists" / "_ADJUDICATIVE_READINESS.yaml"
+    if not path.exists():
+        errors.append(f"{path}: missing — the package has no stated standard "
+                       "of completeness to be measured against")
+        return
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not data.get("maintainer_verified"):
+        warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT, "
+                         "restatement unchecked against the live guide")
+    require_provenance(data, path, "maintainer_verified")
+    if not str(data.get("source_url", "")).startswith("https://www.dcsa.mil/"):
+        errors.append(f"{path}: source_url must point at the DCSA guide")
+    if not data.get("retrieved"):
+        errors.append(f"{path}: 'retrieved' date is required — the page has no "
+                       "stable hash, so the date is the version")
+
+    timeline = data.get("timeline") or {}
+    for key in ("never_delay_for_documents", "pending_documents_are_declared"):
+        if timeline.get(key) is not True:
+            errors.append(f"{path}: timeline.{key} must be true — the report "
+                           "never waits on paperwork and names what is pending")
+
+    # Statement factors must resolve to real elements or facets.
+    spec = coverage_spec()
+    facets = {f.get("id") for f in spec.get("facets", []) if isinstance(f, dict)}
+    known_ids: set[str] = set()
+    uni_path = CORPUS / "checklists" / "_UNIVERSAL.yaml"
+    if uni_path.exists():
+        uni = yaml.safe_load(uni_path.read_text(encoding="utf-8")) or {}
+        known_ids |= {e.get("id") for e in uni.get("elements", []) if isinstance(e, dict)}
+    for gpath in (CORPUS / "checklists").glob("guideline-*.yaml"):
+        gdata = yaml.safe_load(gpath.read_text(encoding="utf-8")) or {}
+        known_ids |= {e.get("id") for e in gdata.get("elements", []) if isinstance(e, dict)}
+
+    factors = data.get("statement_factors") or []
+    if len(factors) < 9:
+        errors.append(f"{path}: statement_factors lists {len(factors)} factors; "
+                       "the guide names nine whole-person factors plus self-reporting")
+    seen: set[str] = set()
+    for f in factors:
+        fid = f.get("id")
+        if not fid or fid in seen:
+            errors.append(f"{path}: statement factor missing id or duplicated: {fid!r}")
+        seen.add(fid)
+        if not f.get("label") or not f.get("why"):
+            errors.append(f"{path}: statement factor '{fid}' needs label and why")
+        sat = f.get("satisfied_by") or {}
+        els = sat.get("elements") or []
+        fcs = sat.get("facets") or []
+        if not els and not fcs:
+            errors.append(f"{path}: statement factor '{fid}' is satisfied by "
+                           "nothing — point it at element ids or coverage facets")
+        for e in els:
+            if e not in known_ids:
+                errors.append(f"{path}: statement factor '{fid}' names element "
+                               f"'{e}', which exists in no checklist — the sweep "
+                               "would never find an answer")
+        for fc in fcs:
+            if fc not in facets:
+                errors.append(f"{path}: statement factor '{fid}' names facet "
+                               f"'{fc}', which is not in _COVERAGE.yaml")
+
+    for pic in data.get("incident_picture") or []:
+        cf = pic.get("coverage_facet")
+        if cf is not None and cf not in facets:
+            errors.append(f"{path}: incident_picture facet '{pic.get('facet')}' "
+                           f"maps to unknown coverage facet '{cf}'")
+
+    retrieval_ids = retrieval_entry_ids()
+    guidelines = data.get("guidelines", {})
+    missing = GUIDELINES - set(guidelines)
+    if missing:
+        errors.append(f"{path}: no entry for guideline(s) {sorted(missing)}")
+    for g, entry in guidelines.items():
+        if g not in GUIDELINES:
+            errors.append(f"{path}: '{g}' is not a valid guideline letter")
+            continue
+        if not entry.get("statement_must_address"):
+            errors.append(f"{path}: {g} has no statement_must_address topics")
+        docs = entry.get("documents") or []
+        if not docs:
+            errors.append(f"{path}: {g} lists no documents")
+        for d in docs:
+            where = f"{path}: {g} document '{str(d.get('type'))[:50]}'"
+            if not d.get("type") or not d.get("custodian") or not d.get("purpose"):
+                errors.append(f"{where}: needs type, custodian and purpose")
+            if d.get("obtain_by") not in ("subject", "security_office", "either"):
+                errors.append(f"{where}: obtain_by must be subject, security_office "
+                               f"or either, not {d.get('obtain_by')!r} — the advisor "
+                               "must know whether the user can fetch this")
+            if d.get("timing", "can_follow") not in ("before", "can_follow"):
+                errors.append(f"{where}: invalid timing {d.get('timing')!r}")
+            # Naming a document without a way to get it is the gap this
+            # cross-check closes: every readiness document points at a
+            # retrieval entry, and the pointer must resolve.
+            refs = d.get("retrieval_ref")
+            if isinstance(refs, str):
+                refs = [refs]
+            if not refs:
+                errors.append(f"{where}: no retrieval_ref — the advisor can name "
+                               "this record but cannot tell the user how to get it")
+            elif retrieval_ids is not None:
+                for r in refs:
+                    if r not in retrieval_ids:
+                        errors.append(f"{where}: retrieval_ref '{r}' is not an entry "
+                                       "in documents/retrieval.yaml")
+
+
+_retrieval_ids_cache: set | None = None
+
+
+def retrieval_entry_ids() -> set | None:
+    """Entry ids from the retrieval directory, or None when the file is
+    absent (check_retrieval_directory reports that on its own)."""
+    global _retrieval_ids_cache
+    if _retrieval_ids_cache is None:
+        path = CORPUS / "documents" / "retrieval.yaml"
+        if not path.exists():
+            return None
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        _retrieval_ids_cache = {e.get("id") for e in data.get("entries", [])
+                                if isinstance(e, dict)}
+    return _retrieval_ids_cache
+
+
+def check_retrieval_directory() -> None:
+    """How each record is actually obtained, and what to do when the original
+    is lost. Directory information held to the court aid's rule: an entry may
+    not be marked verified without a source and a date, and every entry must
+    say who can obtain it so the advisor never hands the user a task that is
+    the security office's, or someone else's document to replace."""
+    path = CORPUS / "documents" / "retrieval.yaml"
+    if not path.exists():
+        errors.append(f"{path}: missing — the advisor can name custodians but "
+                       "cannot say how a record is requested or replaced")
+        return
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not data.get("maintainer_verified"):
+        warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT, "
+                         "procedures unchecked against the agencies' pages")
+    require_provenance(data, path, "maintainer_verified")
+    allowed = set(data.get("obtainable_by_values") or
+                  ["subject", "security_office", "third_party_only"])
+    categories = set(data.get("categories") or [])
+    state_keys = set(data.get("state_directory_keys") or
+                     ["dmv", "tax", "criminal_history", "child_welfare"])
+    national_ids = state_records_national_ids()
+    entries = data.get("entries") or []
+    if not entries:
+        errors.append(f"{path}: no entries")
+        return
+    ids = [e.get("id") for e in entries if isinstance(e, dict)]
+    if len(ids) != len(set(ids)):
+        errors.append(f"{path}: duplicate entry ids")
+    required = ("label", "category", "custodian", "obtainable_by", "request_path",
+                "typical_lead_time", "cost", "lost_original")
+    unverified = 0
+    for e in entries:
+        if not isinstance(e, dict):
+            errors.append(f"{path}: an entry is not a mapping")
+            continue
+        eid = e.get("id") or "<no id>"
+        for key in required:
+            if not str(e.get(key, "")).strip():
+                errors.append(f"{path}: {eid} missing '{key}'")
+        if e.get("obtainable_by") not in allowed:
+            errors.append(f"{path}: {eid} obtainable_by must be one of {sorted(allowed)}")
+        if categories and e.get("category") not in categories:
+            errors.append(f"{path}: {eid} category '{e.get('category')}' is not declared")
+        url = e.get("source_url")
+        if url is not None and not str(url).startswith("https://"):
+            errors.append(f"{path}: {eid} source_url must be https or null")
+        if e.get("verified"):
+            missing = [k for k in ("source_url", "verified_date") if not e.get(k)]
+            if missing:
+                errors.append(f"{path}: {eid} is marked verified without provenance "
+                               f"(missing: {', '.join(missing)})")
+        else:
+            unverified += 1
+        if e.get("obtainable_by") == "third_party_only" and "ask" not in str(e.get("request_path", "")).lower():
+            errors.append(f"{path}: {eid} is another person's document; its request_path "
+                           "must tell the user to ask that person, not to obtain it")
+        # Pointers into the per-state custodian directory must name a real
+        # key and real national ids, or --state attaches nothing and the
+        # advisor silently falls back to "contact the state".
+        key = e.get("state_directory_key")
+        if key is not None and key not in state_keys:
+            errors.append(f"{path}: {eid} state_directory_key '{key}' is not one of {sorted(state_keys)}")
+        for r in e.get("national_ref") or []:
+            if national_ids is not None and r not in national_ids:
+                errors.append(f"{path}: {eid} national_ref '{r}' is not in "
+                               "courts/state-records-sources.yaml's national list")
+    if unverified:
+        warnings.append(f"{path}: {unverified}/{len(entries)} entries unverified — the "
+                         "advisor offers these as directory information, never asserts them")
+
+
+_state_records_cache: dict | None = None
+
+
+def state_records_data() -> dict | None:
+    global _state_records_cache
+    if _state_records_cache is None:
+        path = CORPUS / "courts" / "state-records-sources.yaml"
+        if not path.exists():
+            return None
+        _state_records_cache = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return _state_records_cache
+
+
+def state_records_national_ids() -> set | None:
+    data = state_records_data()
+    if data is None:
+        return None
+    return {n.get("id") for n in data.get("national") or [] if isinstance(n, dict)}
+
+
+def check_state_records_sources() -> None:
+    """The per-state custodian directory beside state-courts.yaml: which
+    agency holds a driver record, state tax transcript, state criminal
+    history and child-welfare record in each jurisdiction, plus national
+    front doors. Same rule as the court aid: every state needs all four
+    agencies with an https link, and nothing is marked verified without
+    provenance."""
+    path = CORPUS / "courts" / "state-records-sources.yaml"
+    data = state_records_data()
+    if data is None:
+        warnings.append(f"{path}: missing — document_lookup.py --state attaches nothing; "
+                        "the advisor falls back to the generic request path")
+        return
+    if not data.get("maintainer_verified"):
+        warnings.append(f"{path}: maintainer_verified=false — REVIEW DRAFT, agency links unchecked")
+    require_provenance(data, path, "maintainer_verified")
+    if not data.get("retrieved"):
+        errors.append(f"{path}: 'retrieved' date is required — the links have no stable hash")
+    states = data.get("states") or {}
+    if len(states) < 51:
+        warnings.append(f"{path}: only {len(states)} jurisdictions — 50 states + DC expected")
+    unverified = 0
+    for code, st in sorted(states.items()):
+        if not isinstance(st, dict):
+            errors.append(f"{path}: entry '{code}' is not a mapping")
+            continue
+        if len(code) != 2 or not code.isupper():
+            errors.append(f"{path}: '{code}' should be a two-letter uppercase code")
+        if not st.get("name"):
+            errors.append(f"{path}: {code} missing 'name'")
+        for key in ("dmv", "tax", "criminal_history", "child_welfare"):
+            agency = st.get(key)
+            if not isinstance(agency, dict) or not agency.get("name"):
+                errors.append(f"{path}: {code} missing '{key}' agency name")
+                continue
+            if not str(agency.get("url", "")).startswith("https://"):
+                errors.append(f"{path}: {code} {key} url must be https")
+        if st.get("verified"):
+            missing = [k for k in ("source_url", "verified_date") if not st.get(k)]
+            if missing:
+                errors.append(f"{path}: {code} is marked verified without provenance "
+                               f"(missing: {', '.join(missing)})")
+        else:
+            unverified += 1
+    national = data.get("national") or []
+    ids = [n.get("id") for n in national if isinstance(n, dict)]
+    if len(ids) != len(set(ids)):
+        errors.append(f"{path}: duplicate national ids")
+    for n in national:
+        if not isinstance(n, dict) or not n.get("id") or not n.get("label"):
+            errors.append(f"{path}: a national entry lacks id or label")
+        elif not str(n.get("url", "")).startswith("https://"):
+            errors.append(f"{path}: national '{n.get('id')}' url must be https")
+    if unverified:
+        warnings.append(f"{path}: {unverified}/{len(states)} jurisdictions unverified — offered "
+                         "as 'the agency that usually holds this', never asserted")
+
+
 def check_courts() -> None:
     """The court recognition aid. A memory jog, held to the same provenance
     rule as everything else: a state may not be marked verified without a
@@ -779,6 +1065,9 @@ def main() -> int:
     check_universal()
     check_severity_ladders()
     check_document_evidence()
+    check_state_records_sources()
+    check_retrieval_directory()
+    check_adjudicative_readiness()
     check_courts()
     check_entity_capture()
     check_collection_policy()

@@ -14,6 +14,8 @@ architecture exists to remove.
 | `reporting/` | SEAD 3 / ISL 2021-02 / 32 CFR §117.8 texts + structured tables | dni.gov, dcsa.mil, eCFR |
 | `forms/` | Guideline ↔ form-section crosswalks | eApp/SF-86, PVQ |
 | `checklists/` | Per-guideline required narrative elements (maintainer-authored) | derived; see each file's `sources` |
+| `checklists/_ADJUDICATIVE_READINESS.yaml` | DCSA's standard for a complete incident report — statement factors and per-guideline supporting documents, restated (maintainer-authored) | dcsa.mil, Adjudicatively Ready Product Reference Guide |
+| `documents/retrieval.yaml` | How each supporting document is actually requested, and how a lost one is replaced (maintainer-authored directory information; read via `scripts/document_lookup.py`) | official agency pages per entry (USCIS, State, NARA, HHS, IRS, CFPB, PACER) |
 
 ## Workflow
 

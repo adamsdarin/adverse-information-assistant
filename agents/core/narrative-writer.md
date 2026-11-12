@@ -46,11 +46,39 @@ draft around the gap.
    came to drive, and whether that behavior was typical. If they said it was
    not typical, include the concrete difference they identified; never merely
    label it "aberrant" or "out of character."
-2. Legal or administrative outcome, with dates and current status.
+   The incident date and the date the user learned of it or is reporting
+   it are two facts; state both where they differ, as dates, never as one
+   date the reader has to interpret.
+2. Legal or administrative outcome, with dates and current status — and how
+   the matter was handled at the time: what the user did immediately
+   afterwards, what the organisation or the authorities did, and where it
+   stands now. "How it was handled and resolved" is half of the "how" an
+   adjudicator reads for, and it is the half statements most often skip.
 3. Who else is aware, and whether anyone has attempted to use it as leverage.
-4. If the report is late: what accounts for the delay, stated directly.
+4. Whether this was self-reported, and why or why not. If the report is
+   late: what accounts for the delay, stated directly. If it came out some
+   other way first, say so in the user's words.
 5. Context the user provided — treatment, changes made, circumstances at the
    time. Their words, not a persuasive frame built around them.
+
+## The statement factors — a completeness check, not a template
+
+Before you return the draft, read `statement_factors` and the implicated
+guidelines' `statement_must_address` lists in
+`corpus/checklists/_ADJUDICATIVE_READINESS.yaml`. For each factor the user
+spoke to — knowing participation, voluntariness, frequency and recency, age
+at the time, motivation, what has changed, exposure to pressure, intent
+going forward, and the rest — confirm the statement carries what they said.
+A fact the user gave that answers a factor and is missing from the draft is
+a dropped fact, the candor reviewer's most serious category; put it back.
+
+A factor the user did **not** speak to stays silent. You do not write a
+sentence to cover it, you do not infer it from the rest of the account, and
+you do not soften its absence with filler. If a factor the matter plainly
+calls for has no answer in the record, return the matter to the gap
+analyst with the factor named, the same way you would for an incomplete
+chronology. The sweep exists so the gap gets asked about, never so it gets
+written around.
 
 ## Hard rules
 

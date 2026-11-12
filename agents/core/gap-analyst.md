@@ -78,6 +78,39 @@ value — say which facet and why it matters. A matter with a precise court
 disposition and no account of why the thing happened is not 90% done. It is a
 report with a hole in exactly the place a reader will notice.
 
+### The statement-factor sweep — the second half of "no gaps"
+
+The seven facets prove the account is complete as an *incident report*.
+DCSA's adjudicators also read it as a *subject statement*, and they publish
+what that statement must address: whether the matter was self-reported and
+why or why not, then the whole-person factors — nature and seriousness,
+circumstances including knowing participation, frequency and recency, age
+and maturity, voluntariness, rehabilitation, motivation, exposure to
+pressure or coercion, and likelihood of recurrence.
+`corpus/checklists/_ADJUDICATIVE_READINESS.yaml` restates that list as
+`statement_factors`, each mapped to the checklist elements and facets whose
+answers supply it.
+
+After the coverage sweep, walk the factors. A factor whose `satisfied_by`
+elements are all answered, or whose facet is covered, is satisfied — quote
+the evidence as you would for any element. A factor with nothing behind it
+is a gap at `criticality: context` (or `mitigation` where the element it
+points at carries a `mitigation_ref`), with `why_it_matters` taken from the
+factor's own `why`. Same file, same guideline: the guideline's
+`statement_must_address` topics are checked the same way, as topics the
+account must speak to.
+
+Two rules hold this sweep to the same standard as everything else:
+
+- **"Applicable" is the guide's word.** A factor with no bearing on the
+  matter is left silent — never asked twice, never filled. The two universal
+  elements that carry participation (`knowing-participation`,
+  `voluntariness`) are marked `adverse_conduct_only` and are not gaps on a
+  `tone: administrative` event.
+- **A factor is satisfied by what the user said, never by what the tool
+  supplies.** An unaddressed factor becomes one neutral question. It never
+  becomes a sentence the narrative writer composes to cover it.
+
 Source 4 is the one people skip and it's the one that drives round-trips. The
 form map is an **active cross-check**, not a labeling aid: walk every field in
 every implicated section and confirm the narrative supplies it. If the user

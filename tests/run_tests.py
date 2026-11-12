@@ -39,6 +39,7 @@ SCORE = ROOT / "scripts" / "score_evals.py"
 CHECKLIB = ROOT / "scripts" / "check_library.py"
 RETRIEVAL = ROOT / "scripts" / "doha_retrieval.py"
 COURTS = ROOT / "scripts" / "court_lookup.py"
+DOCLOOKUP = ROOT / "scripts" / "document_lookup.py"
 VALIDATE = ROOT / "scripts" / "validate_corpus.py"
 SYNTHETIC = ROOT / "scripts" / "generate_synthetic_workflow_runs.py"
 HOSTED = ROOT / "scripts" / "hosted_release.py"
@@ -200,7 +201,7 @@ def main() -> int:
         text = pkg.read_text(encoding="utf-8")
         check("emits the disclaimer", "not affiliated" in text.lower())
         check("emits the adjudication disclaimer", "adjudicative determination" in text.lower())
-        check("emits the corpus version", "0.1.0" in text)
+        check("emits the corpus version", "0.1.1" in text)
         check("emits a blank Person template", "Knowledgeable Parties" in text and "Full name: __" in text)
         check("template ships blank", "Full name: Jane" not in text)
         check("lists declined elements rather than filling them",
@@ -217,6 +218,31 @@ def main() -> int:
         check("package carries the separate-proceeding limitation",
               "cannot determine how a security report may interact" in flatten(text)
               and "discoverability" in flatten(text))
+        check("a list with nothing pending carries no supplement note",
+              "supplement to this report" not in text)
+
+        # DCSA's adjudicative-readiness rule: the report names which
+        # supporting documents are still pending and never waits for them;
+        # records held in the security office's own files are named for the
+        # user to point to, never assigned to them to fetch.
+        pending = base_session()
+        pending["events"][0]["documents"] = [
+            {"name": "Certified court disposition", "source": "Clerk of court",
+             "timing": "can_follow", "status": "pending", "obtain_by": "subject"},
+            {"name": "Arrest report", "source": "Arresting agency",
+             "timing": "can_follow", "status": "in_hand", "obtain_by": "subject"},
+            {"name": "Preliminary inquiry report", "source": "Security office file",
+             "timing": "can_follow", "status": "pending", "obtain_by": "security_office"},
+        ]
+        pending_pkg, _ = build(pending, tmp)
+        pending_text = pending_pkg.read_text(encoding="utf-8")
+        check("pending documents are declared, not omitted",
+              "PENDING" in pending_text and "supplement to this report" in pending_text)
+        check("in-hand documents are marked to attach", "in hand" in pending_text)
+        check("security-office records are named, never assigned to the user",
+              "held by your security office" in pending_text)
+        check("the report still says not to wait for documents",
+              "Do not delay this report" in pending_text)
 
         applicant = base_session()
         applicant["role"] = "applicant"
@@ -932,6 +958,83 @@ def main() -> int:
         check("link checker lists URLs and makes no network calls",
               c == 0 and "no network calls" in o, o.strip()[-200:])
 
+        print("\ndocument_lookup.py — how to get each record, and what if it's lost")
+        c, d, o = run_json(DOCLOOKUP, "--doc", "court-record")
+        check("a known document returns its request path and custodian",
+              c == 0 and "clerk" in d.get("custodian", "").lower()
+              and d.get("how_to_request") and d.get("ask_first"))
+        check("unverified entries are labelled as directory information",
+              d.get("confidence") == "unverified_directory_information"
+              and "never assert" in d.get("usage_rule", "").lower())
+        c, d, o = run_json(DOCLOOKUP, "--doc", "permanent-resident-card")
+        check("a lost green card routes to the USCIS replacement path",
+              c == 0 and "I-90" in d.get("if_the_original_is_lost", "")
+              and d.get("replacement_lead_time"))
+        check("another person's document is asked for, never replaced by the user",
+              d.get("obtainable_by") == "third_party_only"
+              and "ask the person" in d.get("user_task", "").lower())
+        c, d, o = run_json(DOCLOOKUP, "--doc", "naturalization-or-citizenship-certificate")
+        check("a lost naturalization certificate routes to Form N-565",
+              c == 0 and "N-565" in d.get("if_the_original_is_lost", ""))
+        c, d, o = run_json(DOCLOOKUP, "--doc", "medical-records")
+        check("medical records cite the federal right of access and all pages",
+              c == 0 and "right of access" in d.get("how_to_request", "").lower()
+              and d.get("all_pages") is True)
+        c, d, o = run_json(DOCLOOKUP, "--doc", "security-office-record")
+        check("security-office records carry no user task",
+              c == 0 and d.get("ask_first") is None
+              and "held by your security office" in d.get("user_task", ""))
+        c, d, o = run_json(DOCLOOKUP, "--doc", "no-such-document")
+        check("an unknown document falls back rather than inventing a procedure",
+              c == 1 and "fallback" in d)
+        c, d, o = run_json(DOCLOOKUP, "--for-guideline", "F")
+        check("per-guideline walk attaches a retrieval entry to every readiness document",
+              c == 0 and d.get("documents")
+              and all(doc.get("retrieval") and all("error" not in r for r in doc["retrieval"])
+                      for doc in d["documents"]))
+        c, o = run(DOCLOOKUP, "--check-links")
+        check("retrieval link checker lists URLs and makes no network calls",
+              c == 0 and "no network calls" in o, o.strip()[-200:])
+        check("link checker covers the per-state custodian directory too",
+              "IA:dmv" in o and "national:irs-transcript" in o)
+        c, d, o = run_json(DOCLOOKUP, "--doc", "driving-record", "--state", "IA")
+        check("--state attaches the state's motor-vehicle agency to a driver record",
+              c == 0 and d.get("state_custodian", {}).get("state_name") == "Iowa"
+              and "https://" in d.get("state_custodian", {}).get("url", ""))
+        check("state custodians are offered unverified",
+              d.get("state_custodian", {}).get("verified") is False)
+        c, d, o = run_json(DOCLOOKUP, "--doc", "driving-record", "--state", "ZZ")
+        check("an unknown state falls back rather than inventing an agency",
+              c == 0 and "fallback" in d.get("state_custodian", {}))
+        c, d, o = run_json(DOCLOOKUP, "--doc", "irs-transcript")
+        check("federal records carry their national front door",
+              c == 0 and any(n.get("id") == "irs-transcript" and n.get("url")
+                             for n in d.get("national_sources", [])))
+        srs = yaml.safe_load((ROOT / "corpus" / "courts" / "state-records-sources.yaml").read_text(encoding="utf-8")) or {}
+        check("state records directory covers 50 states plus DC", len(srs.get("states") or {}) == 51,
+              f"found {len(srs.get('states') or {})}")
+        check("every state names all four custodians",
+              all(isinstance(st.get(k), dict) and st[k].get("name")
+                  for st in (srs.get("states") or {}).values()
+                  for k in ("dmv", "tax", "criminal_history", "child_welfare")))
+        rd = yaml.safe_load((ROOT / "corpus" / "documents" / "retrieval.yaml").read_text(encoding="utf-8")) or {}
+        rids = {e.get("id") for e in rd.get("entries", [])}
+        ar_docs = yaml.safe_load((ROOT / "corpus" / "checklists" / "_ADJUDICATIVE_READINESS.yaml").read_text(encoding="utf-8")) or {}
+        dangling = []
+        for g, entry in (ar_docs.get("guidelines") or {}).items():
+            for doc in entry.get("documents") or []:
+                refs = doc.get("retrieval_ref") or []
+                refs = [refs] if isinstance(refs, str) else refs
+                if not refs:
+                    dangling.append((g, "no ref"))
+                dangling += [(g, r) for r in refs if r not in rids]
+        check("every readiness document resolves to a retrieval entry", not dangling,
+              str(dangling[:5]))
+        check("every retrieval entry says what to do if the original is lost",
+              all(str(e.get("lost_original", "")).strip() for e in rd.get("entries", [])))
+        check("documents advisor reads the retrieval directory",
+              "document_lookup.py" in (ROOT / "agents" / "optional" / "documents-advisor.md").read_text(encoding="utf-8"))
+
         print("\nshipped corpus must stay a skeleton")
         # The repo publishes the STRUCTURE; the populated corpus is distributed
         # separately and lives outside the repo. It is easy to populate the
@@ -1589,7 +1692,8 @@ def main() -> int:
         checklists = [p for p in sorted(cdir.glob("*.yaml"))
                       if p.name not in ("_COVERAGE.yaml", "_TEMPLATE.yaml", "_UNIVERSAL.yaml",
                                          "_SEVERITY_LADDERS.yaml", "_DOCUMENT_EVIDENCE.yaml",
-                                         "_INCIDENT_CHRONOLOGY.yaml", "_INCIDENT_PROFILES.yaml")]
+                                         "_INCIDENT_CHRONOLOGY.yaml", "_INCIDENT_PROFILES.yaml",
+                                         "_ADJUDICATIVE_READINESS.yaml")]
         for p in checklists + event_files:
             d = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
             els = d.get("elements") or []
@@ -1657,6 +1761,62 @@ def main() -> int:
         sp.write_text(json.dumps(s), encoding="utf-8")
         c, o = run(VALSESS, str(sp))
         check("a non-id citation in basis still passes", c == 0, o.strip()[-200:])
+
+        print("\nadjudicative readiness — DCSA's own standard for a complete report")
+        ar_path = cdir / "_ADJUDICATIVE_READINESS.yaml"
+        check("_ADJUDICATIVE_READINESS.yaml exists", ar_path.exists())
+        ar = yaml.safe_load(ar_path.read_text(encoding="utf-8")) or {} if ar_path.exists() else {}
+        check("readiness file cites the DCSA guide and a retrieval date",
+              str(ar.get("source_url", "")).startswith("https://www.dcsa.mil/")
+              and bool(ar.get("retrieved")))
+        check("readiness file ships unverified, like every maintainer file",
+              ar.get("maintainer_verified") is False)
+        check("readiness file covers all thirteen guidelines",
+              set(ar.get("guidelines") or {}) == set("ABCDEFGHIJKLM"),
+              str(sorted(ar.get("guidelines") or {})))
+        uni = yaml.safe_load((cdir / "_UNIVERSAL.yaml").read_text(encoding="utf-8")) or {}
+        uni_ids = {e.get("id") for e in uni.get("elements", [])}
+        known_ids = set(uni_ids)
+        for g in "ABCDEFGHIJKLM":
+            gd = yaml.safe_load((cdir / f"guideline-{g}.yaml").read_text(encoding="utf-8")) or {}
+            known_ids |= {e.get("id") for e in gd.get("elements", [])}
+        factors = ar.get("statement_factors") or []
+        unresolved = [(f.get("id"), e) for f in factors
+                      for e in (f.get("satisfied_by") or {}).get("elements", [])
+                      if e not in known_ids]
+        check("every statement factor points at a real checklist element",
+              not unresolved, str(unresolved))
+        factor_ids = {f.get("id") for f in factors}
+        check("statement factors include self-reporting, voluntariness and knowing participation",
+              {"self-reported-and-why", "voluntariness",
+               "circumstances-and-knowing-participation"} <= factor_ids,
+              str(sorted(factor_ids)))
+        check("universal checklist carries the two participation factors",
+              {"knowing-participation", "voluntariness"} <= uni_ids)
+        check("participation factors are skipped on administrative-tone events",
+              all(e.get("adverse_conduct_only") is True for e in uni.get("elements", [])
+                  if e.get("id") in ("knowing-participation", "voluntariness")))
+        docs_by_g = {g: (entry.get("documents") or [])
+                     for g, entry in (ar.get("guidelines") or {}).items()}
+        bad_obtain = [(g, d.get("type")) for g, docs in docs_by_g.items() for d in docs
+                      if d.get("obtain_by") not in ("subject", "security_office", "either")]
+        check("every readiness document says who can obtain it", not bad_obtain,
+              str(bad_obtain[:3]))
+        office_only = {g for g, docs in docs_by_g.items()
+                       if any(d.get("obtain_by") == "security_office" for d in docs)}
+        check("security-office-held records are marked so the user is never sent for them",
+              {"I", "K", "M"} <= office_only, str(sorted(office_only)))
+        tl = ar.get("timeline") or {}
+        check("timeline rule: never delay, always declare pending",
+              tl.get("never_delay_for_documents") is True
+              and tl.get("pending_documents_are_declared") is True)
+        for agent in ("agents/optional/documents-advisor.md", "agents/core/gap-analyst.md",
+                      "agents/core/narrative-writer.md", "agents/conductor.md"):
+            check(f"{agent} reads the readiness file",
+                  "_ADJUDICATIVE_READINESS.yaml" in (ROOT / agent).read_text(encoding="utf-8"))
+        tiers = yaml.safe_load((ROOT / "corpus" / "privacy-tiers.yaml").read_text(encoding="utf-8")) or {}
+        check("privacy floor never identifies victims or minors",
+              "victim_or_minor_identity" in (tiers.get("never_collected") or []))
 
         print("\nthe no-legal-deferral rule survived the rewrite")
         # An earlier draft of guideline-D told the interviewer to advise

@@ -388,10 +388,36 @@ def render_event(ev: dict, n: int, total: int, role: str) -> str:
             "*Do not delay this report while gathering these.*",
             "",
         ]
+        pending = 0
         for d in docs:
             timing = "before submission" if d.get("timing") == "before" else "may follow"
-            parts.append(f"- {d.get('name')} — {d.get('source','')} ({timing})")
+            status = d.get("status")
+            if status == "in_hand":
+                tag = "in hand — attach it"
+            elif status == "pending":
+                tag = "PENDING — declared here, will follow"
+                pending += 1
+            else:
+                tag = timing
+            line = f"- {d.get('name')} — {d.get('source','')} ({tag})"
+            if d.get("obtain_by") == "security_office":
+                line += (" — held by your security office, not something you "
+                         "fetch; tell them it exists")
+            parts.append(line)
         parts.append("")
+        if pending:
+            # DCSA's adjudicative-readiness guidance: the initial report says
+            # which supporting documents are still pending, and those follow
+            # as a supplement to the original report through the security
+            # office. Declared, never silently omitted, never a reason to wait.
+            parts.append(
+                "The documents marked PENDING are named here on purpose: this "
+                "report is not held for them. Give each one to your security "
+                "office the day you receive it, so it can be added to the file "
+                "as a supplement to this report. Nothing here is something you "
+                "file yourself."
+            )
+            parts.append("")
 
     updates = ev.get("future_update_topics") or []
     if updates:

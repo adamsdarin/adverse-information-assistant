@@ -25,10 +25,20 @@ never_collected:
   - social_security_number
   - date_of_birth
   - classified_information
+  - victim_or_minor_identity
 never_collected_note: |
   Not even at LOW. The form will ask for SSN and DOB; the user enters those
   directly on the form, never here. If a user types one anyway, the tool tells
   them, does not retain it in any saved session, and asks them to remove it.
+
+  A victim, and anyone under eighteen, is never identified — not by name, and
+  not by a detail that would identify them — at any tier, including LOW,
+  where other people may otherwise be named. Role and count only ("the other
+  driver", "a minor who was present"). DCSA's guidance to the security
+  officers who submit these reports says the same, and the tier a user picks
+  for their own convenience does not get to override a third party's
+  protection. If a user types one anyway, handle it like an SSN: say so, do
+  not retain it, carry the role forward.
 
 # ---------------------------------------------------------------------------
 # TIERS — apply to NATURAL PERSONS only. Entities are exempt (see below).
