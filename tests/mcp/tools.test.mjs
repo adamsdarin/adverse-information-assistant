@@ -192,6 +192,11 @@ test('court_lookup serves one state without a county and labels the guess', asyn
   assert.match(plain.records_sources.data.dmv.url, /^https:\/\//);
   assert.ok(plain.records_sources.data.tax.name);
   assert.equal(plain.records_sources.file, 'corpus/courts/state-records-sources.json');
+  // Where a narrower page was found it rides beside the front door, and a court
+  // entry can name the county directory: the lowest level is where to start.
+  assert.match(plain.records_sources.data.dmv.direct_url, /^https:\/\//);
+  const tn = (await callTool(server, 'court_lookup', { state: 'TN' })).out;
+  assert.match(tn.court.data.county_directory, /^https:\/\//);
 });
 
 test('get_corpus_file and the corpus resources agree', async () => {

@@ -780,6 +780,7 @@ export function createAdverseMcpServer(release, options = {}) {
           dui_note: offense && ['dui', 'owi', 'dwi'].includes(offense) ? st.dui_note ?? null : null,
           records_custodian: st.records_custodian ?? null,
           statewide_portal: st.statewide_portal ?? null,
+          county_directory: st.county_directory ?? null,
           judiciary_url: st.judiciary_url ?? null,
           notes: st.notes ?? null,
           source_url: st.source_url ?? null,

@@ -100,6 +100,24 @@ the Worker from `main` follows this merge, approved with the fix; the live
 other state links (courts and `state-records-sources.yaml`) are still agency
 front doors and have not been narrowed.
 
+DIRECT LINKS ADDED 2026-11-12 at the owner's request ("links as narrow as
+possible", "check the lowest level first"; stale links are an accepted risk).
+`state-records-sources.yaml`: `url` stays the agency front door and a new
+`direct_url` carries the narrowest page found for requesting your own record
+(driver record 50 of 51, criminal history 49, child welfare 37, tax 20 of the
+42 income-tax jurisdictions), each opened in the app's browser that day
+(`direct_links_checked`); a `note` marks county-held child welfare files (CA,
+NC). `state-courts.yaml`: a new `county_directory` (CA, IL, KY, ME, NV, TN,
+WY), a `statewide_portal` for DE, KY, ME, MI, MS and TX, and county-first
+`notes` for the states with no statewide search (GA, LA, MT, OH, WV).
+`court_lookup.py`, `document_lookup.py` and the Worker pass the new fields
+through; the validator requires https on `direct_url`. Research was done in
+the browser by this session and four sub-agents the owner asked for. Not
+found, left on the front door: driver WI (site refuses the browser); criminal
+history ID and PA (the front door is already the bureau page); child welfare
+AZ, CT, GA, IN, NJ, ND, OH, OK, SD, VA, WV, WI; tax for the states where only
+a PDF form or a portal login exists. Every state stays `verified: false`.
+
 DEPLOYED with the owner's approval: Worker `adverse-information-assistant` at
 `https://fsotools.ai/adverse/mcp`, from `main` 814e644 (PR 3, reviewed with ten
 findings all fixed in 893e51f, merged by the owner). Two sessions deployed the
@@ -215,6 +233,12 @@ No new decision needed for the authorized implementation. Prior source-acquisiti
 and migration questions remain scoped separately as noted above.
 
 ## Log
+2026-11-12 Claude (fork f01dd4a3) — Added direct record-request links
+beside the agency front doors, and county directories and county-first notes
+for courts, at the owner's direction. Decisions: keep the front door as the
+stable fallback and add `direct_url` rather than replace `url`; take only
+pages that were opened in a browser, never an unopened PDF; say where the
+county is the place to start. Verified flags untouched.
 2026-11-12 Claude (fork f01dd4a3) — Replaced ten dead `statewide_portal`
 addresses in the court recognition aid with direct working ones and added a
 county-first note for Illinois. Decision: fix the corpus as well as the
